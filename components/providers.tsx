@@ -1,0 +1,7 @@
+'use client';
+import {createContext,useContext,useEffect,useState,ReactNode} from 'react';
+import {Locale,messages} from '@/locales/messages';
+type Ctx={locale:Locale;setLocale:(x:Locale)=>void;dark:boolean;setDark:(x:boolean)=>void;msg:(key:keyof typeof messages.ru)=>string};
+const Context=createContext<Ctx|null>(null);
+export function Providers({children}:{children:ReactNode}){const[locale,setLocale]=useState<Locale>('ru');const[dark,setDark]=useState(false);useEffect(()=>{const l=localStorage.getItem('altai-locale') as Locale|null;const d=localStorage.getItem('altai-dark');if(l&&['ru','kk','en'].includes(l))setLocale(l);setDark(d==='true')},[]);useEffect(()=>{document.documentElement.dataset.theme=dark?'dark':'light';document.documentElement.lang=locale==='kk'?'kk':locale},[dark,locale]);const choose=(x:Locale)=>{localStorage.setItem('altai-locale',x);setLocale(x)};const theme=(x:boolean)=>{localStorage.setItem('altai-dark',String(x));setDark(x)};return <Context.Provider value={{locale,setLocale:choose,dark,setDark:theme,msg:(key)=>messages[locale][key]??key}}>{children}</Context.Provider>}
+export function useApp(){const c=useContext(Context);if(!c)throw new Error('Providers missing');return c}
