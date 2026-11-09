@@ -1,0 +1,57 @@
+---
+alwaysApply: true
+---
+
+# Development workflow
+
+Inspect the existing route, component, and `lib/` helper before editing. Extend the working path.
+
+- Change only the files the task needs. Do not reformat, rename, or replace a working system without a stated reason.
+- Do not install dependencies or run migrations unless the task asks for them.
+- After a meaningful code change, run `npm run typecheck`, `npm run lint`, and `npm run build`. Fix failures caused by the change.
+- For UI changes, verify the affected flow in the browser, including the other locale and the other theme when those are touched.
+- Leave `docs/` claims in place unless the task is to update them. Planning docs lag the demo; trust the code when they disagree.
+
+```text
+1. Read the caller and the helper it already uses.
+2. Patch that path.
+3. npm run typecheck && npm run lint && npm run build
+```
+
+## Code cleanliness and production quality
+
+All application code must remain clean and production-ready.
+
+- Do not add obvious, redundant or conversational comments.
+- Do not add AI-generated notes, authorship notes or explanations inside source files.
+- Do not leave TODO, FIXME, HACK or temporary implementation markers.
+- Do not leave console.log, debugger statements or temporary debugging code.
+- Remove unused imports, variables, functions, components and dead code introduced by your changes.
+- Do not keep commented-out implementations or duplicate code.
+- Avoid unnecessary abstractions, dependencies and boilerplate.
+- Use clear names and readable implementation instead of explanatory comments.
+- Keep meaningful comments for complex logic, security requirements and non-obvious decisions.
+- Preserve legal notices, licenses and required documentation.
+- Do not perform unrelated mass cleanup.
+- Before finishing a task, inspect the diff for accidental files, debug output, placeholders and unnecessary comments.
+- Production code must not contain mock implementations unless they are explicitly isolated as demo data.
+
+The final result must look like carefully maintained professional software, not AI-generated code.
+
+## Token efficiency
+
+Minimize unnecessary model context and tool usage.
+
+- Never scan or read the entire repository for a narrowly scoped task.
+- Inspect only relevant files and directly related dependencies.
+- Do not read node_modules, .next, .data, build artifacts or lockfiles unless specifically necessary.
+- Do not print entire files or long logs; extract only relevant sections.
+- Avoid repeating searches, inspections and commands whose results are already known.
+- Do not launch subagents or parallel agents unless explicitly requested or clearly necessary.
+- Do not call MCP tools unless the task requires them.
+- Use Playwright only for browser testing and visual verification.
+- Do not perform external research when installed project documentation is sufficient.
+- For large tasks, inspect the project once, create a concise implementation plan and reuse findings.
+- Prefer focused changes over broad refactoring.
+- Keep final reports concise: changed files, checks, failures and remaining blockers.
+- Never sacrifice correctness, security or testing merely to save tokens.

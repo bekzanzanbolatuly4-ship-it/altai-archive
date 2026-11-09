@@ -1,0 +1,22 @@
+---
+description: "Apply when editing translations, locale files, user-facing text or place names."
+alwaysApply: false
+---
+
+# Localization
+
+Russian, Kazakh, and English stay first-class. `Locale` is `'ru' | 'kk' | 'en'` in `locales/messages.ts`. UI language Kazakh uses the `kk` key and the KZ selector.
+
+- Add every new user-facing string to `ru`, `kk`, and `en` in the same edit. Read it with `msg()`.
+- Do not hardcode visitor-facing sentences in components, including `aria-label`, placeholders, empty states, and errors.
+- Proper names that are already the official form may stay untranslated. The institution’s official English name is not confirmed; do not invent one. Use the Russian name, or the existing Kazakh form Шығыс Қазақстан облысының мемлекеттік архиві.
+- Keep one spelling for a place across a locale. East Kazakhstan is Восточно-Казахстанская область / Шығыс Қазақстан облысы / East Kazakhstan.
+- Check long Kazakh and Russian strings in buttons, nav, and the hero so they wrap without overflow.
+
+```tsx
+// ❌ BAD
+<button>Publish</button>
+
+// ✅ GOOD — key present in ru, kk, and en
+<button>{msg('publish')}</button>
+```

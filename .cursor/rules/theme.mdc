@@ -1,0 +1,21 @@
+---
+description: "Apply when editing UI components, CSS, design tokens, colors or responsive layouts."
+alwaysApply: false
+---
+
+# Theme
+
+Theme is `html[data-theme=dark]` versus the default light `:root`. Every new surface must be readable in both.
+
+- Color comes from shared tokens in `app/globals.css`: `--paper`, `--surface`, `--ink`, `--muted`, `--line`, `--blue`, `--blue-soft`, `--forest`, `--sage`, `--earth`, `--shadow`.
+- When a token needs a new value, set it in both the light `:root` block and `html[data-theme=dark]`.
+- Do not add raw `#hex`, `rgb()`, or named colors in components or new CSS. Existing one-off colors in `globals.css` are not a pattern to copy.
+- Check text, borders, badges, and images against `--paper` and `--surface` in both themes.
+
+```css
+/* ❌ BAD */
+.notice { background: #f4efe6; color: #786950; }
+
+/* ✅ GOOD */
+.notice { background: var(--blue-soft); color: var(--ink); border: 1px solid var(--line); }
+```

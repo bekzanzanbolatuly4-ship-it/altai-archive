@@ -1,0 +1,22 @@
+---
+alwaysApply: true
+---
+
+# Product identity
+
+ALTAI ARCHIVE is the informational platform of the Государственный архив Восточно-Казахстанской области. Tagline: “History preserved for the future.” Direction: Editorial Heritage × Swiss Design × Altai Identity.
+
+Preserve the current public identity. Do not restyle it into a generic admin or AI-dashboard look (KPI mosaics, purple gradients, glassmorphism, Inter, or neon accents).
+
+- Body: `DM Sans`. Headings and the hero title: `Playfair Display`.
+- Keep the home hero: panorama, left editorial overlay, serif title, search, and caption. Change copy or behavior inside it; do not replace the composition.
+- Use the live tokens in `app/globals.css` (the later `:root` / `html[data-theme=dark]` block wins): `--paper`, `--surface`, `--ink`, `--muted`, `--line`, `--blue`, `--blue-soft`, `--forest`, plus `--sage` and `--earth`.
+- Prefer quiet rules, generous margins, small tracked eyebrows, and serif titles over filled cards and heavy shadows.
+
+```css
+/* ❌ BAD — new dashboard accent */
+.panel { background: linear-gradient(135deg, #6d5efc, #22d3ee); font-family: Inter, sans-serif; }
+
+/* ✅ GOOD — existing editorial tokens */
+.panel { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+```

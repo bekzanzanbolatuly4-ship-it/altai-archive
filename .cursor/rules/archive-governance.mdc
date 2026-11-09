@@ -1,0 +1,21 @@
+---
+alwaysApply: true
+---
+
+# Archive governance
+
+ALTAI ARCHIVE is informational. It presents archival heritage. It does not sell services or act as the archive’s application desk.
+
+- Do not add payments, fees, document orders, reading-room booking, official applications, or service-request workflows.
+- Label synthetic records as demonstration. `provenance: 'demonstration'` and demo copy must stay visibly distinct from `verified` records.
+- Do not invent official contacts, branch addresses, hours, coordinates, staff names, or historical facts. Unknown fields stay null with an explicit gap, as `data/archive.ts` does for unconfirmed branch details.
+- Public pages show only `published` records with `accessStatus: 'public'`. Restricted and unpublished records stay off the public catalog, sitemap, and assistant answers.
+- The assistant searches approved local content. Do not connect an external model, and do not present generated text as an archival fact.
+
+```ts
+// ❌ BAD — guessed phone presented as official
+{ id: 'ridder', phone: '+7 (72336) 0-00-00', provenance: 'verified' }
+
+// ✅ GOOD — gap stays visible
+{ id: 'ridder', phone: null, provenance: 'demonstration' }
+```

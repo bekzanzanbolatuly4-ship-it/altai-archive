@@ -1,0 +1,7 @@
+.env*
+.data/
+.next/
+node_modules/
+*.pem
+*.key
+*.p12

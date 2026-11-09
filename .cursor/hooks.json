@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterFileEdit": [
+      {
+        "command": "bash .cursor/hooks/format-after-edit.sh",
+        "timeout": 10
+      }
+    ]
+  }
+}

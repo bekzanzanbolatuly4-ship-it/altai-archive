@@ -1,0 +1,24 @@
+---
+description: "Apply when editing API routes, authentication, authorization, uploads, sessions or server logic."
+alwaysApply: false
+---
+
+# Security
+
+Authorization is decided on the server with `requireUser` / `can` in `lib/archive-auth.ts`. Hiding a button is not access control.
+
+Role matrix, already implemented: `SUPERADMIN` read, upload, edit, publish, accounts, audit; `SITE_ADMIN` read, upload, edit, publish, audit; `ARCHIVE_EMPLOYEE` and `BRANCH_ADMIN` read, upload, edit; `EDITOR` read, edit, publish; `MODERATOR` read, edit; `ANALYST` read, audit. Only `SUPERADMIN` may create, disable, or retitle staff roles. Do not add public registration or another account owner.
+
+- Secrets stay in `.env.local`: `ARCHIVE_OWNER_EMAIL`, `ARCHIVE_OWNER_PASSWORD`, `SESSION_SECRET`. Never print them, commit them, or send them to the client.
+- Original uploads live in `.data/uploads/`. Serve a file only after an authorization check. Public file routes serve published public objects only.
+- Session cookie `altai_session` stays HTTP-only. Passwords stay scrypt hashes.
+- Return generic 401/403 JSON. Do not include store paths, hashes, or unpublished titles in public errors.
+
+```ts
+// ❌ BAD — role check only in the client
+if (role === 'EDITOR') await fetch('/api/admin/documents', { method: 'POST' });
+
+// ✅ GOOD
+const { user, response } = await requireUser('publish');
+if (!user) return response;
+```
