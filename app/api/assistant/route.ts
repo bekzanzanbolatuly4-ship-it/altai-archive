@@ -1,4 +1,4 @@
-import {readStore} from '@/lib/archive-store';
+import {readPublishedPublicDocuments} from '@/lib/archive-store';
 import {sameOriginFailure} from '@/lib/request-security';
 import {runAgent,safeError} from '@/lib/ai/agent';
 import {readBounded,acquire} from '@/lib/ai/limits';
@@ -14,7 +14,7 @@ export async function POST(request:Request){
   if(!request.headers.get('content-type')?.startsWith('application/json'))throw new AIError('invalid_request',400);
   const raw=await readBounded(request.body,10000);
   let input;try{input=JSON.parse(raw);}catch{throw new AIError('invalid_request',400);}
-  const result=await runAgent(input,{documents:async()=>(await readStore()).documents,key:process.env.OPENROUTER_API_KEY,model:process.env.OPENROUTER_MODEL,limiter:()=>()=>{}});
+  const result=await runAgent(input,{documents:readPublishedPublicDocuments,key:process.env.OPENROUTER_API_KEY,model:process.env.OPENROUTER_MODEL,limiter:()=>()=>{}});
   return Response.json(result,{headers:{'Cache-Control':'no-store'}});
  }catch(error){
   const {code,status}=safeError(error);

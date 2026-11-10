@@ -5,10 +5,10 @@ import {pathToFileURL} from 'node:url';
 import path from 'node:path';
 import ts from 'typescript';
 
-// Execute the real route with an in-memory store; never import the live store.
+// Execute the real route with in-memory public metadata; never import the live store.
 const document={id:'public',title:'Archive photographs',description:'Photographs of mountains.',status:'published',accessStatus:'public',provenance:'demonstration',keywords:[]};
 let source=await readFile('app/api/assistant/route.ts','utf8');
-source=source.replace("import {readStore} from '@/lib/archive-store';",`const readStore=async()=>({documents:${JSON.stringify([document,{...document,id:'private',accessStatus:'restricted'}])}});`);
+source=source.replace("import {readPublishedPublicDocuments} from '@/lib/archive-store';",`const readPublishedPublicDocuments=async()=>${JSON.stringify([document,{...document,id:'private',accessStatus:'restricted'}])};`);
 source=source.replace(/from '@\/([^']+)'/g,(_,name)=>`from '${pathToFileURL(path.resolve(`${name}.ts`)).href}'`);
 const compiled=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
 const {POST}=await import(`data:text/javascript,${encodeURIComponent(compiled)}`);

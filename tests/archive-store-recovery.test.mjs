@@ -45,3 +45,86 @@ test('invalid backups fail without data loss and valid backups recover safely',a
   await rm(cwd,{recursive:true,force:true});
  }
 });
+
+test('assistant metadata read returns empty without creating a missing .data directory',async()=>{
+ const cwd=await mkdtemp(path.join(tmpdir(),'altai-store-readonly-'));
+ const originalCwd=process.cwd;
+ try{
+  process.cwd=()=>cwd;
+  const storeModule=await import(`${storeUrl}?readonly-missing=${Date.now()}`);
+  process.cwd=originalCwd;
+
+  assert.deepEqual(await storeModule.readPublishedPublicDocuments(),[]);
+  await assert.rejects(readdir(path.join(cwd,'.data')),{code:'ENOENT'});
+ }finally{
+  process.cwd=originalCwd;
+  await rm(cwd,{recursive:true,force:true});
+ }
+});
+
+test('assistant metadata read returns no documents from an empty store',async()=>{
+ const cwd=await mkdtemp(path.join(tmpdir(),'altai-store-readonly-empty-'));
+ const originalCwd=process.cwd;
+ try{
+  process.cwd=()=>cwd;
+  const storeModule=await import(`${storeUrl}?readonly-empty=${Date.now()}`);
+  process.cwd=originalCwd;
+
+  await mkdir(path.join(cwd,'.data'));
+  await writeFile(path.join(cwd,'.data','archive-store.json'),JSON.stringify({users:[],documents:[],sessions:[],audit:[]}));
+  assert.deepEqual(await storeModule.readPublishedPublicDocuments(),[]);
+ }finally{
+  process.cwd=originalCwd;
+  await rm(cwd,{recursive:true,force:true});
+ }
+});
+
+test('assistant metadata read exposes only published public documents',async()=>{
+ const cwd=await mkdtemp(path.join(tmpdir(),'altai-store-readonly-public-'));
+ const originalCwd=process.cwd;
+ try{
+  process.cwd=()=>cwd;
+  const storeModule=await import(`${storeUrl}?readonly-public=${Date.now()}`);
+  process.cwd=originalCwd;
+
+  const documents=[
+   {id:'public',fileName:'public.pdf',title:'Public',status:'published',accessStatus:'public',keywords:[]},
+   {id:'draft',fileName:'draft.pdf',title:'Draft',status:'draft',accessStatus:'public',keywords:[]},
+   {id:'restricted',fileName:'restricted.pdf',title:'Restricted',status:'published',accessStatus:'restricted',keywords:[]}
+  ];
+  await mkdir(path.join(cwd,'.data'));
+  const storeFile=path.join(cwd,'.data','archive-store.json');
+  const contents=JSON.stringify({users:[],documents,sessions:[],audit:[]});
+  await writeFile(storeFile,contents);
+
+  assert.deepEqual(await storeModule.readPublishedPublicDocuments(),[documents[0]]);
+  assert.equal(await readFile(storeFile,'utf8'),contents);
+ }finally{
+  process.cwd=originalCwd;
+  await rm(cwd,{recursive:true,force:true});
+ }
+});
+
+test('assistant metadata read reports a corrupt store instead of treating it as missing',async()=>{
+ const cwd=await mkdtemp(path.join(tmpdir(),'altai-store-readonly-corrupt-'));
+ const originalCwd=process.cwd;
+ const originalError=console.error;
+ const logged=[];
+ try{
+  process.cwd=()=>cwd;
+  const storeModule=await import(`${storeUrl}?readonly-corrupt=${Date.now()}`);
+  process.cwd=originalCwd;
+
+  await mkdir(path.join(cwd,'.data'));
+  const storeFile=path.join(cwd,'.data','archive-store.json');
+  await writeFile(storeFile,'not-json');
+  console.error=(...args)=>logged.push(args);
+  await assert.rejects(storeModule.readPublishedPublicDocuments(),/Unable to read public archive metadata/);
+  assert.deepEqual(logged,[['Assistant archive metadata read failed',{type:'SyntaxError',code:'none'}]]);
+  assert.equal(await readFile(storeFile,'utf8'),'not-json');
+ }finally{
+  console.error=originalError;
+  process.cwd=originalCwd;
+  await rm(cwd,{recursive:true,force:true});
+ }
+});

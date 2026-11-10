@@ -93,6 +93,33 @@ export async function readStore():Promise<ArchiveStore>{
  }
 }
 
+/** Reads assistant-visible metadata without creating, recovering, or changing archive files. */
+export async function readPublishedPublicDocuments():Promise<StoredDocument[]>{
+ let content:string;
+ try{
+  content=await readFile(storePath,'utf8');
+ }catch(error){
+  if((error as NodeJS.ErrnoException).code==='ENOENT')return [];
+  logPublicMetadataReadFailure(error);
+  throw new Error('Unable to read public archive metadata');
+ }
+
+ try{
+  const store=normalizeStore(JSON.parse(content));
+  return structuredClone(store.documents.filter(document=>document.status==='published'&&document.accessStatus==='public'));
+ }catch(error){
+  logPublicMetadataReadFailure(error);
+  throw new Error('Unable to read public archive metadata');
+ }
+}
+
+function logPublicMetadataReadFailure(error:unknown){
+ const detail=error&&typeof error==='object'?error as {name?:unknown;code?:unknown}:{};
+ const type=typeof detail.name==='string'?detail.name:'UnknownError';
+ const code=typeof detail.code==='string'?detail.code:'none';
+ console.error('Assistant archive metadata read failed',{type,code});
+}
+
 async function atomicWrite(data:ArchiveStore,{preserveBackup=false}:{preserveBackup?:boolean}={}){
  await mkdir(root,{recursive:true});
  const temp=`${storePath}.${randomUUID()}.tmp`;
