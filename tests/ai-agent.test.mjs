@@ -17,7 +17,7 @@ test('successful retrieval, model generation and server citations',async()=>{
  let body;
  const result=await runAgent(input,deps({fetcher:async(_url,options)=>{body=JSON.parse(options.body);return ok();}}));
  assert.equal(result.mode,'ai');assert.equal(result.citations[0].url,'/document/public-id');
- assert.equal(body.provider.max_price.prompt,0);assert.equal(body.provider.allow_fallbacks,false);assert.equal(body.tools,undefined);
+ assert.equal(body.provider.max_price.prompt,0);assert.equal(body.provider.max_price.completion,0);assert.equal(body.provider.allow_fallbacks,true);assert.equal(body.provider.data_collection,'deny');assert.equal(body.tools,undefined);
  assert.equal(body.max_tokens,900);assert.ok(!JSON.stringify(body).includes('PRIVATE'));assert.ok(!JSON.stringify(body).includes('synthetic-test-secret'));
 });
 test('OpenRouter completion supports a bounded low-token live check',async()=>{
@@ -27,6 +27,14 @@ test('OpenRouter completion supports a bounded low-token live check',async()=>{
  await complete('Safe test question','[]','en',{key:'synthetic-key',model:'test/model:free',maxTokens:5000,fetcher:async(_url,options)=>{body=JSON.parse(options.body);return ok();}});
  assert.equal(body.max_tokens,900);
 });
+test('OpenRouter free router is allowed with zero-cost and privacy constraints',async()=>{
+ let body;
+ await complete('Safe test question','[]','en',{key:'synthetic-key',model:'openrouter/free',fetcher:async(_url,options)=>{body=JSON.parse(options.body);return ok();}});
+ assert.equal(body.model,'openrouter/free');
+ assert.deepEqual(body.provider.max_price,{prompt:0,completion:0});
+ assert.equal(body.provider.data_collection,'deny');
+ assert.equal(body.provider.allow_fallbacks,true);
+});
 test('missing configuration and paid models fail without fetch',async()=>{
  const fetcher=async()=>assert.fail('external request');
  await assert.rejects(runAgent(input,deps({key:undefined,fetcher})),/unconfigured/);
@@ -34,6 +42,14 @@ test('missing configuration and paid models fail without fetch',async()=>{
 });
 test('provider errors and 429 are sanitized without retries',async()=>{
  for(const status of [401,429,500]){let calls=0;try{await runAgent(input,deps({fetcher:async()=>{calls++;return new Response('synthetic-test-secret',{status});}}));assert.fail();}catch(e){assert.equal(safeError(e).code,status===429?'provider_limit':'provider_error');assert.ok(!JSON.stringify(safeError(e)).includes('secret'));}assert.equal(calls,1);}
+});
+test('OpenRouter failure logs only status and a sanitized error code',async()=>{
+ const originalError=console.error;const logs=[];console.error=(...args)=>logs.push(args);
+ try{
+  await assert.rejects(complete('Private user question','[]','en',{key:'private-api-key',model:'test/model:free',fetcher:async()=>new Response(JSON.stringify({error:{code:'free_tier_limit',message:'private provider response',metadata:{provider_name:'private-provider',raw:'private diagnostic'}}}),{status:429})}),/provider_limit/);
+ }finally{console.error=originalError;}
+ assert.deepEqual(logs,[['OpenRouter request failed',{status:429,code:'free_tier_limit'}]]);
+ assert.ok(!JSON.stringify(logs).includes('private'));
 });
 test('timeout aborts request',async()=>{
  await assert.rejects(runAgent(input,deps({timeout:10,fetcher:async(_url,{signal})=>new Promise((_,reject)=>signal.addEventListener('abort',()=>reject(new Error('aborted'))))})),/timeout/);
