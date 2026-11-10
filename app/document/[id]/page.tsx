@@ -145,6 +145,7 @@ export default function DocumentPage(){
      <p>{doc.description}</p>
     </div>
     <div style={{display:'flex',gap:'0.5rem',flexWrap:'wrap'}}>
+     <Link href={`/assistant?q=${encodeURIComponent(`${msg('aiHelpDocument')}: ${doc.title}`)}`} className="outline-link">{msg('assistant')}</Link>
      <a
       href={downloadUrl}
       download={isUploaded?(uploaded?.originalName||`${doc.id}`):undefined}

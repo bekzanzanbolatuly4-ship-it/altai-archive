@@ -1,14 +1,303 @@
 'use client';
 import Link from 'next/link';
-import {useMemo,useState} from 'react';
-import {ArrowRight,ArrowUpRight,Clock3,ExternalLink,MapPin,Phone,Search} from 'lucide-react';
-import {archiveLocations,branches,mainArchive} from '@/data/archive';
+import {useState} from 'react';
+import {ArrowRight,ArrowUpRight,Clock3,ExternalLink,MapPin,Phone,BookOpen,Search} from 'lucide-react';
+import {branches,mainArchive,type ArchiveLocation} from '@/data/archive';
 import {useApp} from './providers';
+import {formatCity,formatInstitutionName} from '@/locales/messages';
 
-const officialName=(locale:'ru'|'kk'|'en')=>locale==='kk'?'Шығыс Қазақстан облысының мемлекеттік архиві':'Государственный архив Восточно-Казахстанской области';
-const unavailable=(locale:'ru'|'kk'|'en')=>locale==='kk'?'Ресми деректе расталмаған':'Не подтверждено официальным источником';
+export function InstitutionPage(){
+  const{msg,locale}=useApp();
+  const instName=formatInstitutionName(locale);
 
-export function InstitutionPage(){const{locale}=useApp();return <div className="page-wrap institution-page"><header className="page-hero"><div className="breadcrumb">ALTAI ARCHIVE <span>/</span> {locale==='ru'?'УЧРЕЖДЕНИЕ':'INSTITUTION'}</div><span className="eyebrow">{locale==='ru'?'ПЛАТФОРМА ЦИФРОВОГО НАСЛЕДИЯ':'DIGITAL HERITAGE PLATFORM'}</span><h1>{locale==='en'?officialName('ru'):officialName(locale)}</h1><p>{locale==='en'?'The institution’s official English name has not been confirmed.':'Сведения об истории, структуре и полномочиях публикуются по подтверждённым институциональным источникам.'}</p></header><section className="institution-story"><div className="institution-copy"><span className="eyebrow">ALTAI ARCHIVE · {locale==='ru'?'ЦИФРОВАЯ ПЛАТФОРМА':'DIGITAL PLATFORM'}</span><h2>{locale==='ru'?'История, сохранённая для будущего':'History, preserved for the future'}</h2><p>{locale==='ru'?'ALTAI ARCHIVE — цифровая платформа для знакомства с историческими материалами Восточного Казахстана. Она не является новым наименованием учреждения.':'ALTAI ARCHIVE is the digital platform identity. It is not a new legal or official name for the archive.'}</p><Link href="/branches" className="outline-link">Архив и филиалы <ArrowRight size={15}/></Link></div><aside className="institution-identity"><span className="identity-rule"/><span className="identity-label">ОФИЦИАЛЬНОЕ НАИМЕНОВАНИЕ</span><h2>{officialName(locale)}</h2><p>{locale==='ru'?'Официальный перевод на английский язык не подтверждён.':'The official institution name is shown in Russian where no verified translation is available.'}</p></aside></section><section className="institution-facts"><div><span>01</span><h3>Государственный архив</h3><p>Основное учреждение</p></div><div><span>02</span><h3>Филиальная сеть</h3><p>{branches.length} архивные записи с указанием источника</p></div><div><span>03</span><h3>Цифровая платформа</h3><p>ALTAI ARCHIVE · демонстрационная версия</p></div></section><div className="institution-notice">Историческая справка государственного портала сообщает, что архив образован в 1940 году и на тот момент имел шесть филиалов. Состав филиальной сети изменился; здесь показаны только филиалы, чья принадлежность архиву подтверждается доступными актуальными источниками.</div><Link className="text-link" href="/catalog">Перейти к материалам каталога <ArrowUpRight size={15}/></Link></div>}
+  return (
+    <div className="page-wrap institution-page">
+      <header className="page-hero">
+        <div className="breadcrumb">
+          ALTAI ARCHIVE <span>/</span> {msg('about')}
+        </div>
+        <span className="eyebrow">
+          {locale==='ru'?'ПЛАТФОРМА ЦИФРОВОГО НАСЛЕДИЯ':locale==='kk'?'ЦИФРЛЫҚ МҰРА ПЛАТФОРМАСЫ':'DIGITAL HERITAGE PLATFORM'}
+        </span>
+        <h1>{instName}</h1>
+        <p>
+          {locale==='en'
+            ?'The institution’s official English name is not confirmed; shown in official form.'
+            :locale==='kk'
+            ?'Тарих, құрылым және өкілеттіктер туралы мәліметтер расталған ресми дереккөздер бойынша жарияланады.'
+            :'Сведения об истории, структуре и полномочиях публикуются по подтверждённым институциональным источникам.'}
+        </p>
+      </header>
 
-export function BranchesDirectory(){const{locale}=useApp();const[q,setQ]=useState('');const[selectedId,setSelectedId]=useState('main');const visible=useMemo(()=>archiveLocations.filter(x=>`${x.name} ${x.city} ${x.affiliation}`.toLowerCase().includes(q.toLowerCase())),[q]);const selected=archiveLocations.find(x=>x.id===selectedId)||mainArchive;const field=(value:string|null)=>value||unavailable(locale);
-return <div className="page-wrap branches-page"><header className="page-hero"><div className="breadcrumb">ALTAI ARCHIVE <span>/</span> {locale==='ru'?'УЧРЕЖДЕНИЕ':'INSTITUTION'}</div><span className="eyebrow">ГОСУДАРСТВЕННЫЙ АРХИВ ВОСТОЧНО-КАЗАХСТАНСКОЙ ОБЛАСТИ</span><h1>Архив и филиалы</h1><p>Основное учреждение показано отдельно от филиалов. Адреса, контакты и географические координаты указаны только при наличии подтверждённого источника.</p></header><div className="branch-source-note"><span className="note-dot"/><span>Доступные справочники неполны и местами устарели: для Риддерского и Усть-Каменогорского филиалов по личному составу найдены публикации 2019 года, которые не подтверждают сегодняшнюю структуру. Запись о Зайсанском филиале найдена в государственном реестре. Неизвестные сведения не дополнены догадками.</span></div><div className="branch-directory-toolbar"><label className="catalog-search"><Search size={19}/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Поиск по филиалам или городу" aria-label="Поиск по филиалам или городу"/></label><span>{visible.length} {locale==='ru'?'записи':'records'}</span></div><div className="branch-network-layout"><section className="branch-network" aria-label="Схема архива и филиалов; расположение не географическое"><div className="network-heading"><span className="eyebrow">СХЕМА СВЯЗЕЙ · НЕ КАРТА</span><p>Положение узлов показывает только институциональную связь. Координаты не предоставлены.</p></div><div className="network-root"><button className={`network-node main-node ${selectedId==='main'?'selected':''}`} onClick={()=>setSelectedId('main')}><span className="node-kind">ОСНОВНОЕ УЧРЕЖДЕНИЕ</span><b>Государственный архив<br/>Восточно-Казахстанской области</b><small>{mainArchive.city}</small></button></div><div className="network-branches">{branches.map((branch)=><button key={branch.id} className={`network-node branch-node ${selectedId===branch.id?'selected':''}`} onClick={()=>setSelectedId(branch.id)}><span className="node-kind">{branch.affiliationStatus==='official-listing'?'ФИЛИАЛ · ГОСРЕЕСТР':'ФИЛИАЛ · УПОМИНАНИЕ 2019'}</span><b>{branch.shortName}</b><small>{branch.city}</small></button>)}</div><div className="network-footnote"><MapPin size={15}/> Географическая карта появится после подтверждения адресов и координат каждого подразделения.</div></section><section className="branch-list-panel"><div className="branch-list-heading"><div><span className="eyebrow">СПРАВОЧНИК</span><h2>Подразделения</h2></div><span>{visible.length.toString().padStart(2,'0')}</span></div>{visible.map(location=><button key={location.id} className={`branch-list-card ${selectedId===location.id?'selected':''}`} onClick={()=>setSelectedId(location.id)}><span className="branch-list-kind">{location.kind==='main'?'Основное учреждение':location.affiliationStatus==='official-listing'?'Филиал · государственный реестр':'Филиал · последнее упоминание в 2019 году'}</span><b>{location.shortName}</b><small><MapPin size={14}/>{location.city}</small></button>)}{visible.length===0&&<p className="branch-empty">Ничего не найдено.</p>}</section></div><section className="branch-detail"><div className="branch-detail-title"><div><span className="eyebrow">{selected.kind==='main'?'ОСНОВНОЕ УЧРЕЖДЕНИЕ':selected.affiliationStatus==='official-listing'?'ФИЛИАЛ · ГОСУДАРСТВЕННЫЙ РЕЕСТР':'ФИЛИАЛ · ПОСЛЕДНЕЕ УПОМИНАНИЕ 2019'}</span><h2>{selected.shortName}</h2></div><span className="branch-city"><MapPin size={15}/>{selected.city}</span></div><p className="branch-affiliation"><b>Институциональная принадлежность</b><br/>{selected.affiliation}</p><div className="branch-contact-grid"><div><MapPin size={16}/><span><b>{selected.addressStatus==='last-listed-2019'?'Адрес · последнее упоминание 2019':'Адрес'}</b><small>{field(selected.address)}</small></span></div><div><Phone size={16}/><span><b>Телефон</b><small>{field(selected.phone)}</small></span></div><div><Clock3 size={16}/><span><b>Часы работы</b><small>{field(selected.hours)}</small></span></div><div><ExternalLink size={16}/><span><b>Электронная почта</b><small>{field(selected.email)}</small></span></div></div><div className="branch-provenance">Источник: <a href={selected.sourceUrl} target="_blank" rel="noreferrer">{selected.sourceLabel} <ArrowUpRight size={13}/></a><span>{selected.sourceDate}</span></div></section><aside className="branch-transfer-note"><b>Изменение административной принадлежности</b><p>Государственный портал области Абай относит Аягозский и Жарминский филиалы к Государственному архиву области Абай. Они не показаны здесь как текущие филиалы архива ВКО.</p><a href="https://www.gov.kz/org/abay-cultura-arhiv/about/structure/10/1" target="_blank" rel="noreferrer">Сверить подведомственные организации области Абай <ArrowUpRight size={13}/></a></aside></div>}
+      <section className="institution-story">
+        <div className="institution-copy">
+          <span className="eyebrow">ALTAI ARCHIVE · {locale==='ru'?'ЦИФРОВАЯ ПЛАТФОРМА':locale==='kk'?'ЦИФРЛЫҚ ПЛАТФОРМА':'DIGITAL PLATFORM'}</span>
+          <h2>
+            {locale==='ru'
+              ?'История, сохранённая для будущего'
+              :locale==='kk'
+              ?'Болашақ үшін сақталған тарих'
+              :'History, preserved for the future'}
+          </h2>
+          <p>
+            {locale==='ru'
+              ?'ALTAI ARCHIVE — цифровая платформа для знакомства с историческими материалами Восточного Казахстана. Она не является новым официальным наименованием учреждения.'
+              :locale==='kk'
+              ?'ALTAI ARCHIVE — Шығыс Қазақстанның тарихи материалдарымен танысуға арналған цифрлық платформа. Бұл мекеменің жаңа ресми атауы емес.'
+              :'ALTAI ARCHIVE is the digital heritage platform identity. It is not a new legal or official name for the archive.'}
+          </p>
+          <Link href="/branches" className="outline-link">
+            {msg('branches')} <ArrowRight size={15}/>
+          </Link>
+        </div>
+        <aside className="institution-identity">
+          <span className="identity-rule"/>
+          <span className="identity-label">
+            {locale==='ru'?'ОФИЦИАЛЬНОЕ НАИМЕНОВАНИЕ':locale==='kk'?'РЕСМИ АТАУЫ':'OFFICIAL INSTITUTION NAME'}
+          </span>
+          <h2>{instName}</h2>
+          <p>
+            {locale==='en'
+              ?'The official institution name is shown in Russian and Kazakh where no verified English translation is available.'
+              :locale==='kk'
+              ?'Шығыс Қазақстан облысының мемлекеттік архиві.'
+              :'Государственный архив Восточно-Казахстанской области.'}
+          </p>
+        </aside>
+      </section>
+
+      <section className="institution-facts">
+        <div>
+          <h3>{msg('headInstitution')}</h3>
+          <p>{instName}</p>
+        </div>
+        <div>
+          <h3>{msg('branches')}</h3>
+          <p>
+            {locale==='ru'
+              ?`${branches.length} строк филиальной таблицы · требуется редакторская проверка`
+              :locale==='kk'
+              ?`Филиалдар кестесіндегі ${branches.length} жазба · редактор тексеруі қажет`
+              :`${branches.length} branch entries from the supplied directory · editorial review pending`}
+          </p>
+        </div>
+        <div>
+          <h3>{locale==='ru'?'Цифровая платформа':locale==='kk'?'Цифрлық платформа':'Digital platform'}</h3>
+          <p>ALTAI ARCHIVE · {msg('demo')}</p>
+        </div>
+      </section>
+
+      <div className="institution-notice">
+        <p>{msg('archiveHistoryContext')}</p>
+        <a href="https://www.gov.kz/org/vko-cultura-arhiv/press/events/details/1292" target="_blank" rel="noreferrer">{msg('archiveHistorySource')} <ArrowUpRight size={14}/></a>
+        <small>{msg('branchCheckedAt')}: 10.11.2026 · {msg('archiveHistoryDateNote')}</small>
+      </div>
+
+      <Link className="text-link" href="/catalog">
+        {msg('viewCatalogRecords')} <ArrowUpRight size={15}/>
+      </Link>
+      <section id="feedback" className="feedback-panel">
+        <span className="eyebrow">{msg('feedback')}</span>
+        <h2>{msg('feedbackTitle')}</h2>
+        <p>{msg('feedbackText')}</p>
+        <Link className="outline-link" href="/branches">{msg('branches')} <ArrowRight size={15}/></Link>
+      </section>
+    </div>
+  );
+}
+
+export function BranchesDirectory(){
+  const{msg,locale}=useApp();
+  const[selectedId,setSelectedId]=useState('main');
+  const[query,setQuery]=useState('');
+  const matchingBranches=branches.filter(x=>`${x.shortName} ${x.city} ${x.address||''}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
+
+  const selected: ArchiveLocation =
+    selectedId === 'main'
+      ? mainArchive
+      : branches.find(x => x.id === selectedId) || mainArchive;
+
+  const branchTitle = (b: ArchiveLocation) => {
+    if (b.kind === 'main') return formatInstitutionName(locale);
+    if (b.id === 'branch-ust-kamenogorsk-personnel') {
+      return locale === 'kk'
+        ? 'Өскемен жеке құрам бойынша филиалы'
+        : locale === 'en'
+        ? 'Oskemen Personnel Branch'
+        : 'Усть-Каменогорский филиал по личному составу';
+    }
+    if (b.id === 'branch-zaisan') {
+      return locale === 'kk'
+        ? 'Зайсан филиалы'
+        : locale === 'en'
+        ? 'Zaysan Branch'
+        : 'Зайсанский филиал';
+    }
+    if (b.id === 'branch-ridder') {
+      return locale === 'kk'
+        ? 'Риддер филиалы'
+        : locale === 'en'
+        ? 'Ridder Branch'
+        : 'Риддерский филиал';
+    }
+    return b.shortName;
+  };
+
+  return (
+    <div className="page-wrap branches-page">
+      <header className="page-hero">
+        <div className="breadcrumb">
+          ALTAI ARCHIVE <span>/</span> {msg('about')}
+        </div>
+        <span className="eyebrow">{formatInstitutionName(locale)}</span>
+        <h1>{msg('branchesTitle')}</h1>
+        <p>{msg('branchesSub')}</p>
+      </header>
+
+      <div className="branch-network-layout">
+        <section className="branch-network" aria-label={msg('structureNotice')}>
+          <label className="catalog-search branch-search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder={msg('branchSearch')} aria-label={msg('branchSearch')}/></label>
+          <div className="network-heading">
+            <span className="eyebrow">{msg('institutionalStructure')}</span>
+          </div>
+
+          <div className="network-root">
+            <button
+              type="button"
+              className={`network-node main-node ${selectedId==='main'?'selected':''}`}
+              onClick={()=>setSelectedId('main')}
+              aria-pressed={selectedId==='main'}
+            >
+              <span className="node-kind">{msg('headInstitution')}</span>
+              <b>{formatInstitutionName(locale)}</b>
+              <small><MapPin size={13}/> {formatCity(mainArchive.city, locale)}</small>
+            </button>
+          </div>
+
+          <div className="network-branches">
+            {matchingBranches.map(branch => {
+              const isSelected = selectedId === branch.id;
+              const statusLabel = branch.affiliationStatus === 'official-listing'
+                ? msg('officialListing')
+                : branch.affiliationStatus === 'source-listing'
+                  ? msg('branchSourceListing')
+                  : msg('lastMentioned2019');
+
+              return (
+                <button
+                  type="button"
+                  key={branch.id}
+                  className={`network-node branch-node ${isSelected?'selected':''}`}
+                  onClick={()=>setSelectedId(branch.id)}
+                  aria-pressed={isSelected}
+                >
+                  <span className="node-kind">{statusLabel}</span>
+                  <b>{branchTitle(branch)}</b>
+                  <small><MapPin size={13}/> {formatCity(branch.city, locale)}</small>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="branch-detail" aria-live="polite">
+          <div className="branch-detail-title">
+            <div>
+              <span className="eyebrow">
+                {selected.kind === 'main'
+                  ? msg('headInstitution')
+                  : selected.affiliationStatus === 'official-listing'
+                  ? msg('officialListing')
+                  : selected.affiliationStatus === 'source-listing'
+                  ? msg('branchSourceListing')
+                  : msg('lastMentioned2019')}
+              </span>
+              <h2>{branchTitle(selected)}</h2>
+            </div>
+            <span className="branch-city">
+              <MapPin size={16}/>
+              {formatCity(selected.city, locale)}
+            </span>
+          </div>
+
+          <p className="branch-affiliation">
+            <b>{msg('affiliation')}</b>
+            <br/>
+            {selected.affiliation}
+          </p>
+
+          <div className="branch-contact-grid">
+            <div>
+              <MapPin size={16}/>
+              <span>
+                <b>{msg('address')}</b>
+                <small>{selected.address || msg('unconfirmed')}</small>
+              </span>
+            </div>
+            <div>
+              <Phone size={16}/>
+              <span>
+                <b>{msg('phone')}</b>
+                <small>{selected.phone || msg('unconfirmed')}</small>
+              </span>
+            </div>
+            <div>
+              <Clock3 size={16}/>
+              <span>
+                <b>{msg('hours')}</b>
+                <small>{selected.hours || msg('unconfirmed')}</small>
+              </span>
+            </div>
+            <div>
+              <ExternalLink size={16}/>
+              <span>
+                <b>{msg('email')}</b>
+                <small>{selected.email || msg('unconfirmed')}</small>
+              </span>
+            </div>
+          </div>
+
+          {selected.address&&<a className="outline-link branch-route" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selected.address)}`} target="_blank" rel="noreferrer"><MapPin size={15}/>{msg('branchRoute')}</a>}
+          {selected.needsReview&&<p className="branch-review-note" role="note">{msg('branchReviewNotice')} {selected.reviewNotes.join(' ')}</p>}
+
+          <div className="branch-context-panel">
+            {selected.kind === 'main' ? (
+              <div className="branch-archive-context">
+                <span className="eyebrow">{msg('historicalNote')}</span>
+                <p>{msg('mainArchiveHistory')}</p>
+                <Link className="text-link" href="/catalog">
+                  <BookOpen size={14}/> {msg('viewCatalogRecords')} <ArrowRight size={14}/>
+                </Link>
+              </div>
+            ) : (
+              <div className="branch-archive-context">
+                <span className="eyebrow">{msg('branchUnit')}</span>
+                <p>
+                  {locale === 'kk'
+                    ? 'Дерек мекеме берген филиалдар кестесінен алынған. Өзектілігі мен жариялауға рұқсаты редактор тарапынан әлі тексерілмеген.'
+                    : locale === 'en'
+                    ? 'This entry comes from the supplied branch directory. Current accuracy and publication approval are awaiting editorial review.'
+                    : 'Запись перенесена из предоставленной таблицы филиалов. Актуальность и разрешение на публикацию ожидают редакторской проверки.'}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="branch-provenance">
+            <span>{msg('sourceLabel')}: </span>
+            {selected.sourceUrl?<a href={selected.sourceUrl} target="_blank" rel="noreferrer">{selected.sourceLabel} <ArrowUpRight size={13}/></a>:<span>{selected.sourceLabel}</span>}
+            <span className="provenance-date"> · {selected.sourceDate}</span>
+          </div>
+        </section>
+      </div>
+
+      <aside className="branch-transfer-note">
+        <b>{msg('boundaryChangeTitle')}</b>
+        <p>{msg('boundaryChangeText')}</p>
+        <a href="https://www.gov.kz/org/abay-cultura-arhiv/about/structure/10/1" target="_blank" rel="noreferrer">
+          {msg('boundaryChangeLink')} <ArrowUpRight size={14}/>
+        </a>
+      </aside>
+    </div>
+  );
+}

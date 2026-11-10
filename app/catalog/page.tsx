@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import {useEffect,useMemo,useState} from 'react';
-import {ArrowDownWideNarrow,ArrowUpRight,ChevronDown,ChevronLeft,ChevronRight,Filter,Search,SlidersHorizontal} from 'lucide-react';
+import {ArrowDownWideNarrow,ArrowUpRight,ChevronDown,ChevronLeft,ChevronRight,Filter,Search,SlidersHorizontal,Sparkles} from 'lucide-react';
 import {documents,type ArchiveDocument} from '@/data/archive';
 import {useApp} from '@/components/providers';
 
@@ -34,6 +34,7 @@ export default function Catalog(){
  const[filters,setFilters]=useState(false);
  const[uploaded,setUploaded]=useState<ArchiveDocument[]>([]);
  const[loading,setLoading]=useState(true);
+ const[loadError,setLoadError]=useState(false);
  const[page,setPage]=useState(1);
 
  useEffect(()=>{
@@ -45,7 +46,7 @@ export default function Catalog(){
   if(initialCategory)setCategory(initialCategory);
 
   fetch('/api/documents')
-   .then(r=>r.ok?r.json():{documents:[]})
+   .then(r=>{if(!r.ok)throw new Error('catalog_unavailable');return r.json();})
    .then(({documents:items})=>{
     if(Array.isArray(items)){
      setUploaded(
@@ -76,7 +77,7 @@ export default function Catalog(){
      );
     }
    })
-   .catch(()=>{})
+   .catch(()=>{setLoadError(true);})
    .finally(()=>setLoading(false));
  },[locale]);
 
@@ -178,6 +179,8 @@ export default function Catalog(){
     <span className="demo-stamp">{msg('demo').toUpperCase()}</span>
    </div>
 
+   {loadError&&<p className="catalog-load-warning" role="status">{msg('catalogueSourceError')}</p>}
+
    <form className="catalog-search" onSubmit={e=>e.preventDefault()}>
     <Search size={19}/>
     <input
@@ -223,6 +226,10 @@ export default function Catalog(){
      </select>
     </label>
    </div>
+
+   <Link className="catalog-ai-link" href={`/assistant?q=${encodeURIComponent(q||msg('askPlaceholder'))}`}>
+    <Sparkles size={17}/>{msg('aiHelpCatalog')}<ArrowUpRight size={15}/>
+   </Link>
 
    {filters&&(
     <div className="filter-panel">
@@ -292,7 +299,7 @@ export default function Catalog(){
          </div>
          <div className="status-line">
           <span className="status-dot"/>
-          {d.status}
+          {uploaded.some(record=>record.id===d.id)?msg('published'):msg('demo')}
          </div>
         </div>
        </Link>
@@ -331,13 +338,7 @@ export default function Catalog(){
     <div className="empty-state">
      <Search size={25}/>
      <h2>{msg('noResults')}</h2>
-     <p>
-      {locale==='ru'
-       ?'Попробуйте изменить запрос или сбросить фильтры.'
-       :locale==='kk'
-       ?'Сұрауды өзгертіп көріңіз немесе сүзгілерді тазартыңыз.'
-       :'Try another query or reset the filters.'}
-     </p>
+     <p>{msg('searchEmptyHint')}</p>
      <button
       type="button"
       onClick={()=>{setQ('');setCategory('');setFrom('');setTo('');}}

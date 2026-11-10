@@ -1,35 +1,32 @@
-# Architecture proposal
+# ALTAI ARCHIVE architecture
 
-This is a provisional shape for discussion, not a selected stack or deployed design. Keep boundaries modular until the official specification, existing archive systems, database, and operational constraints are known.
+## Current MVP (implemented)
 
-## Proposed logical components
+- Next.js 16 App Router and React 19. Route handlers implement the HTTP boundary; client components implement catalogue controls and the staff workspace.
+- `data/archive.ts` contains the demonstration catalogue and static exhibitions, news, atlas points, branches, and homepage collection cards. These arrays are not backed by a CMS/database. The branch entries include source/provenance fields; demonstration records stay labelled as such.
+- Uploaded document records, staff accounts, sessions, and a bounded audit log are stored in `.data/archive-store.json`. A previous-state JSON backup is kept beside it; dated backups are created during export. Uploads are local files under `.data/uploads/`. This is single-instance local persistence, not shared or horizontally scalable storage.
+- `lib/archive-auth.ts` verifies signed HttpOnly cookies against server-side session rows, checks disabled users, and enforces the existing role matrix through `requireUser` / `can`. Passwords are scrypt hashes. Login throttling is in-process memory.
+- Public document handlers return only published/public metadata and files. Staff handlers require permissions and can read private files. The publication workflow is server-enforced. Browser language, theme, and recently viewed IDs are stored in localStorage; there are no visitor accounts, saved favorites, or persistent user collections.
+- The catalogue currently merges static demo records with the public document API and filters/sorts/pages in the browser. This is suitable for the MVP-sized dataset, not a large collection or archive-grade search index.
+- No Supabase client, database, external auth provider, Storage service, CMS, or external AI service is connected.
 
-1. **Public experience:** accessible, localized catalog/search, record pages, and permitted digitized-document presentation.
-2. **Application/API boundary:** validates input, applies authorization and publication rules, and exposes stable application-level contracts.
-3. **Domain modules:** catalog and description, access policy, digitized assets, identity/research tools, editorial content, and administration. Add modules only when scope is approved.
-4. **Persistence adapters:** isolate archive-system/database access behind interfaces. Preserve original identifiers, hierarchy, source values, and provenance; avoid making a new schema the sole authoritative source without approval.
-5. **Search index:** derived and rebuildable from approved sources, with language-aware analyzers selected from actual data. Search results must respect the same access rules as record views.
-6. **Asset delivery:** use an approved storage and delivery path with access checks, format validation, and appropriate caching; do not assume public object storage.
-7. **Optional AI boundary:** separate service that can receive only explicitly approved, access-filtered content. It must not become an alternate route around catalog permissions.
+## Boundaries to keep
 
-## Design constraints
+1. **UI:** preserve current visual system; call stable application APIs instead of directly importing storage details into client code.
+2. **API/domain:** validate request shape, authorize each operation, apply workflow transitions and access decisions atomically, emit public DTOs rather than stored file paths/password data.
+3. **Persistence:** isolate JSON access behind `lib/archive-store.ts` today. When migration is approved, replace this adapter without making UI components depend on Supabase table names.
+4. **Files:** private original storage; public delivery must check the current document publication/access decision. Future object storage keys are server-owned opaque values.
+5. **Static editorial content:** migrate exhibitions/news/branches only after ownership and update requirements are established. Until then they remain explicitly static/demo/source-annotated.
 
-- Prefer a modular monolith initially unless scale, team structure, or operational requirements justify separate services.
-- Use documented API and domain contracts; avoid coupling UI components directly to a vendor database schema.
-- Keep search indexes, embeddings, OCR output, and generated summaries derived and traceable to source versions.
-- Record provenance and version information wherever content is transformed or enriched.
-- Keep public, staff, and restricted operations behind explicit authorization boundaries.
-- Make import and indexing idempotent where possible; support reconciliation and rollback before production data migration.
-- Plan observability and audit logging without placing sensitive record content or credentials in logs.
+## Future Supabase target (not connected)
 
-## Stack selection gates
+Use PostgreSQL for profiles, documents, immutable document versions, document-file metadata, append-only audit logs, and—if editorial administration is approved—exhibitions, news, and branches. Supabase Auth should own identity and session lifecycle; `profiles` carries server-controlled roles. Postgres RLS must be enabled for every exposed table. Anonymous reads are limited to published/public records. Staff access must use the current role matrix and workflow checks; `authenticated` alone is not sufficient. Keep originals in private Supabase Storage and authorize reads using document state. Never put a service-role key in a client bundle.
 
-Do not select a framework, database, cloud, identity provider, search engine, OCR tool, or AI vendor until these are known: existing archive platforms and export formats; deployment and data residency rules; staff skills and support model; traffic and collection scale; language/search quality needs; security classification and access policy; procurement constraints; and integration permissions.
+Collections in the homepage are currently presentation data, not user-owned entities. A future `collections` / `collection_documents` model is optional editorial curation. `favorites` are not implemented; add only after research-account scope and privacy/retention rules are approved. See [DATA_MODEL.md](DATA_MODEL.md) for candidate columns, relationships, indexes, RLS boundaries, and migration reconciliation.
 
-## Deployment environments (proposal)
+## Operations and constraints
 
-When implementation is authorized, define local, test/staging, and production environments with isolated credentials and data. Use synthetic or explicitly approved sample records outside production. Establish backup, restore, monitoring, patching, incident response, and content rollback responsibilities before launch.
-
-## Decisions intentionally deferred
-
-No runtime, framework, database, search service, CMS, cloud, identity system, AI provider, or deployment target has been selected or verified in this workspace.
+- Local JSON writes are serialized and use an atomic primary-file replacement. The previous primary is staged as backup before replacement. Recovery must preserve a corrupt primary and raise an explicit error when no valid backup exists; never silently reset the store.
+- Local disk requires a persistent volume and one application writer. Serverless/ephemeral deployments are not supported by this implementation.
+- Before production, choose hosting/data region, define secrets handling and key rotation, external rate limiting, backup retention, restore drills, monitoring, upload limits, access-rights review, and incident ownership. Do not treat successful compilation as production approval.
+- Keep Next.js route and caching behavior aligned with the installed Next.js documentation. Public caching must not serve private document files or stale access decisions.

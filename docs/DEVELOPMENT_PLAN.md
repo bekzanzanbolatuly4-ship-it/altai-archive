@@ -1,45 +1,34 @@
-# Development plan
+# ALTAI ARCHIVE development and migration plan
 
-Sequence and exit criteria are proposals. Reorder them with archive stakeholders after the official requirements and data access conditions are known.
+## Current MVP status
 
-## Phase 0 — Discovery and authorization
+Implemented: responsive public pages; RU/KZ/EN interface locale state; client-side catalogue search, filters, year range, relevance/date sorting, and pagination; public document detail/view/download; server-side upload validation; staff login/logout and role checks; document create/edit/delete; sequential publication workflow; JSON persistence/backup; public metadata/file filtering; sitemap; audit events for login, document create/update/delete, staff create/update, and export. Static exhibitions/news/branches/atlas and the assistant content are local demonstration/source-annotated data. This is a local MVP, not a production archival platform.
 
-**Work:** Confirm product owner, decision-makers, intended audiences, official requirements, scope, operational constraints, rights/access policy, and what data may be inspected.
+Not implemented: Supabase, shared database, private object storage, immutable document-version history, user favorites or accounts, dynamic CMS for exhibitions/news/branches, production-grade distributed rate limiting, large-scale search, OCR ingestion, monitored backup jobs, or demonstrated restore operations on production-sized data.
 
-**Exit:** Approved requirements baseline; named owners; documented data handling and access permissions; prioritized initial journey.
+## Before using real archive records
 
-## Phase 1 — Data and system assessment
+1. Obtain archive-owner approval, a data dictionary, source-ID and hierarchy definitions, rights/access decisions, language conventions, and an approved sample export.
+2. Confirm single-instance persistence and storage requirements, hosting/data region, operational owner, availability target, retention, incident response, backup cadence, and restore objectives.
+3. Review staff role assignments and dual-control expectations for review/approval/publication. Confirm whether current roles are appropriate for real records.
+4. Verify metadata and access policies with archive staff. Test public and restricted examples, including actual file formats, before importing any holdings.
 
-**Work:** Review permitted schema/sample exports, hierarchy and identifiers, language coverage, data quality, digitized assets, existing systems, integrations, and deployment/security constraints.
+## Supabase preparation (no service connected)
 
-**Exit:** Data mapping and gap report reviewed by archive staff; integration and hosting options constrained; no unapproved data copied.
+1. Approve the target schema in `DATA_MODEL.md` and record decisions about Auth, row ownership, publication, versions, audit retention, and Storage visibility.
+2. Create a dedicated test project/environment only after approval; keep credentials separate and server-only. Write versioned migrations for tables, constraints, indexes, RLS policies, and Storage policies.
+3. Test each role and anonymous access against both direct database/API queries and application route handlers. Test disabled accounts, session revocation, every allowed workflow edge, forbidden skips, and storage access after unpublishing.
+4. Build an idempotent dry-run importer with a durable source-to-target ID map. Snapshot JSON and files read-only; validate input, count rows by status/access, calculate SHA-256 for every file, and emit a reconciliation report.
+5. Import Auth identities through an approved provisioning/reset flow; do not migrate session cookies. Import metadata preserving source strings, original identifiers, provenance, timestamps, and public IDs where safe. Upload files to private Storage and verify counts, lengths, and checksums before linking.
+6. Reconcile all entities, relationships, files, language coverage, public responses, and sample staff operations. Require archive-owner sign-off.
+7. Cut over after a write freeze and final delta import. Preserve the frozen JSON/files and tested database backup for an agreed rollback window. Roll back by routing back to the frozen instance and separately reconciling any writes made after cutover.
 
-## Phase 2 — Architecture and prototype definition
+## Production release gates
 
-**Work:** Choose a small user journey; define API/domain boundaries, access model, localization and accessibility criteria, stack and environments; create interface prototypes using synthetic or approved sample content.
-
-**Exit:** Architecture decision record, reviewable prototype, testable acceptance criteria, threat/privacy review, and implementation estimate approved.
-
-## Phase 3 — Discovery MVP (candidate)
-
-**Work:** Implement catalog browsing/search and record detail on a limited approved dataset, with localization, stable citations, access checks, and operational logging.
-
-**Exit:** Stakeholder acceptance; search and access tests pass; accessibility and security review completed; backup/restore and deployment ownership established.
-
-## Phase 4 — Digitized material workflow (candidate)
-
-**Work:** Add authorized asset delivery, viewer, OCR presentation, rights display, and staff correction/publication flow only if supported by policy and source systems.
-
-**Exit:** Rights/access behavior verified for representative cases; asset integrity and rollback procedures demonstrated; OCR clearly distinguished from source.
-
-## Phase 5 — Additional capabilities (separate approvals)
-
-Evaluate atlas/timeline, exhibitions, user accounts, saved collections, community contributions, genealogy tools, administration, semantic search, and AI assistant as independent initiatives with their own discovery, policy, and acceptance criteria.
-
-## Ongoing work
-
-Localization review, accessibility testing, data quality monitoring, security patching, backups, incident response, analytics/privacy governance, staff training, and user feedback.
-
-## Current implementation status
-
-The hackathon implementation brief authorizes a local demonstration MVP. A Next.js application is now implemented with responsive routes, synthetic demonstration content, browser-persisted theme/language/history/admin state, schematic maps, and a local catalogue-search assistant. This does not establish official archive policy, production authentication, rights/access decisions, real archive integrations, or data import. The referenced official DOCX specification was not present in the repository at implementation time. Validate the outstanding Phase 0 and Phase 1 requirements before using real holdings or deploying as an official archive service.
+- Archive owner approval of content, rights/access, languages, staff roles, and public presentation.
+- Hosting and data-residency approval; persistent and encrypted storage; secrets isolation and rotation.
+- Successful backup/restore rehearsal, file checksum reconciliation, monitoring and alert ownership.
+- Security review of API authorization, sessions, uploads, Storage/RLS, rate limiting, and error handling.
+- Accessibility and cross-browser/device review; localized form and error review in RU/KZ/EN.
+- Operational runbook, incident response, update cadence, content correction/takedown, and named support owners.
+- Production build and automated checks passing against the release commit. Do not infer legal or standards compliance from this list.

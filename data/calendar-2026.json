@@ -1,0 +1,942 @@
+[
+  {
+    "sourceDate": "8 января",
+    "year": 2026,
+    "month": 1,
+    "day": 8,
+    "language": "ru",
+    "text": "130 лет (1896-1971) со дня рождения Ефима Николаевича Пермитина, писателя, уроженца Восточного Казахстана",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": true,
+    "reviewNotes": [
+      "Различаются годы жизни: RU 1896–1971, KK 1896–1917."
+    ]
+  },
+  {
+    "sourceDate": "11 января",
+    "year": 2026,
+    "month": 1,
+    "day": 11,
+    "language": "ru",
+    "text": "85 лет (1941) со дня образования газеты «Путь Ильича» Таврического (ныне Уланского) района Восточно-Казахстанской области",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "17 января",
+    "year": 2026,
+    "month": 1,
+    "day": 17,
+    "language": "ru",
+    "text": "85 лет (1941) со дня преобразования п.Зыряновск в город",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "23 января",
+    "year": 2026,
+    "month": 1,
+    "day": 23,
+    "language": "ru",
+    "text": "120 лет (1906-1970) со дня рождения Ивана Васильевича Бердус, заслуженного энергетика Казахской ССР, директора Лениногорского каскада гидроэлектростанций",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "январь",
+    "year": 2026,
+    "month": 1,
+    "day": null,
+    "language": "ru",
+    "text": "60 лет (1966) со дня образования Маркакольской районной газеты «Маяк»",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "6 февраля",
+    "year": 2026,
+    "month": 2,
+    "day": 6,
+    "language": "ru",
+    "text": "85 лет (1941) со дня переименования г.Риддер в Лениногорск",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "февраль",
+    "year": 2026,
+    "month": 2,
+    "day": null,
+    "language": "ru",
+    "text": "95 лет (1931) со дня образования Зыряновской районной газеты «За коллективизацию»",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "20 марта",
+    "year": 2026,
+    "month": 3,
+    "day": 20,
+    "language": "ru",
+    "text": "130 (1896) лет со дня образования Восточно-Казахстанской областной библиотеки им. А.С.Пушкина",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "12 апреля",
+    "year": 2026,
+    "month": 4,
+    "day": 12,
+    "language": "ru",
+    "text": "125 (1901-1989) лет со дня рождения Семена Николаевича Герасимова, краеведа, ученого, писателя",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "май",
+    "year": 2026,
+    "month": 5,
+    "day": null,
+    "language": "ru",
+    "text": "240 лет (1786) со дня основания г.Риддер",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "14 июня",
+    "year": 2026,
+    "month": 6,
+    "day": 14,
+    "language": "ru",
+    "text": "135 лет (1891-1977) со дня рождения Александра Мелентьевича Волкова, ученого, детского писателя",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "18 маусым",
+    "year": 2026,
+    "month": 6,
+    "day": 18,
+    "language": "ru",
+    "text": "95 лет (1931) со дня образования газеты «Риддерский рабочий» (в настоящее время газета ТОО «Лениногорская правда»)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "19 июня",
+    "year": 2026,
+    "month": 6,
+    "day": 19,
+    "language": "ru",
+    "text": "70 лет со дня сооружения плотины Бухтарминской ГЭС",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "22 июня",
+    "year": 2026,
+    "month": 6,
+    "day": 22,
+    "language": "ru",
+    "text": "95 лет (1931-2009) со дня рождения Николая Владимировича Алексеенко, Почетного гражданина г.Усть-Каменогорска, ученого, краеведа",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "25 июня",
+    "year": 2026,
+    "month": 6,
+    "day": 25,
+    "language": "ru",
+    "text": "105 лет (1921) со дня первых выборов в местные Советы рабочих, крестьянских и красноармейских депутатов в Зайсанском уезде",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "1 июля",
+    "year": 2026,
+    "month": null,
+    "day": 1,
+    "language": "ru",
+    "text": "65 лет (1961) со дня образования историко- краеведческого музея в г. Риддере",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "16 июля",
+    "year": 2026,
+    "month": null,
+    "day": 16,
+    "language": "ru",
+    "text": "105 лет (1921) со дня открытия I Бухтарминского съезда Советов в г.Зыряновске",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "27 июля",
+    "year": 2026,
+    "month": null,
+    "day": 27,
+    "language": "ru",
+    "text": "105 лет (1921) со дня открытия II конференции профессиональных Союзов в Усть-Каменогорском уезде",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "июль",
+    "year": 2026,
+    "month": 7,
+    "day": null,
+    "language": "ru",
+    "text": "60 лет (1966) со дня образования Уланской районной газеты «Өркен – Расцвет»",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "29 августа",
+    "year": 2026,
+    "month": 8,
+    "day": 29,
+    "language": "ru",
+    "text": "35 лет (1991) со дня закрытия Семипалатинского ядерного полигона",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "30 августа",
+    "year": 2026,
+    "month": 8,
+    "day": 30,
+    "language": "ru",
+    "text": "150 лет (1876-1919) со дня рождения краеведа-исследователя Рудного Алтая Александра Никитича Седельникова",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "август",
+    "year": 2026,
+    "month": 8,
+    "day": null,
+    "language": "ru",
+    "text": "125 лет (1901) со дня открытия в г.Усть-Каменогорске Мариинского женского училища",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "16 сентября",
+    "year": 2026,
+    "month": 9,
+    "day": 16,
+    "language": "ru",
+    "text": "135 лет (1891-1968) со дня рождения Никандра Александровича Петровского, краеведа, составителя словаря «Русских личных имен»",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "19 сентября",
+    "year": 2026,
+    "month": 9,
+    "day": 19,
+    "language": "ru",
+    "text": "115 лет (1911) со дня рождения Семена Михайловича Анисимова, поэта",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "26 сентября",
+    "year": 2026,
+    "month": 9,
+    "day": 26,
+    "language": "ru",
+    "text": "115 лет (1911-1985) со дня рождения Ивана Георгиевича Макеева, журналиста, краеведа",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "26 сентября",
+    "year": 2026,
+    "month": 9,
+    "day": 26,
+    "language": "ru",
+    "text": "185 лет (1841-1913) со дня рождения Евгения Петровича Михаэлиса, политического ссыльного, ученого, краеведа, друга Абая",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "сентябрь",
+    "year": 2026,
+    "month": 9,
+    "day": null,
+    "language": "ru",
+    "text": "145 лет (1881) со дня открытия в г.Зайсане приходского училища",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "3 октября",
+    "year": 2026,
+    "month": 10,
+    "day": 3,
+    "language": "ru",
+    "text": "70 лет (1946) со дня сдачи в Усть-Каменогорске в эксплуатацию первой очереди полуавтоматической телефонной станции на 600 абонентов",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": true,
+    "reviewNotes": [
+      "Различаются юбилейные числа телефонной станции 1946 года: RU 70 лет, KK 80 лет."
+    ]
+  },
+  {
+    "sourceDate": "23 октября",
+    "year": 2026,
+    "month": 10,
+    "day": 23,
+    "language": "ru",
+    "text": "65 лет (1961) со дня преобразования п.Шемонаиха в город",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "ноябрь",
+    "year": 2026,
+    "month": 11,
+    "day": null,
+    "language": "ru",
+    "text": "95 лет (1931) со дня образования Риддерской газеты «Жумышы»",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "9 декабря",
+    "year": 2026,
+    "month": 12,
+    "day": 9,
+    "language": "ru",
+    "text": "165 лет (1861-1924) со дня рождения исследователя Алтая Василия Васильевича Сапожникова",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "16 декабря",
+    "year": 2026,
+    "month": 12,
+    "day": 16,
+    "language": "ru",
+    "text": "35 лет (1991) со дня обретения Казахстаном Независимости",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "1881 г.",
+    "year": 2026,
+    "month": null,
+    "day": null,
+    "language": "ru",
+    "text": "145 лет со дня преобразования Усть-Каменогорского мужского приходского училища в трехклассное мужское училище",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "1886 г.",
+    "year": 2026,
+    "month": null,
+    "day": null,
+    "language": "ru",
+    "text": "130 лет со дня открытия высшей начальной школы в г.Усть-Каменогорске",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": true,
+    "reviewNotes": [
+      "Различаются юбилейные числа для школы, открытой в 1886 году: RU 130 лет, KK 140 лет."
+    ]
+  },
+  {
+    "sourceDate": "1911 г.",
+    "year": 2026,
+    "month": null,
+    "day": null,
+    "language": "ru",
+    "text": "115 лет со дня проведения научной экспедиции В.А.Обручева в Восточный Казахстан",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "1921 г.",
+    "year": 2026,
+    "month": null,
+    "day": null,
+    "language": "ru",
+    "text": "105 лет со дня открытия педагогического техникума им.В.В Воровского в г. Усть-Каменогорске",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "1761 г.",
+    "year": 2026,
+    "month": null,
+    "day": null,
+    "language": "ru",
+    "text": "265 лет со дня основания Бухтарминской крепости",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "1761 г.",
+    "year": 2026,
+    "month": null,
+    "day": null,
+    "language": "ru",
+    "text": "265 лет со дня основания п.Глубокое",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "1761 г.",
+    "year": 2026,
+    "month": null,
+    "day": null,
+    "language": "ru",
+    "text": "265 лет со дня открытия Николаевского рудника",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "1771 г.",
+    "year": 2026,
+    "month": null,
+    "day": null,
+    "language": "ru",
+    "text": "245 лет со времени исследования Рудного Алтая ученым П.С.Палласом",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": true,
+    "reviewNotes": [
+      "Различаются юбилейные числа для исследования Рудного Алтая: RU 245 лет, KK 255 лет."
+    ]
+  },
+  {
+    "sourceDate": "1791 г.",
+    "year": 2026,
+    "month": null,
+    "day": null,
+    "language": "ru",
+    "text": "235 лет со дня основания г.Зыряновск",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "1936 г.",
+    "year": 2026,
+    "month": null,
+    "day": null,
+    "language": "ru",
+    "text": "90 лет с начала работы первой государственной радиовещательной установки в Усть- Каменогорске",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "8 қаңтар",
+    "year": 2026,
+    "month": 1,
+    "day": 8,
+    "language": "kk",
+    "text": "Шығыс Қазақстанның тумасы, жазушы Ефим Николаевич Пермитиннің дүниеге келгеніне 130 жыл (1896-1917)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": true,
+    "reviewNotes": [
+      "Различаются годы жизни: RU 1896–1971, KK 1896–1917."
+    ]
+  },
+  {
+    "sourceDate": "11 қаңтар",
+    "year": 2026,
+    "month": 1,
+    "day": 11,
+    "language": "kk",
+    "text": "Шығыс Қазақстан облысы Таврия аудандық (қазір Ұлан) «Путь Ильича» атты газетінің құрылғанына 85 жыл (1941)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "17 қаңтар",
+    "year": 2026,
+    "month": 1,
+    "day": 17,
+    "language": "kk",
+    "text": "Зыряновск кенті қалаға өзгеруіне 85 жыл (1941)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "23 қаңтар",
+    "year": 2026,
+    "month": 1,
+    "day": 23,
+    "language": "kk",
+    "text": "Қазақ СРО еңбегі сіңген энергетигі, Лениногорск суэлектрстанция каскадының директоры Ивана Васильевич Бердустың дүниеге келгеніне 120 жыл (1906-1970)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "қаңтар",
+    "year": 2026,
+    "month": 1,
+    "day": null,
+    "language": "kk",
+    "text": "Марқакөл аудандық «Маяк» газетінің шыққан күніне 60 жыл(1966)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "6ақпан",
+    "year": 2026,
+    "month": 2,
+    "day": 6,
+    "language": "kk",
+    "text": "Риддер қ. Лениногорск қ. қайта аталуына 85 жыл (1941)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "ақпан",
+    "year": 2026,
+    "month": 2,
+    "day": null,
+    "language": "kk",
+    "text": "Зырян аудандық «За коллективизацию» газетінің құрылғанына 95 жыл(1931)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "20 наурыз",
+    "year": 2026,
+    "month": 3,
+    "day": 20,
+    "language": "kk",
+    "text": "А.С.Пушкин атындағы Шығыс Қазақстан облыстық кітапханасының негізі қаланғанына 130 жыл(1896)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "12 сәуір",
+    "year": 2026,
+    "month": 4,
+    "day": 12,
+    "language": "kk",
+    "text": "Өлкетанушы, ғалым, жазушы Семен Николаевич Герасимовтың дүниеге келгеніне 125 жыл(1901-1989)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "мамыр",
+    "year": 2026,
+    "month": 5,
+    "day": null,
+    "language": "kk",
+    "text": "Риддер қ. құрылуына 240 жыл (1786)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "14 маусым",
+    "year": 2026,
+    "month": 6,
+    "day": 14,
+    "language": "kk",
+    "text": "Ғалым, балалар жазушысы Александр Мелентьевич Волковтың дүниеге келгеніне 135 жыл(1891-1977)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "18 маусым",
+    "year": 2026,
+    "month": 6,
+    "day": 18,
+    "language": "kk",
+    "text": "«Риддерский рабочий» газетінің құрылғанына 95 жыл (1931) (қазіргі уақытта «Лениногркая правда» ЖШС газеті)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "19 маусым",
+    "year": 2026,
+    "month": 6,
+    "day": 19,
+    "language": "kk",
+    "text": "Бұқтырма СЭС бөгетінің салынуына 70 жыл",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "22 маусым",
+    "year": 2026,
+    "month": 6,
+    "day": 22,
+    "language": "kk",
+    "text": "Ғалым, өлкетанушы, Өскемен қ. Құрметті азаматы Николай Владимирович Алексеенконың дүниеге келгеніне 95 жыл(1931-2009)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "25 маусым",
+    "year": 2026,
+    "month": 6,
+    "day": 25,
+    "language": "kk",
+    "text": "Зайсан уезіндегі жергілікті Кеңеске жұмысшылардың, шаруа және қызыл әскер депутаттардың бірінші сайлауына 105 жыл(1921)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "1 шілде",
+    "year": 2026,
+    "month": 7,
+    "day": 1,
+    "language": "kk",
+    "text": "Риддер қ. тарихи-өлкетану мұражайының құрылғанына 65 жыл(1961)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "16 шілде",
+    "year": 2026,
+    "month": 7,
+    "day": 16,
+    "language": "kk",
+    "text": "Зырян қаласында І Бұқтырма Кеңес сьезінің ашылуына 105 жыл(1921)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "27 шілде",
+    "year": 2026,
+    "month": 7,
+    "day": 27,
+    "language": "kk",
+    "text": "Өскемен уезінде Кәсіби Одақтардың II конференциясының ашылуына 105 жыл(1921)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "шілде",
+    "year": 2026,
+    "month": 7,
+    "day": null,
+    "language": "kk",
+    "text": "Ұлан аудандық «Өркен- Расцвет» газетінің құрылғанына 60 жыл(1966)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "29 тамыз",
+    "year": 2026,
+    "month": 8,
+    "day": 29,
+    "language": "kk",
+    "text": "Семей ядролық полигонының жабылуына 35 жыл(1991)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "30 тамыз",
+    "year": 2026,
+    "month": 8,
+    "day": 30,
+    "language": "kk",
+    "text": "Рудный Алтайдың өлкетанушы-зерттеушісі Алескандр Никитич Седельниковтың дүниеге келгеніне 150 жыл (1876-1919)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "тамыз",
+    "year": 2026,
+    "month": 8,
+    "day": null,
+    "language": "kk",
+    "text": "Өскемен қаласында Мария қыздар училищесінің ашылуына 125 жыл(1901)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "16 қыркүйек",
+    "year": 2026,
+    "month": 9,
+    "day": 16,
+    "language": "kk",
+    "text": "Өлкетанушы, «Русские личные имена» сөздігін құрастырушы Никандр Александрович Петровскидің дүниеге келгеніне 135 жыл(1891-1968)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "19 қыркүйек",
+    "year": 2026,
+    "month": 9,
+    "day": 19,
+    "language": "kk",
+    "text": "Ақын Семен Михайлович Анисимовтың дүниеге келгеніне 115 жыл (1911)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "26 қыркүйек",
+    "year": 2026,
+    "month": 9,
+    "day": 26,
+    "language": "kk",
+    "text": "Журналист, өлкетанушы Иван Георгиевич Макеевтің дүниеге келгеніне 115 жыл(1911-1985)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "26 қыркүйек",
+    "year": 2026,
+    "month": 9,
+    "day": 26,
+    "language": "kk",
+    "text": "Абайдың досы, ғалым, өлкетанушы, саяси жер аударылушы Евгений Петрович Михаэлистің дүниеге келгеніне 185 жыл(1841-1913)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "қыркүйек",
+    "year": 2026,
+    "month": 9,
+    "day": null,
+    "language": "kk",
+    "text": "Зайсан қаласында шіркеу училищесінің ашылғанына 145 жыл(1881)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "3 қазан",
+    "year": 2026,
+    "month": 10,
+    "day": 3,
+    "language": "kk",
+    "text": "Өскеменде 600 абонентке бірінші кезектегі жартылай автоматты телефон станциясын іске қосылуына 80 жыл (1946)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": true,
+    "reviewNotes": [
+      "Различаются юбилейные числа телефонной станции 1946 года: RU 70 лет, KK 80 лет."
+    ]
+  },
+  {
+    "sourceDate": "23 қазан",
+    "year": 2026,
+    "month": 10,
+    "day": 23,
+    "language": "kk",
+    "text": "Шемонаиха кенті қалаға өзгеруіне 65 жыл (1961)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "қараша",
+    "year": 2026,
+    "month": 11,
+    "day": null,
+    "language": "kk",
+    "text": "Риддер «Жұмысшы» газетінің құрылғанына 95 жыл(1931)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "9 желтоқсан",
+    "year": 2026,
+    "month": 12,
+    "day": 9,
+    "language": "kk",
+    "text": "Алтай зерттеушісі Василий Васильевич Сапожниковтың дүниеге келгеніне 165 жыл (1861-1924)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "16-желтоқсан",
+    "year": 2026,
+    "month": 12,
+    "day": 16,
+    "language": "kk",
+    "text": "Қазақстан Республикасының Тәуелсіздігіне 35 жыл(1991)",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "1881ж.",
+    "year": 2026,
+    "month": null,
+    "day": null,
+    "language": "kk",
+    "text": "Өскемен қалалық ерлердің шіркеу училищесінің үш топтық ерлер училищесіне өзгертілгеніне 145 жыл",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "1886 ж.",
+    "year": 2026,
+    "month": null,
+    "day": null,
+    "language": "kk",
+    "text": "Өскемен қаласында жоғары бастауыш мектебінің ашылуына 140 жыл",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": true,
+    "reviewNotes": [
+      "Различаются юбилейные числа для школы, открытой в 1886 году: RU 130 лет, KK 140 лет."
+    ]
+  },
+  {
+    "sourceDate": "1911 ж.",
+    "year": 2026,
+    "month": null,
+    "day": null,
+    "language": "kk",
+    "text": "Шығыс Қазақстанда В.А.Обручевтың ғылыми экспедициясының жүргізілуіне 115 жыл",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "1921 ж.",
+    "year": 2026,
+    "month": null,
+    "day": null,
+    "language": "kk",
+    "text": "Өскемен қаласында В.В.Воровский атындағы педагогикалық техникумының ашылуына 105 жыл",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "1761 ж.",
+    "year": 2026,
+    "month": null,
+    "day": null,
+    "language": "kk",
+    "text": "Бұқтырма бекетінің қалауына 265 жыл",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "1761 ж.",
+    "year": 2026,
+    "month": null,
+    "day": null,
+    "language": "kk",
+    "text": "Глубокий к. қалауына 265 жыл",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "1761 ж.",
+    "year": 2026,
+    "month": null,
+    "day": null,
+    "language": "kk",
+    "text": "Николаевский кен орнының ашылуына 265 жыл",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "1771 ж.",
+    "year": 2026,
+    "month": null,
+    "day": null,
+    "language": "kk",
+    "text": "Рудный Алтайды ғалым П.С. Палласпен зерттеуіне 255 жыл",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": true,
+    "reviewNotes": [
+      "Различаются юбилейные числа для исследования Рудного Алтая: RU 245 лет, KK 255 лет."
+    ]
+  },
+  {
+    "sourceDate": "1791 ж.",
+    "year": 2026,
+    "month": null,
+    "day": null,
+    "language": "kk",
+    "text": "Зырян қ. құрылуына 235 жыл",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  },
+  {
+    "sourceDate": "1936 ж.",
+    "year": 2026,
+    "month": null,
+    "day": null,
+    "language": "kk",
+    "text": "Өскеменде бірінші мемлекеттік радиомен хабар беретін станция жұмысының басталуына 90 жыл",
+    "sourceDocument": "календарь 2026 год каз рус.docx",
+    "needsReview": false,
+    "reviewNotes": []
+  }
+]

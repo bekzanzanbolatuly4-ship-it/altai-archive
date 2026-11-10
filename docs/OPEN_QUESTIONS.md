@@ -1,50 +1,40 @@
-# Open questions
+# ALTAI ARCHIVE open decisions
 
-These questions block responsible scope and implementation choices. None is answered by the current project brief unless explicitly marked confirmed.
+These decisions remain unresolved in the repository. Do not treat the future PostgreSQL model as approved or use this document as authorization to process real holdings.
 
-## Ownership and policy
+## Archive ownership and content policy
 
-1. Who is the product owner and who can approve requirements, publication, and access policy?
-2. What is the official project name and relationship to the archive's existing website and systems?
-3. Which collections may be described, digitized, displayed, or indexed, and under what rights and restrictions?
-4. What rules govern personal data, sensitive material, takedown, correction, preservation, and reuse?
+1. Who owns the product and who approves requirements, metadata corrections, publication, rights/access decisions, takedowns, and role assignment?
+2. What authoritative source systems, identifiers, hierarchy levels, metadata standards, retention rules, and data dictionary apply?
+3. Which collections and files may be described, digitized, displayed, indexed, exported, or retained? Who verifies provenance and access status?
+4. What rules cover personal/sensitive records, living persons, legal restrictions, correction history, deletion, and preservation?
+5. Which current source-annotated branch/contact facts are still valid, and who is authorized to verify updates?
 
-## Users and scope
+## Identity and workflow
 
-5. Which audiences and user journeys are the launch priority?
-6. Which feature proposals are in scope for an initial release, and which are explicitly deferred?
-7. What should visitors be able to do without accounts? Are accounts or community submissions actually required?
-8. What are the expected traffic, availability, response-time, and support targets?
+6. Should Supabase Auth be the identity provider, and which invitation, password reset, MFA, session expiry, and account recovery flows are required?
+7. Is the existing role matrix approved for real operations? Should authoring, review, approval, and publication be separated among different people?
+8. What are the audit retention, export, review, and tamper-resistance requirements?
+9. Are visitor accounts, favorites, or personal collections in scope? They are not implemented today.
 
-## Data and integrations
+## Hosting and migration
 
-9. What archive platforms, databases, exports, APIs, identifiers, hierarchy, and metadata standards exist?
-10. Can the team receive a documented, rights-cleared sample dataset and data dictionary? What is the approved transfer method?
-11. What are the digitized asset formats, scale, OCR/transcription availability, and storage/delivery constraints?
-12. Which source is authoritative for descriptions, access status, and corrections? How are changes synchronized?
+10. Which hosting region, data-residency constraints, network boundaries, availability, traffic, and support targets apply?
+11. What PostgreSQL and Storage backup/restore objectives, retention periods, encryption/key rotation, monitoring, and incident response ownership are required?
+12. What source export and file transfer are approved? Who validates row counts, source-to-target ID mapping, file hashes, and migration sign-off?
+13. What rollback window is required, and how will post-cutover writes be reconciled if the frozen JSON system is restored?
+14. What search volume, language analyzers, transliteration, and accessibility acceptance criteria are required?
 
-## Language, accessibility, and content
+## Editorial and localization
 
-13. Are Kazakh and Russian both required at launch? Which scripts, terminology, transliteration, and translation ownership rules apply?
-14. Is English or another language required?
-15. Which accessibility standard and conformance level should guide design and acceptance?
-16. Who reviews historical context, place names, summaries, translations, and exhibition content?
+15. Will exhibitions, news, branches, and homepage collections be managed dynamically, or remain reviewed static content?
+16. Which RU/KZ/EN translations are required at launch, who owns each translation, and which language is authoritative for archival source text?
+17. Are OCR, translation, AI assistance, or analytics approved? If so, which data classes, providers, retention, human review, and user disclosure rules apply?
 
-## Security and operations
-
-17. What data classification, hosting region, residency, identity, audit, backup, retention, and incident response requirements apply?
-18. Who operates the system, handles support, approves staff roles, and maintains content?
-19. What procurement, licensing, budget, infrastructure, and technology constraints exist?
-
-## AI and analytics
-
-20. Is any AI-assisted processing approved? If so, which data classes, tasks, providers, regions, retention settings, and human review rules are allowed?
-21. What evidence and acceptance thresholds would justify semantic search, OCR, translation, or a question-answering feature?
-22. Are analytics permitted, and what consent, minimization, retention, and reporting limits apply?
-
-## Confirmed decisions
+## Current confirmed project facts
 
 - Product name: ALTAI ARCHIVE.
 - Tagline: “History preserved for the future.”
-- Design direction and palette: as recorded in the project brief and README.
-- Initial assignment is documentation and planning; the brief explicitly says not to immediately build the whole application.
+- The current repository includes a functional local MVP and demonstration/source-annotated data.
+- No Supabase project or external persistence service is connected.
+- Legal, regulatory, and standards compliance has not been established by this repository review.

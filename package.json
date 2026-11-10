@@ -5,9 +5,11 @@
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs",
     "start": "next start --hostname 127.0.0.1",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:e2e:ai": "node tests/e2e/assistant.mjs"
   },
   "dependencies": {
     "lucide-react": "1.69.0",

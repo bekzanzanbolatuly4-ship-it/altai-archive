@@ -8,3 +8,17 @@ out/
 .env.*
 !.env.example
 .data/
+.agents/mcp_config.json
+.cursor/mcp.json
+
+/hackathon-materials/source_documents/
+
+# Local agent configuration and test artifacts
+/output/
+/.agents/
+/.geminiignore
+/GEMINI.md
+
+# Local test artifacts
+/output/
+/.agents/
