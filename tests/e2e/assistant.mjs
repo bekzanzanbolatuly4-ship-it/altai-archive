@@ -103,6 +103,28 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
   await page.evaluate(locale=>localStorage.setItem('altai-locale',locale),locale);
   await page.reload();
   await page.getByRole('heading',{name:aboutTitle}).waitFor();
+  const feedbackCopy={ru:{heading:'Отзывы и предложения',type:'Тип сообщения',message:'Сообщение',submit:'Отправить сообщение',success:'Спасибо! Ваше сообщение получено.',error:'Не удалось отправить сообщение. Попробуйте позже.'},kk:{heading:'Пікірлер мен ұсыныстар',type:'Хабарлама түрі',message:'Хабарлама',submit:'Хабарламаны жіберу',success:'Рақмет! Хабарламаңыз қабылданды.',error:'Хабарламаны жіберу мүмкін болмады. Кейінірек қайталап көріңіз.'},en:{heading:'Feedback and suggestions',type:'Message type',message:'Message',submit:'Send message',success:'Thank you! Your message has been received.',error:'Could not send the message. Please try again later.'}}[locale];
+  await page.getByRole('heading',{name:feedbackCopy.heading}).scrollIntoViewIfNeeded();
+  const feedbackForm=page.locator('.feedback-form');
+  await feedbackForm.getByLabel(new RegExp(feedbackCopy.type)).selectOption('suggestion');
+  await feedbackForm.locator('textarea[name="message"]').fill('A helpful suggestion about the site');
+  await page.route('**/api/feedback',route=>route.fulfill({status:201,contentType:'application/json',body:JSON.stringify({received:true})}));
+  await feedbackForm.getByRole('button',{name:feedbackCopy.submit}).click();
+  await page.getByRole('status').filter({hasText:feedbackCopy.success}).waitFor();
+  assert.equal(await feedbackForm.locator('textarea[name="message"]').inputValue(),'','Successful submissions clear the form only after server confirmation');
+  await page.unroute('**/api/feedback');
+  await feedbackForm.locator('input[name="name"]').fill('Example');
+  assert.equal(await feedbackForm.locator('input[name="contactConsent"]').count(),1,'Contact details must reveal the consent checkbox');
+  await feedbackForm.locator('input[name="contactConsent"]').check();
+  await feedbackForm.locator('input[name="name"]').fill('');
+  await feedbackForm.getByLabel(new RegExp(feedbackCopy.type)).selectOption('site_feedback');
+  await feedbackForm.locator('textarea[name="message"]').fill('The search filter could be clearer');
+  await page.route('**/api/feedback',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'feedback_storage_unavailable'})}));
+  await feedbackForm.getByRole('button',{name:feedbackCopy.submit}).click();
+  await page.getByRole('alert').filter({hasText:feedbackCopy.error}).waitFor();
+  assert.equal(await feedbackForm.locator('textarea[name="message"]').inputValue(),'The search filter could be clearer','Failed submissions must preserve the draft');
+  await page.unroute('**/api/feedback');
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Feedback form must fit a mobile viewport');
   await page.getByText('Жапаров Аскар Кенжебаевич',{exact:true}).waitFor();
   await page.goto('http://127.0.0.1:3107/official-documents');
   await page.getByRole('heading',{name:locale==='ru'?'Государственные услуги и документы':locale==='kk'?'Мемлекеттік қызметтер мен құжаттар':'Public services and documents'}).waitFor();
@@ -117,6 +139,8 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
   await page.setViewportSize({width:1440,height:1000});
   await page.screenshot({path:path.join(root,`output/playwright/official-documents-${locale}-desktop.png`),fullPage:true});
  }
+ const publicFeedbackRead=await page.request.get('http://127.0.0.1:3107/api/feedback');
+ assert.equal(publicFeedbackRead.status(),405,'Feedback messages must not have a public read endpoint');
  for(const locale of ['ru','kk','en']){
   for(const mobile of [false,true]){
    await page.setViewportSize(mobile?{width:390,height:844}:{width:1440,height:1000});
@@ -224,7 +248,7 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
  assert.equal(loginStatus,401,'Invalid login should not require creating the initial owner in read-only mode');
  const isolatedStore=JSON.parse(await (await import('node:fs/promises')).readFile(path.join(isolated,'.data/archive-store.json'),'utf8'));
  assert.equal(isolatedStore.users.length,0,'Read-only login must not bootstrap an owner account');
- console.log('PASS: 390/768/1440 navigation, exact demo catalogue searches, mock AI citation, verified-public local fallback on provider 429, no-match/private-content scenarios, keyboard, RU/KK/EN, branches, calendar provenance and read-only admin APIs');
+ console.log('PASS: 390/768/1440 navigation, feedback form success/error/draft retention and RU/KK/EN, exact demo catalogue searches, mock AI citation, verified-public local fallback on provider 429, no-match/private-content scenarios, keyboard, branches, calendar provenance and read-only admin APIs');
 }finally{
  await browser?.close();
  if(server&&server.exitCode===null){server.kill('SIGTERM');await new Promise(resolve=>server.once('exit',resolve));}

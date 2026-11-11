@@ -4,6 +4,7 @@ import {useState} from 'react';
 import {ArrowRight,ArrowUpRight,Clock3,ExternalLink,MapPin,Phone,BookOpen,Search} from 'lucide-react';
 import {branches,mainArchive,type ArchiveLocation} from '@/data/archive';
 import {useApp} from './providers';
+import {FeedbackForm} from './feedback-form';
 import {formatCity,formatInstitutionName} from '@/locales/messages';
 
 export function InstitutionPage(){
@@ -127,7 +128,7 @@ export function InstitutionPage(){
         <span className="eyebrow">{msg('feedback')}</span>
         <h2>{msg('feedbackTitle')}</h2>
         <p>{msg('feedbackText')}</p>
-        <Link className="outline-link" href="/branches">{msg('branches')} <ArrowRight size={15}/></Link>
+        <FeedbackForm/>
       </section>
     </div>
   );
