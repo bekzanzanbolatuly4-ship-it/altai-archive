@@ -5,9 +5,9 @@
 - `POST /api/assistant` validates request origin, JSON size and content type, then applies the existing in-process and Upstash limits.
 - Retrieval is limited to published records with public access. Search uses title and description metadata only; original files, staff records and private fields are never sent to an AI provider.
 - Responses must be bounded JSON. Citations must name a retrieved opaque source ID and quote an exact excerpt. The route rechecks current publication/access state before returning citations.
-- If no public document matches, the route returns a deterministic “no matching published archive material” response without contacting a provider.
+- If no public document matches, the route searches a separate synthetic demonstration set and returns it only as `mode: local-search`; this is explicitly not generative AI. With no local match, it returns a deterministic no-match response without contacting a provider.
 - Provider keys stay server-side. Logs contain only provider name, HTTP status and a sanitized provider error code.
-- The explicit local demo assistant is separate from provider-generated answers. It is not an AI service and is labelled as a demonstration in the interface.
+- Local search fallback is separate from provider-generated answers. It is not an AI service and its UI label says that AI was not used. Provider failure only falls back when a local demonstration record matches; otherwise the sanitized error remains visible. Origin checks and the production limiter remain fail-closed.
 
 ## Provider configuration
 
@@ -23,7 +23,7 @@ Legacy `OPENROUTER_API_KEY` and `OPENROUTER_MODEL` are still accepted when `AI_P
 
 ### OpenRouter
 
-OpenRouter’s own current free-tier page says free variants have account-level limits (currently 20 requests/minute and 50/day below the qualifying $10 credit-purchase threshold; 1,000/day at or above it); individual providers can impose tighter limits. Therefore `HTTP 429` is an expected upstream availability case. The app returns `provider_limit`, does not retry or cycle through model IDs, and offers retry only as a user action. The `openrouter/free` router may choose a currently available free model. Our separate Redis limiter remains enabled: 5 requests/minute per IP and 20/minute globally.
+OpenRouter’s own current free-tier page says free variants have account-level limits (currently 20 requests/minute and 50/day below the qualifying $10 credit-purchase threshold; 1,000/day at or above it); individual providers can impose tighter limits. Therefore `HTTP 429` is an expected upstream availability case. The provider layer classifies it as `provider_limit` and does not retry or cycle through model IDs. If a local demo record matches, the route instead returns the explicitly labelled `local-search`; otherwise the sanitized provider limit remains visible. The `openrouter/free` router may choose a currently available free model. Local code configures a Redis limiter at 5 requests/minute per IP and 20/minute globally; the current Production backend could not be confirmed.
 
 ### Gemini alternative
 
@@ -43,13 +43,17 @@ This is an integration option, not a claim that a live account/key is already co
 - Question and matching published public title/description metadata are sent to the configured provider. Do not submit personal data, credentials, unpublished or restricted content.
 - Prompt instructions treat both the question and metadata as untrusted input. There are no tools, web search, external citations or file contents.
 - The validator rejects invalid output and fabricated/mismatched citations. General knowledge must not be represented as archive evidence.
-- Provider free quotas change and can return 429, 5xx, invalid data or timeouts. In each case the app shows a localized unavailable message and offers the separately labelled local demo.
+- Provider free quotas change and can return 429, 5xx, invalid data or timeouts. A matching local demonstration record is returned in the explicitly labelled `local-search` mode; otherwise the app shows a localized unavailable message and a link to the separately labelled demo assistant.
 
 ## Verification
 
 Automated checks use synthetic documents, synthetic keys and mocked provider responses. They prove request construction, access filtering, response validation, Origin rejection and safe error handling; they do **not** prove a live model is available.
 
-Production smoke-check on 2026-11-11: `POST https://altai-archive.vercel.app/api/assistant` with Origin `https://altai-archive.vercel.app` and `{ "message": "Find photographs", "locale": "en" }` returned HTTP 200 and `mode: "ai"`. The response had no citations and showed the old no-match weakness. At the time, the deployed code wired only OpenRouter, so OpenRouter is inferred as the live provider; provider identity/model headers were not exposed. This proves one successful request at that moment, not dependable free quota, grounding quality, or current state after a future deployment.
+Production audit on 2026-11-11: all eight requested page GETs returned HTTP 200 without redirects, but `GET /api/documents` returned HTTP 500. Three assistant queries returned HTTP 200 with `mode: "no-match"` and no citations; no generator invocation or provider identity was observable. Mismatched and missing Origin requests both returned HTTP 403. The public deployment version, environment variable names/values, active provider/model and Redis state cannot be introspected from the public API. Do not infer that OpenRouter or Gemini was used. The production browser rendered all eight routes without page errors or console errors; `/official-documents` fit a 390px viewport in RU/KK/EN.
+
+Six additional unmatched Production requests returned HTTP 200 for the first five and HTTP 429 for the sixth, consistent with the configured 5-per-minute-per-IP limiter. These requests had no public match and therefore did not reach an AI provider. Black-box behavior cannot prove which limiter backend/version served this threshold; Redis credentials and state remain unobservable.
+
+The local API route now uses read-only public metadata access, so a missing local JSON store no longer requires a write during a public GET. This fix and the explicitly labelled demo-search fallback are not deployed. Re-check the Production API after an authorized deployment.
 
 For an authorized live check, first configure a real server-side key and an approved free model in a non-production Preview environment. Ask about a known published public record and confirm the response includes its catalogue link and an exact metadata excerpt. Then verify an unmatched question makes no provider call, restricted/draft records are never returned, cross-origin POST gets 403, and a provider HTTP 429 is displayed as a limit message. Never paste keys into shell history, test fixtures or logs. Remove or rotate temporary credentials after verification.
 

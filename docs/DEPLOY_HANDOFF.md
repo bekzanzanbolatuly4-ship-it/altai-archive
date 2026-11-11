@@ -1,5 +1,7 @@
 # ALTAI ARCHIVE · handoff к защите
 
+> **Актуальный аудит 11.11.2026:** см. [сценарий демонстрации](DEMO_SCRIPT.md) и [матрицу готовности](READINESS_MATRIX.md). Все восемь публичных страниц вернули HTTP 200; Production `GET /api/documents` вернул 500, три AI-запроса вернули no-match без источников. Первая строка ниже — исторический handoff на 10.11.2026; более поздняя публичная проверка описывает состояние, которое реально доступно сейчас. Версия Vercel и провайдер публично не определяются.
+
 Дата работы: 10.11.2026. Реализация выполнена в существующем проекте с сохранением незакоммиченного состояния из `docs/AI_IMPLEMENTATION_HANDOFF.md`. Коммитов, push, deployment, миграций Supabase и реальных запросов к OpenRouter/Redis не было. `.env.local` и реальные `.data` не открывались и не изменялись.
 
 ## Результат по заданию
@@ -39,8 +41,8 @@
 | Isolated browser E2E | **PASS** | синтетическая копия, mock provider; RU/KK/EN, desktop 1440 px, mobile 390 px, light/dark, AI errors/retry/demo, календарные фильтры, поиск/маршрут филиала, read-only UI/API |
 | Browser screenshots | **PASS** | визуально осмотрены desktop history/branches и mobile dark history/branches; screenshots находятся в `output/playwright/` |
 | Client bundle scan | **PASS** | идентификатор `OPENROUTER_API_KEY` не обнаружен в `.next/static` JavaScript; реальное значение ключа не читалось |
-| OpenRouter live | **PASS · point-in-time** | 2026-11-11 `POST /api/assistant`, Origin `https://altai-archive.vercel.app`, test query `Find photographs` returned HTTP 200 / `mode: ai`; the response had no citations because no matching record was available. This is not a quota/SLA guarantee. |
-| Free model availability / latency / semantic grounding | **PARTIAL / NOT TESTED** | one API response was received; identity is inferred as OpenRouter from the deployed integration, latency was not benchmarked, model quality was not established |
+| OpenRouter live | **NOT VERIFIED IN CURRENT AUDIT** | Earlier handoff text recorded HTTP 200 / `mode: ai` for `Find photographs` and inferred OpenRouter. The latest audit returned `mode: no-match` with no sources; no provider call or provider identity was observable. Do not use the earlier inference as proof of current provider configuration. |
+| Free model availability / latency / semantic grounding | **NOT TESTED** | No real provider invocation was verified in the current audit; latency, provider/model identity and semantic grounding remain unknown. |
 | Redis live connectivity / provider spending cap | **NOT TESTED** | Redis credentials и spending cap не настраивались; limiter проверен mock тестами |
 | Production Vercel persistence / deploy smoke | **NOT TESTED** | deployment не выполнялся; production storage не решён |
 
@@ -50,7 +52,7 @@ E2E использует только синтетические докумен�
 
 1. Не называть демо production-ready и не демонстрировать постоянную работу админки на Vercel. Для статического/preview показа включить `DEMO_READ_ONLY=true` и использовать только синтетический каталог.
 2. Не показывать реальные комплаенс-файлы и не утверждать, что список прошёл правовую или редакторскую проверку.
-3. AI receives only matching published public metadata and does not read PDF files. A one-off Production response was observed; no-match behavior in the old deployment was not properly grounded. The updated local code now returns a deterministic no-match result without contacting a provider.
+3. AI receives only matching published public metadata and does not read PDF files. In the latest Production audit, no provider invocation was verified. The updated local code searches its synthetic demonstration set in a separately labelled non-AI mode, then returns a deterministic no-match if that also has no match.
 4. Перед публичным размещением отдельно проверить телефон/email/адреса филиалов и права публикации персонализированных рабочих контактов.
 5. Указать, что календарь бережно сохраняет source wording, а четыре отмеченных несоответствия ждут редактора.
 6. Перед production решить постоянное хранилище, backup/restore, distributed AI limiter credentials, provider quota/budget settings и организационные privacy approvals.
@@ -73,6 +75,6 @@ E2E использует только синтетические докумен�
 - `/branches` использует список и синхронизированную панель карты; на экранах ≤800 px доступны вкладки «Список / Карта». Точных координат нет — карта не рисует маркеры. Для адреса есть внешний маршрут. Телефон показывается только в сравнении двух источников со статусом расхождения; непроверенные телефоны не представлены как действующие контакты.
 - Provenance календаря различает текст исходного DOCX, внешний источник, дату проверки и неизвестную дату публикации. Внешний gov.kz подтверждает создание архива в 1940 году (исторический материал также относит сведения о шести филиалах к 2020 году): https://www.gov.kz/org/vko-cultura-arhiv/press/events/details/1292. Публикация gov.kz о 2026 годе подтверждает 130-летие областной библиотеки имени А. С. Пушкина: https://www.gov.kz/memleket/entities/vko-cultura-arhiv/press/news/details/1150609?lang=ru. Точная дата публикации этого материала не установлена.
 - Список e-memory используется только как кандидат для сверки; он содержит конфликтующие контакты и записи с устаревшей административной принадлежностью: https://e-memory.kz/en/archive/vostochno-kazakhstanskaya-oblast/. Актуальную принадлежность Жарминского и Аягозского филиалов подтверждает раздел подведомственных учреждений управления области Абай: https://www.gov.kz/org/abay-cultura-arhiv/about/structure/10/1. Остальные контакты/адреса из XLS требуют редакторской проверки. Обычный OpenRouter не даёт веб-поиск: UI сообщает, что интернет-поиск AI не подключён; внешняя search-интеграция не подключалась.
-- Безопасная ручная проверка live OpenRouter без изменения `.env.local` описана в `docs/AI_INTEGRATION.md`. Формулировка **NOT TESTED** относилась к срезу на 10.11.2026; 11.11.2026 выполнен единичный Production запрос, результат которого приведён в таблице выше. Это не проверка квоты, стабильности или SLA. Mock E2E не обращается к сети и использует синтетические данные.
+- Безопасная ручная проверка live provider без изменения `.env.local` описана в `docs/AI_INTEGRATION.md`. В текущем аудите Production AI не дошёл до генерации, так как не нашёл опубликованных источников. Mock E2E не обращается к внешнему AI и использует синтетические данные.
 - Новый isolated E2E: **PASS** на 390/768/1440 px, RU/KK/EN, карточка главной и мобильное меню → AI, Escape-закрытие меню, branch search/empty state/list-to-map/route, calendar source status, AI mock/errors/retry/demo и read-only admin API. Скриншоты — в `output/playwright/`.
 - Итоговые `npm test`, `npm run typecheck`, `npm run lint`, `git diff --check` — **PASS**. Чистый `npm run build` в локальной конфигурации остановился на обязательном HTTPS `NEXT_PUBLIC_SITE_URL`; повторный production build с изолированными тестовыми HTTPS origins завершился **PASS**. `.env.local`, `.data`, GitHub и Vercel не менялись.

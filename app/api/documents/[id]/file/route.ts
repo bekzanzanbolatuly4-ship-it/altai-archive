@@ -1,14 +1,14 @@
 import {isPublicDocument} from '@/lib/public-access';
 import {readFile} from 'node:fs/promises';
 import path from 'node:path';
-import {readStore,uploadPath} from '@/lib/archive-store';
+import {readPublishedPublicDocuments,uploadPath} from '@/lib/archive-store';
 
 export const runtime='nodejs';
 
 export async function GET(request:Request,{params}:{params:Promise<{id:string}>}){
  const {id}=await params;
- const store=await readStore();
- const d=store.documents.find(x=>x.id===id&&isPublicDocument(x));
+ const documents=await readPublishedPublicDocuments();
+ const d=documents.find(x=>x.id===id&&isPublicDocument(x));
 
  if(!d)return Response.json({error:'Not found'},{status:404});
  if(!/^[\da-f-]+\.(pdf|jpg|png|webp|tiff)$/.test(d.fileName)){

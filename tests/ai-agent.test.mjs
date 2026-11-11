@@ -46,11 +46,11 @@ test('Gemini adapter uses the official compatible endpoint and refuses other mod
 });
 test('missing configuration and paid models fail without fetch',async()=>{
  const fetcher=async()=>assert.fail('external request');
- await assert.rejects(runAgent(input,deps({key:undefined,fetcher})),/unconfigured/);
- await assert.rejects(runAgent(input,deps({model:'paid/model',fetcher})),/configuration/);
+ assert.equal((await runAgent(input,deps({key:undefined,fetcher}))).mode,'local-search');
+ assert.equal((await runAgent(input,deps({model:'paid/model',fetcher}))).mode,'local-search');
 });
 test('provider errors and 429 are sanitized without retries',async()=>{
- for(const status of [401,429,500]){let calls=0;try{await runAgent(input,deps({fetcher:async()=>{calls++;return new Response('synthetic-test-secret',{status});}}));assert.fail();}catch(e){assert.equal(safeError(e).code,status===429?'provider_limit':'provider_error');assert.ok(!JSON.stringify(safeError(e)).includes('secret'));}assert.equal(calls,1);}
+ for(const status of [401,429,500]){let calls=0;try{await complete(input.message,'[]','en',{key:'synthetic-test-secret',model:'test/model:free',fetcher:async()=>{calls++;return new Response('synthetic-test-secret',{status});}});assert.fail();}catch(e){assert.equal(safeError(e).code,status===429?'provider_limit':'provider_error');assert.ok(!JSON.stringify(safeError(e)).includes('secret'));}assert.equal(calls,1);}
 });
 test('OpenRouter failure logs only status and a sanitized error code',async()=>{
  const originalError=console.error;const logs=[];console.error=(...args)=>logs.push(args);
@@ -61,13 +61,15 @@ test('OpenRouter failure logs only status and a sanitized error code',async()=>{
  assert.ok(!JSON.stringify(logs).includes('private'));
 });
 test('timeout aborts request',async()=>{
- await assert.rejects(runAgent(input,deps({timeout:10,fetcher:async(_url,{signal})=>new Promise((_,reject)=>signal.addEventListener('abort',()=>reject(new Error('aborted'))))})),/timeout/);
+ await assert.rejects(complete(input.message,'[]','en',{key:'synthetic-test-secret',model:'test/model:free',timeout:10,fetcher:async(_url,{signal})=>new Promise((_,reject)=>signal.addEventListener('abort',()=>reject(new Error('aborted'))))}),/timeout/);
 });
 test('invalid, truncated and tool responses are rejected',async()=>{
  for(const message of [{content:'not JSON'},{content:JSON.stringify({answer:'https://evil.test',citations:[]})},{content:output,tool_calls:[{}]}]){
-  await assert.rejects(runAgent(input,deps({fetcher:async()=>Response.json({choices:[{finish_reason:'stop',message}]})})),/invalid_response/);
+  const result=await runAgent(input,deps({fetcher:async()=>Response.json({choices:[{finish_reason:'stop',message}]})}));
+  assert.equal(result.mode,'local-search');
  }
- await assert.rejects(runAgent(input,deps({fetcher:async()=>Response.json({choices:[{finish_reason:'length',message:{content:output}}]})})),/invalid_response/);
+ const truncated=await runAgent(input,deps({fetcher:async()=>Response.json({choices:[{finish_reason:'length',message:{content:output}}]})}));
+ assert.equal(truncated.mode,'local-search');
 });
 test('global rate and concurrency limits release correctly',()=>{
  let now=0;const acquire=createLimiter(()=>now);const release=acquire();const release2=acquire();assert.throws(acquire,/rate_limit/);release();release();release2();
@@ -90,8 +92,23 @@ test('citations require exact excerpts and current authorization',()=>{
  assert.throws(()=>validateResponse(output,sources,[{...doc,title:'Changed'}]),/source_changed/);
 });
 test('no source matches do not fabricate citations',async()=>{
- const result=await runAgent(input,deps({documents:async()=>[],fetcher:async()=>Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify({answer:'No matching public document was found.',citations:[]})}}]})}));
+ const result=await runAgent({message:'квантовая обсерватория на Марсе',locale:'ru'},deps({documents:async()=>[],fetcher:async()=>assert.fail('No-match must not call the provider')}));
  assert.deepEqual(result.citations,[]);
+});
+test('local demonstration search has a clear non-AI label and a source link',async()=>{
+ for(const [locale,message,phrase] of [['ru','Найти фотографию','не генеративный ответ AI'],['kk','Фото іздеу','генеративті AI жауабы емес'],['en','Find photographs','not a generative AI response']]){
+  const result=await runAgent({message,locale},deps({documents:async()=>[]}));
+  assert.equal(result.mode,'local-search');assert.match(result.answer,new RegExp(phrase));
+  assert.ok(result.citations.some(source=>source.url==='/document/demo-01'));
+  assert.ok(result.citations.every(source=>source.provenance==='demonstration'));
+ }
+});
+test('unmatched and restricted content do not enter local demonstration answers',async()=>{
+ const question='PRIVATE CONTENT restricted personnel record';
+ const result=await runAgent({message:question,locale:'en'},deps({documents:async()=>[{...doc,id:'private',title:'PRIVATE CONTENT restricted personnel record',status:'draft',accessStatus:'restricted'}]}));
+ assert.equal(result.mode,'no-match');
+ assert.deepEqual(result.citations,[]);
+ assert.ok(!JSON.stringify(result).includes('PRIVATE CONTENT'));
 });
 test('RU, KK and EN detection with locale fallback',()=>{
  assert.equal(parseInput({message:'Найти фотографии',locale:'en'}).locale,'ru');

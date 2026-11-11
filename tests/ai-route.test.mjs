@@ -26,7 +26,7 @@ test('real route integrates input, public retrieval, provider, validation and sa
   delete process.env.OPENROUTER_API_KEY;
   globalThis.fetch=async()=>{providerCalls++;assert.fail('No live network permitted');};
   const missing=await POST(request({message:'Find photographs',locale:'en'}));
-  assert.equal(missing.status,503);assert.deepEqual(await missing.json(),{mode:'unavailable',error:'unconfigured'});
+  assert.equal(missing.status,200);assert.equal((await missing.json()).mode,'local-search');
   process.env.AI_PROVIDER='unlisted-provider';process.env.AI_API_KEY='synthetic-key';process.env.AI_MODEL='test/model:free';
   const unsupported=await POST(request({message:'Find photographs',locale:'en'}));
   assert.equal(unsupported.status,503);assert.deepEqual(await unsupported.json(),{mode:'unavailable',error:'configuration'});
@@ -38,8 +38,8 @@ test('real route integrates input, public retrieval, provider, validation and sa
   assert.equal((await POST(crossSite)).status,403);
   assert.equal((await POST(request({message:'x'.repeat(2001),locale:'en'}))).status,400);
   globalThis.__assistantDocuments=[];
-  const empty=await POST(request({message:'Find photographs',locale:'en'}));
-  assert.equal(empty.status,200);assert.deepEqual(await empty.json(),{mode:'no-match',locale:'en',answer:'No matching published archive material was found.',citations:[]});
+  const empty=await POST(request({message:'квантовая обсерватория на Марсе',locale:'ru'}));
+  assert.equal(empty.status,200);assert.deepEqual(await empty.json(),{mode:'no-match',locale:'ru',answer:'По вашему запросу не найдено опубликованных архивных материалов.',citations:[]});
   assert.equal(providerCalls,0,'No provider request should run when there are no public documents');
   delete globalThis.__assistantDocuments;
   process.env.OPENROUTER_API_KEY='synthetic-key';process.env.OPENROUTER_MODEL='test/model:free';
@@ -61,11 +61,11 @@ test('real route integrates input, public retrieval, provider, validation and sa
   process.env.AI_PROVIDER='openrouter';delete process.env.AI_API_KEY;delete process.env.AI_MODEL;
   globalThis.fetch=async()=>new Response('DO NOT EXPOSE provider internal secret',{status:429});
   const limited=await POST(request({message:'Find photographs',locale:'en'}));
-  assert.equal(limited.status,429);assert.equal(limited.headers.get('Retry-After'),'60');
-  assert.deepEqual(await limited.json(),{mode:'unavailable',error:'provider_limit'});
+  assert.equal(limited.status,200);
+  assert.equal((await limited.json()).mode,'local-search');
   globalThis.fetch=async()=>new Response('secret provider body',{status:503});
   const unavailable=await POST(request({message:'Find photographs',locale:'en'}));
-  assert.equal(unavailable.status,503);assert.deepEqual(await unavailable.json(),{mode:'unavailable',error:'provider_error'});
+  assert.equal(unavailable.status,200);assert.equal((await unavailable.json()).mode,'local-search');
  }finally{
   globalThis.fetch=previousFetch;
   if(previousDocuments===undefined)delete globalThis.__assistantDocuments;else globalThis.__assistantDocuments=previousDocuments;

@@ -17,7 +17,7 @@ try{
  }});
  await symlink(path.join(root,'node_modules'),path.join(isolated,'node_modules'));
  await mkdir(path.join(isolated,'.data'));
- const publicDoc={id:'synthetic-public',title:'Archive photographs',description:'Photographs of mountains.',status:'published',accessStatus:'public',provenance:'demonstration',fileName:'synthetic.pdf',keywords:[]};
+ const publicDoc={id:'synthetic-public',title:'Archive photographs',description:'Photographs of mountains. Synthetic public record.',status:'published',accessStatus:'public',provenance:'demonstration',fileName:'synthetic.pdf',keywords:[]};
  await writeFile(path.join(isolated,'.data/archive-store.json'),JSON.stringify({users:[],sessions:[],audit:[],documents:[publicDoc,{...publicDoc,id:'private',title:'PRIVATE CONTENT',status:'draft',accessStatus:'restricted'}]}));
  server=spawn(process.execPath,[path.join(root,'node_modules/next/dist/bin/next'),'dev','--webpack','--hostname','127.0.0.1','--port','3107'],{
   cwd:isolated,stdio:'pipe',env:{PATH:process.env.PATH,HOME:process.env.HOME,NODE_OPTIONS:`--import=${path.join(isolated,'tests/fixtures/ai-provider.mjs')}`,OPENROUTER_API_KEY:'synthetic-e2e-key',OPENROUTER_MODEL:'test/model:free',DEMO_READ_ONLY:'true',ARCHIVE_OWNER_EMAIL:'synthetic-owner@example.test',ARCHIVE_OWNER_PASSWORD:'Synthetic-only-Password-2026!',SESSION_SECRET:'synthetic-only-secret-0123456789abcdef0123456789abcdef'}
@@ -84,6 +84,11 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
  await page.goto('http://127.0.0.1:3107/catalog');
  assert.equal(await page.locator('.catalog-search').count(),1);
  assert.equal(await page.locator('.top-search').count(),0);
+ const catalogueSearch=page.locator('.catalog-search input');
+ await catalogueSearch.fill('карта горной местности');
+ await page.getByRole('heading',{name:'Карта горной местности (макет)'}).waitFor();
+ await catalogueSearch.fill('машинописного документа');
+ await page.getByRole('heading',{name:'Образец машинописного документа'}).waitFor();
  await page.route('**/api/documents',route=>route.abort());
  await page.reload();
  await page.getByText('Не удалось загрузить опубликованные записи. Демонстрационные материалы остаются доступны.').waitFor();
@@ -132,13 +137,30 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
    assert.equal(await page.locator('a[href="/document/synthetic-public"]').count(),1);
    assert.ok(!(await page.locator('body').innerText()).includes('PRIVATE CONTENT'));
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-   await input.fill('Find photographs failure');await input.press('Enter');
+   if(locale==='ru'&&mobile){
+   const localSearchResponse=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/assistant');
+   await input.fill(locale==='ru'?'карта горной местности':'map');await input.press('Enter');
+   const localSearch=await (await localSearchResponse).json();assert.equal(localSearch.mode,'local-search');assert.equal(localSearch.citations[0].url,'/document/demo-02');
+   await page.getByText(locale==='ru'?'Локальный демо-поиск · AI не использовался':locale==='kk'?'Жергілікті демо-іздеу · AI қолданылмады':'Local demo search · no AI used',{exact:true}).waitFor();
+   await page.locator('a[href="/document/demo-02"]').waitFor();
+   const unmatched=locale==='ru'?'квантовая обсерватория на Марсе':locale==='kk'?'Марстағы ғарыш обсерваториясы':'quasar observatory on mars';
+   const noMatchResponse=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/assistant');
+   await input.fill(unmatched);await input.press('Enter');
+   const noMatch=await (await noMatchResponse).json();assert.equal(noMatch.mode,'no-match');assert.deepEqual(noMatch.citations,[]);
+   await page.getByText(noMatch.answer,{exact:true}).waitFor();
+   const privateResponse=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/assistant');
+   await input.fill('PRIVATE CONTENT');await input.press('Enter');
+   const privateResult=await (await privateResponse).json();assert.ok(!JSON.stringify(privateResult).includes('PRIVATE CONTENT'));
+   const privateReply=page.locator('.chat-bubble.assistant-bubble').last();await privateReply.waitFor();
+   assert.ok(!(await privateReply.innerText()).includes('PRIVATE CONTENT'),'Private record content must never be echoed by the assistant');
+   await input.fill('record failure');await input.press('Enter');
    const aiError=page.locator('.chat-bubble[role="alert"]');
    await aiError.waitFor();
    await aiError.getByRole('button').first().click();
    await aiError.waitFor();
    await aiError.getByRole('button').last().click();
    await page.getByText('DEMO ARCHIVIST',{exact:false}).waitFor();
+   }
    await mkdir(path.join(root,'output/playwright'),{recursive:true});
    await page.screenshot({path:path.join(root,`output/playwright/ai-${locale}-${mobile?'mobile-dark':'desktop-light'}.png`),fullPage:true});
   }
@@ -194,7 +216,7 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
  assert.equal(loginStatus,401,'Invalid login should not require creating the initial owner in read-only mode');
  const isolatedStore=JSON.parse(await (await import('node:fs/promises')).readFile(path.join(isolated,'.data/archive-store.json'),'utf8'));
  assert.equal(isolatedStore.users.length,0,'Read-only login must not bootstrap an owner account');
- console.log('PASS: 390/768/1440 navigation to AI, direct chat, mock citations/errors/retry/demo, keyboard, RU/KK/EN, branch search/empty state/mobile list-to-map/routes, calendar provenance filters, read-only admin API and desktop/mobile themes');
+ console.log('PASS: 390/768/1440 navigation, exact demo catalogue searches, mock AI citation, local-search/no-match/private-content scenarios, provider 429 retry/demo, keyboard, RU/KK/EN, branches, calendar provenance and read-only admin APIs');
 }finally{
  await browser?.close();
  if(server&&server.exitCode===null){server.kill('SIGTERM');await new Promise(resolve=>server.once('exit',resolve));}
