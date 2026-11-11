@@ -45,3 +45,21 @@ test('production origin validation requires an explicit trusted application orig
   if(oldAppOrigin===undefined)delete process.env.APP_ORIGIN;else process.env.APP_ORIGIN=oldAppOrigin;
  }
 });
+
+test('production browser requests accept only the configured same-origin alias',()=>{
+ const oldNodeEnv=process.env.NODE_ENV;
+ const oldAppOrigin=process.env.APP_ORIGIN;
+ process.env.NODE_ENV='production';
+ process.env.APP_ORIGIN='https://altai-archive.vercel.app';
+ try{
+  const browserRequest=new Request('https://altai-archive.vercel.app/api/assistant',{method:'POST',headers:{origin:'https://altai-archive.vercel.app','sec-fetch-site':'same-origin'}});
+  const previewRequest=new Request('https://altai-archive-git-main-example.vercel.app/api/assistant',{method:'POST',headers:{origin:'https://altai-archive-git-main-example.vercel.app','sec-fetch-site':'same-origin'}});
+  const mislabeledRequest=new Request('https://altai-archive.vercel.app/api/assistant',{method:'POST',headers:{origin:'https://altai-archive.vercel.app','sec-fetch-site':'cross-site'}});
+  assert.equal(sameOriginFailure(browserRequest),null);
+  assert.equal(sameOriginFailure(previewRequest)?.status,403,'A Vercel preview hostname is not trusted implicitly');
+  assert.equal(sameOriginFailure(mislabeledRequest)?.status,403,'Cross-site Fetch Metadata remains denied even with a matching Origin');
+ }finally{
+  if(oldNodeEnv===undefined)delete process.env.NODE_ENV;else process.env.NODE_ENV=oldNodeEnv;
+  if(oldAppOrigin===undefined)delete process.env.APP_ORIGIN;else process.env.APP_ORIGIN=oldAppOrigin;
+ }
+});

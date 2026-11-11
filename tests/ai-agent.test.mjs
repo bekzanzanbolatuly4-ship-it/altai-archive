@@ -35,6 +35,15 @@ test('OpenRouter free router is allowed with zero-cost and privacy constraints',
  assert.equal(body.provider.data_collection,'deny');
  assert.equal(body.provider.allow_fallbacks,true);
 });
+test('Gemini adapter uses the official compatible endpoint and refuses other model IDs',async()=>{
+ let called=false;
+ await complete('Safe test question','[]','en',{provider:'gemini',key:'synthetic-key',model:'gemini-2.5-flash-lite',fetcher:async(url,options)=>{
+  called=true;assert.equal(url,'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions');
+  assert.equal(JSON.parse(options.body).provider,undefined);return ok();
+ }});
+ assert.equal(called,true);
+ await assert.rejects(complete('Safe test question','[]','en',{provider:'gemini',key:'synthetic-key',model:'paid-model',fetcher:async()=>assert.fail('Unapproved Gemini model must not be called')}),/configuration/);
+});
 test('missing configuration and paid models fail without fetch',async()=>{
  const fetcher=async()=>assert.fail('external request');
  await assert.rejects(runAgent(input,deps({key:undefined,fetcher})),/unconfigured/);
@@ -48,7 +57,7 @@ test('OpenRouter failure logs only status and a sanitized error code',async()=>{
  try{
   await assert.rejects(complete('Private user question','[]','en',{key:'private-api-key',model:'test/model:free',fetcher:async()=>new Response(JSON.stringify({error:{code:'free_tier_limit',message:'private provider response',metadata:{provider_name:'private-provider',raw:'private diagnostic'}}}),{status:429})}),/provider_limit/);
  }finally{console.error=originalError;}
- assert.deepEqual(logs,[['OpenRouter request failed',{status:429,code:'free_tier_limit'}]]);
+ assert.deepEqual(logs,[['AI provider request failed',{provider:'openrouter',status:429,code:'free_tier_limit'}]]);
  assert.ok(!JSON.stringify(logs).includes('private'));
 });
 test('timeout aborts request',async()=>{

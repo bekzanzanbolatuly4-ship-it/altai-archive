@@ -1,10 +1,13 @@
 import {AIError} from './errors.ts';
 import {readBounded} from './limits.ts';
 import {instructions} from './instructions.ts';
-export async function complete(message:string,context:string,locale:string,options:{key?:string;model?:string;fetcher?:typeof fetch;timeout?:number;maxTokens?:number}={}){
- const key=options.key,model=options.model;
+export type AIProvider='openrouter'|'gemini';
+export async function complete(message:string,context:string,locale:string,options:{key?:string;model?:string;provider?:AIProvider;fetcher?:typeof fetch;timeout?:number;maxTokens?:number}={}){
+ const key=options.key,model=options.model,provider=options.provider??'openrouter';
  if(!key||!model)throw new AIError('unconfigured');
- if(model!=='openrouter/free'&&!/^[\w./-]+:free$/.test(model))throw new AIError('configuration');
+ if(provider!=='openrouter'&&provider!=='gemini')throw new AIError('configuration');
+ if(provider==='openrouter'&&model!=='openrouter/free'&&!/^[\w./-]+:free$/.test(model))throw new AIError('configuration');
+ if(provider==='gemini'&&model!=='gemini-2.5-flash-lite')throw new AIError('configuration');
  const messages=[{role:'system',content:instructions},{role:'user',content:JSON.stringify({language:locale,question:message,untrustedPublicMetadata:JSON.parse(context)})}];
  // UTF-8 byte budget is a conservative upper bound for byte-level tokenizers.
  if(Buffer.byteLength(JSON.stringify(messages),'utf8')>14000)throw new AIError('too_large',413);
@@ -12,13 +15,14 @@ export async function complete(message:string,context:string,locale:string,optio
  const timer=setTimeout(()=>controller.abort(),options.timeout??20_000);
  try{
   const maxTokens=Number.isInteger(options.maxTokens)?Math.max(1,Math.min(900,options.maxTokens!)):900;
-  const response=await (options.fetcher??fetch)('https://openrouter.ai/api/v1/chat/completions',{
+  const endpoint=provider==='gemini'?'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions':'https://openrouter.ai/api/v1/chat/completions';
+  const response=await (options.fetcher??fetch)(endpoint,{
    method:'POST',signal:controller.signal,headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},
-   body:JSON.stringify({model,messages,max_tokens:maxTokens,temperature:0.1,stream:false,provider:{allow_fallbacks:true,max_price:{prompt:0,completion:0},data_collection:'deny'}})
+   body:JSON.stringify({model,messages,max_tokens:maxTokens,temperature:0.1,stream:false,...(provider==='openrouter'?{provider:{allow_fallbacks:true,max_price:{prompt:0,completion:0},data_collection:'deny'}}:{})})
   });
   if(!response.ok){
-   const code=await readOpenRouterErrorCode(response.body);
-   console.error('OpenRouter request failed',{status:response.status,code});
+   const code=await readProviderErrorCode(response.body);
+   console.error('AI provider request failed',{provider,status:response.status,code});
    throw new AIError(response.status===429?'provider_limit':'provider_error',response.status===429?429:503);
   }
   const data=JSON.parse(await readBounded(response.body,32000));
@@ -32,7 +36,7 @@ export async function complete(message:string,context:string,locale:string,optio
  }finally{clearTimeout(timer);}
 }
 
-async function readOpenRouterErrorCode(body:ReadableStream<Uint8Array>|null):Promise<string>{
+async function readProviderErrorCode(body:ReadableStream<Uint8Array>|null):Promise<string>{
  try{
   if(!body)return 'unknown';
   const payload=JSON.parse(await readBounded(body,4096)) as {error?:{code?:unknown}};

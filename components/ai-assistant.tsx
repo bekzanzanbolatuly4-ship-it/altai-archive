@@ -4,8 +4,8 @@ import {useEffect,useRef,useState} from 'react';
 import {ArrowRight,Send,Sparkles} from 'lucide-react';
 import {useApp} from './providers';
 
-type Reply={answer:string;citations:{id:string;title:string;quote:string;url:string;provenance:string}[]};
-type Turn={question:string;reply?:Reply;error?:boolean};
+type Reply={mode:'ai'|'no-match';answer:string;citations:{id:string;title:string;quote:string;url:string;provenance:string}[]};
+type Turn={question:string;reply?:Reply;error?:string};
 export function AIAssistant({demo}:{demo:React.ReactNode}){
  const {msg,locale}=useApp();
  const [query,setQuery]=useState('');
@@ -27,11 +27,11 @@ export function AIAssistant({demo}:{demo:React.ReactNode}){
   const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),25000);
   try{
    const response=await fetch('/api/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:question,locale}),signal:controller.signal});
-   if(!response.ok)throw new Error('unavailable');
    const reply=await response.json();
-   if(reply.mode!=='ai'||typeof reply.answer!=='string'||!Array.isArray(reply.citations))throw new Error('invalid');
+   if(!response.ok)throw new Error(typeof reply?.error==='string'?reply.error:'unavailable');
+   if(!['ai','no-match'].includes(reply.mode)||typeof reply.answer!=='string'||!Array.isArray(reply.citations))throw new Error('invalid');
    setTurns(old=>old.map((t,i)=>i===index?{question,reply}:t));
-  }catch{setTurns(old=>old.map((t,i)=>i===index?{question,error:true}:t));}
+  }catch(error){setTurns(old=>old.map((t,i)=>i===index?{question,error:error instanceof Error?error.message:'unavailable'}:t));}
   finally{clearTimeout(timer);busy.current=false;setLoading(false);input.current?.focus();}
  }
  return <div className="page-wrap assistant-page">
@@ -46,8 +46,8 @@ export function AIAssistant({demo}:{demo:React.ReactNode}){
     {turns.map((turn,i)=><div key={i}>
      <div className="chat-bubble user-bubble ai-text">{turn.question}</div>
      {turn.reply&&<div className="chat-bubble assistant-bubble">
-      <strong>{msg('aiLabel')}</strong><p className="ai-text">{turn.reply.answer}</p>
-      <p>{msg('aiEvidenceNote')}</p>
+      <strong>{msg(turn.reply.mode==='ai'?'aiLabel':'aiSearchResult')}</strong><p className="ai-text">{turn.reply.answer}</p>
+      {turn.reply.mode==='ai'&&<p>{msg('aiEvidenceNote')}</p>}
       <section className="assistant-results" aria-label={msg('aiSources')}><h3>{msg('aiSources')}</h3>
        {turn.reply.citations.length?turn.reply.citations.map(source=><div key={source.id}>
         <Link href={source.url}>{source.title}</Link><blockquote className="ai-text">{source.quote}</blockquote>
@@ -55,7 +55,7 @@ export function AIAssistant({demo}:{demo:React.ReactNode}){
        </div>):<p>{msg('aiNoSources')}</p>}
       </section>
      </div>}
-     {turn.error&&<div className="chat-bubble assistant-bubble" role="alert"><p>{msg('aiError')}</p><button type="button" disabled={loading} onClick={()=>void send(turn.question,i)}>{msg('aiRetry')}</button><button type="button" onClick={()=>setShowDemo(true)}>{msg('aiDemo')}</button><Link href="/catalog">{msg('catalog')} <ArrowRight size={14}/></Link></div>}
+     {turn.error&&<div className="chat-bubble assistant-bubble" role="alert"><p>{msg(turn.error==='provider_limit'?'aiProviderLimit':turn.error==='rate_limit'?'aiRateLimit':'aiError')}</p><button type="button" disabled={loading} onClick={()=>void send(turn.question,i)}>{msg('aiRetry')}</button><button type="button" onClick={()=>setShowDemo(true)}>{msg('aiDemo')}</button><Link href="/catalog">{msg('catalog')} <ArrowRight size={14}/></Link></div>}
     </div>)}
     {loading&&<p role="status">{msg('aiLoading')}</p>}
    </div>

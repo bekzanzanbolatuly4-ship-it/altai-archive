@@ -2591,6 +2591,69 @@ html[data-theme='dark'] .map-scale {
   margin: 8px 0 16px;
 }
 
+/* OFFICIAL DOCUMENTS */
+.official-documents-page { max-width: 1120px; margin: 0 auto; }
+.official-documents-heading { max-width: 780px; padding: 8px 0 26px; }
+.official-documents-heading h1 { margin: 8px 0 10px; font: 500 clamp(30px,4vw,42px)/1.15 'Playfair Display',Georgia,serif; color: var(--ink); }
+.official-documents-heading p { max-width: 680px; margin: 0; color: var(--muted); }
+.official-info-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.official-info-card { min-width: 0; padding: 24px; border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow); }
+.official-info-icon { display: grid; place-items: center; width: 42px; height: 42px; margin-bottom: 18px; background: var(--blue-soft); color: var(--forest); }
+.official-info-card h2 { margin: 8px 0 10px; font: 500 clamp(21px,2vw,27px)/1.24 'Playfair Display',Georgia,serif; color: var(--ink); overflow-wrap: anywhere; }
+.official-info-card p { color: var(--muted); font-size: 14px; line-height: 1.65; }
+.official-info-links { display: grid; gap: 8px; margin-top: 17px; }
+.official-info-link { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; min-height: 44px; padding: 11px 12px; border: 1px solid var(--line); color: var(--forest); font-size: 13px; font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; }
+.official-info-link svg { flex: 0 0 auto; margin-top: 2px; }
+.official-info-link:hover { background: var(--blue-soft); }
+.official-info-note,.official-info-footer { padding: 12px 14px; border-left: 3px solid var(--earth); background: var(--paper); font-size: 12px !important; }
+.official-info-footer { margin-top: 18px; color: var(--muted); line-height: 1.6; }
+.institution-structure { margin: 32px 0; padding: 24px; border: 1px solid var(--line); background: var(--surface); }
+.institution-structure-heading { max-width: 760px; }
+.institution-structure-heading h2 { margin: 8px 0; font: 500 clamp(24px,3vw,34px)/1.2 'Playfair Display',Georgia,serif; }
+.institution-structure-heading p { color: var(--muted); font-size: 14px; line-height: 1.65; }
+.institution-director { display: grid; gap: 5px; margin-top: 20px; padding: 16px; border: 1px solid var(--line); background: var(--paper); }
+.institution-director b { color: var(--forest); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+.institution-director span { font: 500 19px/1.35 'Playfair Display',Georgia,serif; color: var(--ink); }
+.institution-director small { max-width: 800px; color: var(--muted); line-height: 1.55; }
+.institution-director a { display: inline-flex; align-items: center; gap: 7px; width: fit-content; margin-top: 5px; color: var(--forest); font-size: 12px; font-weight: 600; }
+.institution-structure-caveat { color: var(--muted); font-size: 13px; line-height: 1.6; }
+.institution-departments { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 24px; margin: 20px 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.institution-departments li { padding: 13px 2px; border-bottom: 1px solid var(--line); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.official-document-card { overflow: hidden; border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow); }
+.official-document-copy { display: grid; grid-template-columns: 52px minmax(0,1fr); gap: 18px; padding: 28px 30px 22px; }
+.official-document-icon { display: grid; place-items: center; width: 48px; height: 56px; background: var(--blue-soft); color: var(--forest); }
+.official-document-kind { color: var(--forest); font-size: 10px; letter-spacing: .13em; font-weight: 700; }
+.official-document-copy h2 { max-width: 890px; margin: 8px 0 8px; font: 500 clamp(21px,2.5vw,30px)/1.28 'Playfair Display',Georgia,serif; color: var(--ink); }
+.official-document-subtitle { max-width: 760px; margin: 0; color: var(--muted); font-size: 14px; }
+.official-document-metadata { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; margin: 0 30px; padding: 20px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.official-document-metadata div { min-width: 0; }
+.official-document-metadata dt { margin-bottom: 4px; color: var(--muted); font-size: 12px; }
+.official-document-metadata dd { margin: 0; color: var(--ink); font-size: 14px; font-weight: 600; }
+.official-document-original-note { margin: 17px 30px 0; color: var(--muted); font-size: 13px; }
+.official-document-actions { display: flex; flex-wrap: wrap; gap: 10px; padding: 21px 30px; }
+.official-document-open,.official-document-download { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 9px 15px; border: 1px solid var(--forest); font-size: 13px; font-weight: 600; }
+.official-document-open { background: var(--forest); color: var(--surface-featured-ink); }
+.official-document-download { background: var(--surface); color: var(--forest); }
+.official-document-open:hover,.official-document-download:hover { filter: brightness(.94); }
+.official-document-preview { height: min(78vh,900px); min-height: 500px; margin: 0 30px; border: 1px solid var(--line); background: var(--paper); }
+.official-document-preview iframe { display: block; width: 100%; height: 100%; border: 0; }
+.official-document-source-note { margin: 0; padding: 13px 30px 22px; color: var(--muted); font-size: 12px; }
+
+@media (max-width: 640px) {
+  .official-documents-heading { padding: 4px 0 20px; }
+  .official-info-grid { grid-template-columns: minmax(0,1fr); gap: 12px; }
+  .official-info-card { padding: 18px 16px; }
+  .institution-structure { padding: 18px 16px; }
+  .institution-departments { grid-template-columns: minmax(0,1fr); }
+  .official-document-copy { grid-template-columns: 40px minmax(0,1fr); gap: 12px; padding: 20px 16px 17px; }
+  .official-document-icon { width: 40px; height: 48px; }
+  .official-document-metadata { grid-template-columns: 1fr; gap: 12px; margin: 0 16px; padding: 16px 0; }
+  .official-document-original-note { margin: 14px 16px 0; }
+  .official-document-actions { display: grid; grid-template-columns: 1fr; padding: 17px 16px; }
+  .official-document-preview { height: 72vh; min-height: 430px; margin: 0 16px; }
+  .official-document-source-note { padding: 12px 16px 18px; }
+}
+
 /* ASSISTANT */
 .assistant-disclosure {
   display: flex;

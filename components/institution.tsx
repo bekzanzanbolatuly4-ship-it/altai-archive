@@ -87,6 +87,33 @@ export function InstitutionPage(){
         </div>
       </section>
 
+      <section className="institution-structure" aria-labelledby="institution-structure-title">
+        <div className="institution-structure-heading">
+          <span className="eyebrow">{locale==='ru'?'ОРГАНИЗАЦИОННАЯ СТРУКТУРА · ИСТОЧНИК ЗАКАЗЧИКА':locale==='kk'?'ҰЙЫМДЫҚ ҚҰРЫЛЫМ · ТАПСЫРЫС БЕРУШІНІҢ ДЕРЕККӨЗІ':'ORGANIZATION STRUCTURE · CUSTOMER SOURCE'}</span>
+          <h2 id="institution-structure-title">{locale==='ru'?'Руководство и отделы':locale==='kk'?'Басшылық және бөлімдер':'Management and departments'}</h2>
+        </div>
+        <div className="institution-director">
+          <b>{locale==='ru'?'Директор':locale==='kk'?'Директор':'Director'}</b>
+          <span>Жапаров Аскар Кенжебаевич</span>
+          <small>{locale==='ru'?'Имя указано в документе о структуре и в государственной закупке от 21.08.2026; эта дата подтверждает только запись в документе, но не гарантирует, что должность не менялась позже.':locale==='kk'?'Аты құрылым құжатында және 2026 жылғы 21 тамыздағы мемлекеттік сатып алу жазбасында көрсетілген. Бұл тек сол жазбадағы деректі растайды, кейін лауазым өзгермегеніне кепіл емес.':'Named in the supplied organization chart and an official procurement record dated 21 Aug 2026. This confirms that record only; it does not guarantee no later change.'}</small>
+          <a href="https://procurement.gov.kz/ru/announce/index/17537922" target="_blank" rel="noreferrer">{locale==='ru'?'Проверить запись госзакупки':locale==='kk'?'Мемлекеттік сатып алу жазбасын көру':'View procurement record'} <ArrowRight size={14}/></a>
+        </div>
+        <p className="institution-structure-caveat">{locale==='ru'?'Состав подразделений приведён по документу «Структура.docx»; дата его актуальности не указана. Персональные телефоны и почта сотрудников не размещены, поскольку их текущая публикация не подтверждена. Переводы названий на казахский и английский даны для навигации и архивом не утверждены.':locale==='kk'?'Бөлімшелер құрамы «Структура.docx» құжаты бойынша берілген; мәліметтің өзектілік күні көрсетілмеген. Қызметкерлердің жеке телефондары мен электрондық поштасы жарияланбады, өйткені қазіргі жариялануы расталмады. Қазақша және ағылшынша атаулар архив бекітпеген навигациялық аударма болып табылады.':'Departments below follow “Структура.docx”; the source gives no effective date. Staff phone numbers and email addresses are omitted because current publication status was not confirmed. Kazakh and English department names are unapproved navigation translations.'}</p>
+        <ul className="institution-departments">
+          {([
+            ['Финансовой и кадровой работы','Қаржы және кадр жұмысы','Finance and Human Resources'],
+            ['Административно-хозяйственной части','Әкімшілік-шаруашылық бөлігі','Administrative and Facilities'],
+            ['Обеспечения сохранности и государственного учёта документов','Құжаттардың сақталуын және мемлекеттік есебін қамтамасыз ету','Document Preservation and State Records'],
+            ['Комплектования и контроля за ведомственными архивами','Жинақтау және ведомстволық архивтерді бақылау','Acquisitions and Departmental Archives Oversight'],
+            ['Научно-справочного аппарата, публикации и научного использования документов','Ғылыми-анықтамалық аппарат, құжаттарды жариялау және ғылыми пайдалану','Reference Tools, Publications and Scholarly Use'],
+            ['Информационных технологий','Ақпараттық технологиялар','Information Technology'],
+            ['Экспертизы ценности документов','Құжаттардың құндылығына сараптама жасау','Records Appraisal'],
+          ] as const).map(([ru,kk,en])=><li key={ru}>{locale==='ru'?`Отдел ${ru}`:locale==='kk'?kk:en}</li>)}
+          <li>{locale==='ru'?'Главный хранитель фондов':locale==='kk'?'Қорлардың бас сақтаушысы':'Chief Custodian of Archival Holdings'}</li>
+        </ul>
+        <a className="outline-link" href="https://www.gov.kz/org/vko-uca/about/structure" target="_blank" rel="noreferrer">{locale==='ru'?'Официальная структура курирующего управления':locale==='kk'?'Жетекшілік ететін басқарманың ресми құрылымы':'Official structure of the supervising department'} <ArrowRight size={15}/></a>
+      </section>
+
       <div className="institution-notice">
         <p>{msg('archiveHistoryContext')}</p>
         <a href="https://www.gov.kz/org/vko-cultura-arhiv/press/events/details/1292" target="_blank" rel="noreferrer">{msg('archiveHistorySource')} <ArrowUpRight size={14}/></a>

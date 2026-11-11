@@ -95,3 +95,11 @@ test('new branch and calendar interface labels exist in RU, KK and EN',()=>{
  const keys=['assistant','feedback','feedbackTitle','moreSections','branchList','branchMap','branchSearch','branchRoute','branchReviewNotice','branchStatusNeedsReview','branchStatusConflict','branchSourceOriginal','branchSourceExternal','branchCrossCheckCaveat','provenanceConfirmed','provenanceNoSource','aiWebSearchUnavailable','aiExampleOne','aiHelpCatalog','aiHelpDocument','catalogueSourceError','searchEmptyHint','exhibitionDemo','historyRegionEyebrow','historySampleMaterials','calendarEyebrow','calendarTitle','calendarIntro','calendarYear','calendarMonth','calendarTopic','calendarSourceLanguage','calendarEnglishUnavailable','calendarReviewNeeded','calendarNoEntries','historyCalendarIntro','calendarAskAI','calendarSourceVersion'];
  for(const locale of ['ru','kk','en'])for(const key of keys)assert.equal(typeof messages[locale][key],'string',`${locale}.${key}`);
 });
+
+test('official documents navigation is localized and the route has no missing local PDF references',async()=>{
+ const keys=['officialDocuments'];
+ for(const locale of ['ru','kk','en'])for(const key of keys)assert.equal(typeof messages[locale][key],'string',`${locale}.${key}`);
+ const page=await readFile(new URL('../app/official-documents/page.tsx',import.meta.url),'utf8');
+ for(const url of ['https://adilet.zan.kz/rus/docs/G23V000289A','https://adilet.zan.kz/kaz/docs/G23V000289A','https://www.gov.kz/services/3014?lang=ru','https://www.gov.kz/situations/13/67'])assert.ok(page.includes(url),`Official source link missing: ${url}`);
+ assert.doesNotMatch(page,/href=["']\/documents\//,'The source PDFs are unavailable; do not create broken local download links');
+});

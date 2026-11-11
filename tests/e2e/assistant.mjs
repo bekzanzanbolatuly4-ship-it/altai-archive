@@ -32,6 +32,10 @@ try{
  assert.ok(ready,'Isolated server must start');
 browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_EXECUTABLE_PATH}:{})});
  const page=await browser.newPage();
+ const assistantRequests=[];
+ page.on('request',request=>{
+  if(new URL(request.url()).pathname==='/api/assistant')assistantRequests.push(request);
+ });
  await page.route('**/*',route=>new URL(route.request().url()).hostname==='127.0.0.1'?route.continue():route.abort());
  for(const width of [390,768,1440]){
   await page.setViewportSize({width,height:900});
@@ -89,6 +93,25 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
  await page.goto('http://127.0.0.1:3107/atlas');
  await page.getByRole('textbox',{name:'Поиск места'}).fill('no-matching-place');
  await page.locator('.place-list-empty').waitFor();
+ for(const [locale,aboutTitle] of [['ru','Руководство и отделы'],['kk','Басшылық және бөлімдер'],['en','Management and departments']]){
+  await page.goto('http://127.0.0.1:3107/about');
+  await page.evaluate(locale=>localStorage.setItem('altai-locale',locale),locale);
+  await page.reload();
+  await page.getByRole('heading',{name:aboutTitle}).waitFor();
+  await page.getByText('Жапаров Аскар Кенжебаевич',{exact:true}).waitFor();
+  await page.goto('http://127.0.0.1:3107/official-documents');
+  await page.getByRole('heading',{name:locale==='ru'?'Государственные услуги и документы':locale==='kk'?'Мемлекеттік қызметтер мен құжаттар':'Public services and documents'}).waitFor();
+  for(const section of ['#paid-services','#government-service','#legal-framework','#compliance','#reading-room','#useful-links'])await page.locator(section).waitFor();
+  assert.equal(await page.locator('a[href^="/documents/"]').count(),0,'Missing customer PDFs must not be exposed as broken local links');
+  const officialHosts=await page.locator('.official-info-link').evaluateAll(links=>links.map(link=>new URL(link.href).hostname));
+  assert.ok(officialHosts.length>=10);
+  assert.ok(officialHosts.every(host=>host==='adilet.zan.kz'||host==='old.adilet.zan.kz'||host==='www.gov.kz'||host==='gov.kz'||host==='egov.kz'));
+  await page.setViewportSize({width:390,height:844});
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Official information page must fit a mobile viewport');
+  await page.screenshot({path:path.join(root,`output/playwright/official-documents-${locale}-mobile.png`),fullPage:true});
+  await page.setViewportSize({width:1440,height:1000});
+  await page.screenshot({path:path.join(root,`output/playwright/official-documents-${locale}-desktop.png`),fullPage:true});
+ }
  for(const locale of ['ru','kk','en']){
   for(const mobile of [false,true]){
    await page.setViewportSize(mobile?{width:390,height:844}:{width:1440,height:1000});
@@ -100,6 +123,12 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
    assert.match(await input.inputValue(),/\n/);
    await input.press('Enter');
    await page.getByText('Public metadata describes photographs.',{exact:true}).waitFor();
+   const assistantRequest=assistantRequests.at(-1);
+   assert.ok(assistantRequest,'Browser must issue the assistant request');
+   assert.equal(assistantRequest.url(),`${page.url().split('/assistant')[0]}/api/assistant`,'Assistant fetch must use the current site origin');
+   const assistantHeaders=await assistantRequest.allHeaders();
+   assert.equal(assistantHeaders.origin,'http://127.0.0.1:3107','Browser Origin must match the page origin');
+   assert.ok(assistantHeaders['sec-fetch-site']===undefined||assistantHeaders['sec-fetch-site']==='same-origin','Browser Fetch Metadata must not mark the API request cross-site');
    assert.equal(await page.locator('a[href="/document/synthetic-public"]').count(),1);
    assert.ok(!(await page.locator('body').innerText()).includes('PRIVATE CONTENT'));
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));

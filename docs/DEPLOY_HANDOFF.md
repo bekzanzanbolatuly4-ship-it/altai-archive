@@ -39,7 +39,8 @@
 | Isolated browser E2E | **PASS** | синтетическая копия, mock provider; RU/KK/EN, desktop 1440 px, mobile 390 px, light/dark, AI errors/retry/demo, календарные фильтры, поиск/маршрут филиала, read-only UI/API |
 | Browser screenshots | **PASS** | визуально осмотрены desktop history/branches и mobile dark history/branches; screenshots находятся в `output/playwright/` |
 | Client bundle scan | **PASS** | идентификатор `OPENROUTER_API_KEY` не обнаружен в `.next/static` JavaScript; реальное значение ключа не читалось |
-| OpenRouter live / free model availability / latency | **NOT TESTED** | реальные AI вызовы не разрешались и не выполнялись |
+| OpenRouter live | **PASS · point-in-time** | 2026-11-11 `POST /api/assistant`, Origin `https://altai-archive.vercel.app`, test query `Find photographs` returned HTTP 200 / `mode: ai`; the response had no citations because no matching record was available. This is not a quota/SLA guarantee. |
+| Free model availability / latency / semantic grounding | **PARTIAL / NOT TESTED** | one API response was received; identity is inferred as OpenRouter from the deployed integration, latency was not benchmarked, model quality was not established |
 | Redis live connectivity / provider spending cap | **NOT TESTED** | Redis credentials и spending cap не настраивались; limiter проверен mock тестами |
 | Production Vercel persistence / deploy smoke | **NOT TESTED** | deployment не выполнялся; production storage не решён |
 
@@ -49,10 +50,10 @@ E2E использует только синтетические докумен�
 
 1. Не называть демо production-ready и не демонстрировать постоянную работу админки на Vercel. Для статического/preview показа включить `DEMO_READ_ONLY=true` и использовать только синтетический каталог.
 2. Не показывать реальные комплаенс-файлы и не утверждать, что список прошёл правовую или редакторскую проверку.
-3. Сказать, что AI отвечает по опубликованным метаданным, не читает PDF и требует внешней конфигурации; live модель и её качество не проверены.
+3. AI receives only matching published public metadata and does not read PDF files. A one-off Production response was observed; no-match behavior in the old deployment was not properly grounded. The updated local code now returns a deterministic no-match result without contacting a provider.
 4. Перед публичным размещением отдельно проверить телефон/email/адреса филиалов и права публикации персонализированных рабочих контактов.
 5. Указать, что календарь бережно сохраняет source wording, а четыре отмеченных несоответствия ждут редактора.
-6. Перед production решить постоянное хранилище, backup/restore, distributed AI limiter credentials, provider hard spending limit и организационные privacy approvals.
+6. Перед production решить постоянное хранилище, backup/restore, distributed AI limiter credentials, provider quota/budget settings и организационные privacy approvals.
 
 ## Риски
 
@@ -72,6 +73,6 @@ E2E использует только синтетические докумен�
 - `/branches` использует список и синхронизированную панель карты; на экранах ≤800 px доступны вкладки «Список / Карта». Точных координат нет — карта не рисует маркеры. Для адреса есть внешний маршрут. Телефон показывается только в сравнении двух источников со статусом расхождения; непроверенные телефоны не представлены как действующие контакты.
 - Provenance календаря различает текст исходного DOCX, внешний источник, дату проверки и неизвестную дату публикации. Внешний gov.kz подтверждает создание архива в 1940 году (исторический материал также относит сведения о шести филиалах к 2020 году): https://www.gov.kz/org/vko-cultura-arhiv/press/events/details/1292. Публикация gov.kz о 2026 годе подтверждает 130-летие областной библиотеки имени А. С. Пушкина: https://www.gov.kz/memleket/entities/vko-cultura-arhiv/press/news/details/1150609?lang=ru. Точная дата публикации этого материала не установлена.
 - Список e-memory используется только как кандидат для сверки; он содержит конфликтующие контакты и записи с устаревшей административной принадлежностью: https://e-memory.kz/en/archive/vostochno-kazakhstanskaya-oblast/. Актуальную принадлежность Жарминского и Аягозского филиалов подтверждает раздел подведомственных учреждений управления области Абай: https://www.gov.kz/org/abay-cultura-arhiv/about/structure/10/1. Остальные контакты/адреса из XLS требуют редакторской проверки. Обычный OpenRouter не даёт веб-поиск: UI сообщает, что интернет-поиск AI не подключён; внешняя search-интеграция не подключалась.
-- Безопасная ручная проверка live OpenRouter без изменения `.env.local` описана в `docs/AI_INTEGRATION.md`. Она не выполнялась; live API остаётся **NOT TESTED**. Mock E2E не обращается к сети и использует синтетические данные.
+- Безопасная ручная проверка live OpenRouter без изменения `.env.local` описана в `docs/AI_INTEGRATION.md`. Формулировка **NOT TESTED** относилась к срезу на 10.11.2026; 11.11.2026 выполнен единичный Production запрос, результат которого приведён в таблице выше. Это не проверка квоты, стабильности или SLA. Mock E2E не обращается к сети и использует синтетические данные.
 - Новый isolated E2E: **PASS** на 390/768/1440 px, RU/KK/EN, карточка главной и мобильное меню → AI, Escape-закрытие меню, branch search/empty state/list-to-map/route, calendar source status, AI mock/errors/retry/demo и read-only admin API. Скриншоты — в `output/playwright/`.
 - Итоговые `npm test`, `npm run typecheck`, `npm run lint`, `git diff --check` — **PASS**. Чистый `npm run build` в локальной конфигурации остановился на обязательном HTTPS `NEXT_PUBLIC_SITE_URL`; повторный production build с изолированными тестовыми HTTPS origins завершился **PASS**. `.env.local`, `.data`, GitHub и Vercel не менялись.

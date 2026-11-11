@@ -17,6 +17,7 @@ const primary:readonly NavItem[]=[
 ];
 const institutional:readonly NavItem[]=[
   ['/about','about',Archive],
+  ['/official-documents','officialDocuments',BookOpen],
   ['/news','news',Newspaper],
   ['/about#feedback','feedback',Mail],
   ['/atlas','atlas',Map]

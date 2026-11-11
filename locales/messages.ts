@@ -72,8 +72,9 @@ export const messages = {
     send: 'Отправить',
     assistantDisclosure: 'Демонстрационный помощник отвечает только на основе локальных демонстрационных материалов. Внешняя AI-служба не подключена.',
     aiIntro: "Цифровой историко-архивный помощник проекта ALTAI ARCHIVE.",
-    aiPrivacy: "Ваш текущий вопрос и найденные публичные метаданные отправляются в OpenRouter. Не вводите персональные данные, пароли или секреты. История хранится только на этой странице; каждый вопрос обрабатывается отдельно.",
+    aiPrivacy: "При подключённом AI-провайдере ему отправляются ваш вопрос и подходящие опубликованные публичные метаданные. Условия обработки зависят от провайдера. Не вводите персональные данные, пароли или секреты. История хранится только на этой странице.",
     aiLabel: "Ответ AI",
+    aiSearchResult: "Результат поиска по каталогу",
     aiWelcome: "Здравствуйте! Помогу найти опубликованные материалы. Я цифровой помощник, а не архивист или представитель государственных органов.",
     aiEvidenceNote: "Ответ сгенерирован AI и может содержать ошибки. Доступны только метаданные; оригинальные PDF не прочитаны. Источники ниже подтверждают лишь приведённые выдержки.",
     aiSources: "Проверенные публичные источники",
@@ -81,6 +82,8 @@ export const messages = {
     aiDemoSource: "Демонстрационный источник · метаданные",
     aiMetadata: "Публичные метаданные",
     aiError: "AI-ответ недоступен: возможны ограничение запросов, ошибка сервиса или непроверенный ответ. Попробуйте позже или откройте явно обозначенный локальный демо-режим.",
+    aiProviderLimit: "Провайдер AI ограничил бесплатные запросы. Повторите позже или используйте локальный демо-режим.",
+    aiRateLimit: "Достигнут лимит запросов помощника. Повторите позже или используйте локальный демо-режим.",
     aiRetry: "Повторить запрос",
     aiDemo: "Демонстрационный помощник (без AI)",
     aiLoading: "ALTAI AI готовит ответ…",
@@ -182,6 +185,7 @@ export const messages = {
     notTranslated: 'Без автоматического перевода',
     structureNotice: 'Схема связей архива и филиалов',
     resetFilters: 'Сбросить фильтры',
+    officialDocuments: 'Официальные документы',
     share: 'Поделиться'
   },
   kk: {
@@ -255,8 +259,9 @@ export const messages = {
     send: 'Жіберу',
     assistantDisclosure: 'Демонстрациялық көмекші жергілікті демо материалдарына ғана сүйенеді. Сыртқы AI қызметі қосылмаған.',
     aiIntro: "ALTAI ARCHIVE жобасының цифрлық тарихи-архивтік көмекшісі.",
-    aiPrivacy: "Ағымдағы сұрағыңыз бен табылған ашық метадеректер OpenRouter қызметіне жіберіледі. Жеке деректерді, құпиясөздерді немесе құпияларды енгізбеңіз. Тарих тек осы бетте сақталады; әр сұрақ бөлек өңделеді.",
+    aiPrivacy: "AI провайдері қосылғанда оған сұрағыңыз және сәйкес жарияланған ашық метадеректер жіберіледі. Деректерді өңдеу шарттары провайдерге байланысты. Жеке деректерді, құпиясөздерді немесе құпия кілттерді енгізбеңіз. Тарих тек осы бетте сақталады.",
     aiLabel: "AI жауабы",
+    aiSearchResult: "Каталогтан іздеу нәтижесі",
     aiWelcome: "Сәлеметсіз бе! Жарияланған материалдарды табуға көмектесемін. Мен архивист немесе мемлекеттік орган өкілі емес, цифрлық көмекшімін.",
     aiEvidenceNote: "Жауапты AI жасады, қателер болуы мүмкін. Тек метадеректер қолжетімді; түпнұсқа PDF оқылған жоқ. Төмендегі дереккөздер тек келтірілген үзінділерді растайды.",
     aiSources: "Тексерілген ашық дереккөздер",
@@ -264,6 +269,8 @@ export const messages = {
     aiDemoSource: "Демонстрациялық дереккөз · метадеректер",
     aiMetadata: "Ашық метадеректер",
     aiError: "AI жауабы қолжетімсіз: сұрау шегі, қызмет қатесі немесе тексерілмеген жауап болуы мүмкін. Кейінірек қайталаңыз немесе белгіленген жергілікті демо режимін ашыңыз.",
+    aiProviderLimit: "AI провайдері тегін сұрауларға шектеу қойды. Кейінірек қайталаңыз немесе жергілікті демо режимін пайдаланыңыз.",
+    aiRateLimit: "Көмекшінің сұрау шегіне жетті. Кейінірек қайталаңыз немесе жергілікті демо режимін пайдаланыңыз.",
     aiRetry: "Қайта сұрау",
     aiDemo: "Демонстрациялық көмекші (AI қолданбайды)",
     aiLoading: "ALTAI AI жауап дайындауда…",
@@ -365,6 +372,7 @@ export const messages = {
     notTranslated: 'Автоматты аудармасыз',
     structureNotice: 'Архив пен филиалдардың байланыс сызбасы',
     resetFilters: 'Сүзгілерді тазарту',
+    officialDocuments: 'Ресми құжаттар',
     share: 'Бөлісу'
   },
   en: {
@@ -438,8 +446,9 @@ export const messages = {
     send: 'Send',
     assistantDisclosure: 'This demonstration assistant uses only local demo materials. No external AI service is connected.',
     aiIntro: "The digital history and archive assistant for ALTAI ARCHIVE.",
-    aiPrivacy: "Your current question and matching public metadata are sent to OpenRouter. Do not enter personal data, passwords or secrets. History stays on this page only; each question is processed independently.",
+    aiPrivacy: "When an AI provider is configured, your question and matching published public metadata are sent to it. Data handling depends on the provider. Do not enter personal data, passwords or secrets. Conversation history stays on this page only.",
     aiLabel: "AI response",
+    aiSearchResult: "Catalogue search result",
     aiWelcome: "Hello! I can help find published materials. I am a digital assistant, not an archivist or a government representative.",
     aiEvidenceNote: "This AI-generated answer may contain errors. Only metadata is available; original PDFs have not been read. Sources below substantiate only the quoted excerpts.",
     aiSources: "Verified public sources",
@@ -447,6 +456,8 @@ export const messages = {
     aiDemoSource: "Demonstration source · metadata",
     aiMetadata: "Public metadata",
     aiError: "The AI response is unavailable: a request limit, service error or unverified response may be responsible. Try later or open the clearly labelled local demo.",
+    aiProviderLimit: "The AI provider has limited free requests. Try again later or use the local demo mode.",
+    aiRateLimit: "The assistant request limit has been reached. Try again later or use the local demo mode.",
     aiRetry: "Retry request",
     aiDemo: "Demonstration assistant (no AI)",
     aiLoading: "ALTAI AI is preparing an answer…",
@@ -548,6 +559,7 @@ export const messages = {
     notTranslated: 'No automatic translation',
     structureNotice: 'Archive and branch relationship structure',
     resetFilters: 'Reset filters',
+    officialDocuments: 'Official documents',
     share: 'Share'
   }
 } satisfies Record<Locale, Record<string, string>>;
