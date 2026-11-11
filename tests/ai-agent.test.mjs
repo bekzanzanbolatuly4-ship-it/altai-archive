@@ -31,8 +31,22 @@ test('reference questions call the real completion path with approved public fac
  assert.equal(result.mode,'ai');assert.equal(result.citations[0].url,'/catalog');assert.equal(result.citations[0].provenance,'verified');
  assert.equal(context.length,1);assert.equal(context[0].id,reference.id);assert.ok(context[0].description.includes('demonstration interface'));
 });
-test('reference questions surface provider 429 and never mislabel fallback as generated AI',async()=>{
- await assert.rejects(runAgent({message:'What is an archive fund?',locale:'en'},deps({documents:async()=>assert.fail('No archive read'),fetcher:async()=>new Response('{}',{status:429})})),/provider_limit/);
+test('greetings, ALTAI ARCHIVE overview and catalogue navigation use cited local reference replies in RU, KK and EN',async()=>{
+ const questions=[['Привет!','ru','/assistant'],['Что такое ALTAI ARCHIVE?','ru','/about'],['Где каталог?','ru','/catalog'],['Сәлем!','kk','/assistant'],['ALTAI ARCHIVE деген не?','kk','/about'],['Каталог қайда?','kk','/catalog'],['Hello!','en','/assistant'],['What is ALTAI ARCHIVE?','en','/about'],['Where is the catalogue?','en','/catalog']];
+ for(const [message,locale,url] of questions){
+  const result=await runAgent({message,locale},deps({documents:async()=>assert.fail('Local site references must not read archive storage'),fetcher:async()=>assert.fail('Local site references must not call Gemini or another model')}));
+  assert.equal(result.mode,'reference',message);assert.ok(result.answer.length>20,message);assert.ok(result.citations.some(source=>source.url===url),message);
+ }
+});
+test('site capability questions return localized local references without model calls',async()=>{
+ for(const [message,locale] of [['Какие разделы есть на сайте?','ru'],['Сайтта қандай бөлімдер бар?','kk'],['What sections are on the site?','en']]){
+  const result=await runAgent({message,locale},deps({documents:async()=>assert.fail('Site navigation must not read archive storage'),fetcher:async()=>assert.fail('Site navigation must not call a model')}));
+  assert.equal(result.mode,'reference');assert.ok(result.citations.length>=5);
+ }
+});
+test('reference questions fall back to a cited local reference on provider 429 without claiming AI',async()=>{
+ const result=await runAgent({message:'What is an archive fund?',locale:'en'},deps({documents:async()=>assert.fail('No archive read'),fetcher:async()=>new Response('{}',{status:429})}));
+ assert.equal(result.mode,'reference');assert.equal(result.citations[0].url,'https://adilet.zan.kz/rus/docs/Z980000326_');assert.ok(!result.answer.includes('AI response'));
 });
 test('OpenRouter completion supports a bounded low-token live check',async()=>{
  let body;
@@ -115,6 +129,10 @@ test('citations require exact excerpts and current authorization',()=>{
 test('no source matches do not fabricate citations',async()=>{
  const result=await runAgent({message:'квантовая обсерватория на Марсе',locale:'ru'},deps({documents:async()=>[],fetcher:async()=>assert.fail('No-match must not call the provider')}));
  assert.deepEqual(result.citations,[]);
+});
+test('missing specific archive documents remain no-match and do not hit the synthetic demo catalogue',async()=>{
+ const result=await runAgent({message:'Найди архивный документ с шифром 999-XYZ',locale:'ru'},deps({documents:async()=>[],fetcher:async()=>assert.fail('No confirmed archive record must not call a provider')}));
+ assert.equal(result.mode,'no-match');assert.deepEqual(result.citations,[]);
 });
 test('local demonstration search has a clear non-AI label and a source link',async()=>{
  for(const [locale,message,phrase] of [['ru','Найти фотографию','не генеративный ответ AI'],['kk','Фото іздеу','генеративті AI жауабы емес'],['en','Find photographs','not a generative AI response']]){

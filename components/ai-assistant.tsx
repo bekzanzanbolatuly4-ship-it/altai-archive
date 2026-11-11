@@ -4,7 +4,7 @@ import {useEffect,useRef,useState} from 'react';
 import {ArrowRight,Send,Sparkles} from 'lucide-react';
 import {useApp} from './providers';
 
-type Reply={mode:'ai'|'local-search'|'no-match';answer:string;citations:{id:string;title:string;quote:string;url:string;provenance:string}[]};
+type Reply={mode:'ai'|'reference'|'local-search'|'no-match';answer:string;citations:{id:string;title:string;quote:string;url:string;provenance:string}[]};
 type Turn={question:string;reply?:Reply;error?:string};
 const AI_ERROR_MESSAGES:Record<string,'aiProviderLimit'|'aiRateLimit'|'aiUnconfigured'|'aiConfiguration'|'aiLimiterUnavailable'|'aiProviderUnavailable'|'aiTimeout'|'aiInvalidResponse'>={provider_limit:'aiProviderLimit',rate_limit:'aiRateLimit',unconfigured:'aiUnconfigured',configuration:'aiConfiguration',rate_limit_unavailable:'aiLimiterUnavailable',client_ip_unavailable:'aiLimiterUnavailable',provider_error:'aiProviderUnavailable',timeout:'aiTimeout',invalid_response:'aiInvalidResponse',source_changed:'aiInvalidResponse'};
 export function AIAssistant({demo}:{demo:React.ReactNode}){
@@ -30,7 +30,7 @@ export function AIAssistant({demo}:{demo:React.ReactNode}){
    const response=await fetch('/api/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:question,locale}),signal:controller.signal});
    const reply=await response.json();
    if(!response.ok)throw new Error(typeof reply?.error==='string'?reply.error:'unavailable');
-   if(!['ai','local-search','no-match'].includes(reply.mode)||typeof reply.answer!=='string'||!Array.isArray(reply.citations))throw new Error('invalid');
+   if(!['ai','reference','local-search','no-match'].includes(reply.mode)||typeof reply.answer!=='string'||!Array.isArray(reply.citations))throw new Error('invalid');
    setTurns(old=>old.map((t,i)=>i===index?{question,reply}:t));
   }catch(error){setTurns(old=>old.map((t,i)=>i===index?{question,error:error instanceof Error?error.message:'unavailable'}:t));}
   finally{clearTimeout(timer);busy.current=false;setLoading(false);input.current?.focus();}
@@ -47,7 +47,7 @@ export function AIAssistant({demo}:{demo:React.ReactNode}){
     {turns.map((turn,i)=><div key={i}>
      <div className="chat-bubble user-bubble ai-text">{turn.question}</div>
      {turn.reply&&<div className="chat-bubble assistant-bubble">
-      <strong>{msg(turn.reply.mode==='ai'?'aiLabel':turn.reply.mode==='local-search'?'aiLocalSearch':'aiSearchResult')}</strong><p className="ai-text">{turn.reply.answer}</p>
+      <strong>{msg(turn.reply.mode==='ai'?'aiLabel':turn.reply.mode==='reference'?'aiReferenceAnswer':turn.reply.mode==='local-search'?'aiLocalSearch':'aiSearchResult')}</strong><p className="ai-text">{turn.reply.answer}</p>
       {turn.reply.mode==='ai'&&<p>{msg('aiEvidenceNote')}</p>}
       <section className="assistant-results" aria-label={msg('aiSources')}><h3>{msg('aiSources')}</h3>
        {turn.reply.citations.length?turn.reply.citations.map(source=><div key={source.id}>

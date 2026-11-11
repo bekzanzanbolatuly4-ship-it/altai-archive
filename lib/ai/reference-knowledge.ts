@@ -1,7 +1,7 @@
 import type {Language} from './context.ts';
 import type {Source} from './context.ts';
 
-export type ReferenceIntent='fund'|'catalogue'|'branches'|'official-documents'|'institution'|'site-sections';
+export type ReferenceIntent='greeting'|'platform'|'fund'|'catalogue'|'branches'|'official-documents'|'institution'|'site-sections';
 type KnowledgeEntry={id:string;title:Record<Language,string>;description:Record<Language,string>;url:string;intent:ReferenceIntent};
 
 const entries:KnowledgeEntry[]=[
@@ -23,17 +23,48 @@ const entries:KnowledgeEntry[]=[
 
 export function classifyReferenceQuestion(message:string):ReferenceIntent|null{
  const q=message.toLocaleLowerCase();
+ if(/^(?:(?:привет|здравствуй[\p{L}]*|доброе утро|добрый день|добрый вечер|сәлем|салем|қайырлы таң|қайырлы күн|қайырлы кеш|hello|hi|hey|good morning|good afternoon|good evening)(?=$|[\s!,.?]))/iu.test(q))return 'greeting';
+ if(/(?:что такое|что представляет собой|what is|define|деген не|не болып табылады).{0,60}altai\s+archive|altai\s+archive.{0,60}(?:что такое|what is|деген не)/iu.test(q))return 'platform';
  if(/(?:\b(?:что такое|что значит|определение|what is|define|анықтамасы|деген не)\b).{0,60}(?:архивн[\p{L}]* фонд|архивтік қор|archive fund)|(?:архивн[\p{L}]* фонд|архивтік қор|archive fund).{0,50}(?:что такое|what is|деген не)/u.test(q))return 'fund';
  if(/(?:что представляет собой|что такое|what is|who is|кто такой|мекеме қандай|не представляет собой).{0,100}(?:государственн[\p{L}]* архив|госархив|архив вко|архив восточно-казахстан|state archive|вко архив)/u.test(q))return 'institution';
  if(/(?:филиал|branches|branch|филиалдар)/u.test(q)&&/(?:где|найти|показ|список|where|find|show|қайда|табу|көрсету)/u.test(q))return 'branches';
- if(/(?:каталог|catalogue|catalog|каталогтан|каталогты)/u.test(q)&&/(?:как|пользоват|искать|найти|поиск|how|use|search|find|қалай|ізде|пайдалан)/u.test(q))return 'catalogue';
+ if(/(?:каталог|catalogue|catalog|каталогтан|каталогты)/u.test(q)&&/(?:как|пользоват|искать|найти|поиск|где|how|use|search|find|where|қайда|қалай|ізде|пайдалан)/u.test(q))return 'catalogue';
  if(/(?:официальн[\p{L}]* документ|ресми құжат|official document|адилет|әділет)/u.test(q)&&/(?:где|найти|искать|как|where|find|search|how|қайда|табу|қалай)/u.test(q))return 'official-documents';
- if(/(?:раздел[\p{L}]*|страниц[\p{L}]*|сайт|sections|pages|website|бөлімдер|бет|сайтта)/u.test(q)&&/(?:какие|какой|список|есть|what|which|list|available|қандай|бар|тізім)/u.test(q))return 'site-sections';
+ if(/(?:раздел[\p{L}]*|страниц[\p{L}]*|сайт|sections|pages|website|бөлімдер|бет|сайтта|платформа)/u.test(q)&&/(?:какие|какой|список|есть|что умеет|возможност[\p{L}]*|what|which|list|available|can .* do|қандай|не істей алады|мүмкіндіктер|бар|тізім)/u.test(q))return 'site-sections';
  return null;
 }
 
 export function approvedReferenceSources(intent:ReferenceIntent,locale:Language):Source[]{
+ if(intent==='greeting')return sourcesById(['section-assistant','section-catalogue'],locale);
+ if(intent==='platform')return sourcesById(['institution-platform','section-catalogue'],locale);
  return entries.filter(entry=>entry.intent===intent).map((entry,index)=>({
   id:`R${index+1}`,kind:'reference',title:entry.title[locale],description:entry.description[locale],provenance:'verified',url:entry.url
  }));
+}
+
+function sourcesById(ids:string[],locale:Language):Source[]{
+ return ids.flatMap((id,index)=>{
+  const entry=entries.find(candidate=>candidate.id===id);
+  return entry?[{id:`R${index+1}`,kind:'reference' as const,title:entry.title[locale],description:entry.description[locale],provenance:'verified',url:entry.url}]:[];
+ });
+}
+
+export function localReferenceReply(intent:ReferenceIntent,locale:Language){
+ const sources=intent==='greeting'
+  ?approvedReferenceSources('greeting',locale)
+  :intent==='platform'
+  ?approvedReferenceSources('platform',locale)
+  :intent==='catalogue'
+  ?approvedReferenceSources('catalogue',locale)
+  :intent==='site-sections'
+  ?approvedReferenceSources('site-sections',locale)
+  :approvedReferenceSources(intent,locale);
+ if(!sources.length)return null;
+ let answer:string;
+ if(intent==='greeting')answer=locale==='kk'?'Сәлем! Мен ALTAI ARCHIVE сайтының анықтамалық көмекшісімін. Сайт бөлімдері туралы айтып, каталогтан жарияланған материалдарды іздеуге көмектесемін.':locale==='ru'?'Здравствуйте! Я справочный помощник ALTAI ARCHIVE. Подскажу разделы сайта и помогу искать опубликованные материалы в каталоге.':'Hello! I can guide you around ALTAI ARCHIVE and help you search published materials in the catalogue.';
+ else if(intent==='platform')answer=locale==='kk'?'ALTAI ARCHIVE — архивтің жаңа ресми атауы емес, цифрлық платформа. Каталогты /catalog бетінен ашуға болады.':locale==='ru'?'ALTAI ARCHIVE — цифровая платформа, а не новое официальное название архива. Каталог находится на странице /catalog.':'ALTAI ARCHIVE is a digital platform, not a new official name for the archive. The catalogue is at /catalog.';
+ else if(intent==='catalogue')answer=locale==='kk'?'Каталог /catalog бетінде орналасқан. Бұл — демонстрациялық интерфейс; «демо» карточкалары түпнұсқа архивтік істер емес.':locale==='ru'?'Каталог находится на странице /catalog. Это демонстрационный интерфейс; карточки с пометкой «демо» не являются подлинными архивными делами.':'The catalogue is at /catalog. It is a demonstration interface; cards marked “demo” are not authentic archival files.';
+ else if(intent==='site-sections')answer=locale==='kk'?'Сайтта басты бет, каталог, көмекші, ресми құжаттар, архив туралы мәлімет, филиалдар, өңір тарихы және көрмелер бөлімдері бар.':locale==='ru'?'На сайте есть главная, каталог, AI-помощник, официальные документы, сведения об архиве, филиалы, история региона и выставки.':'The site includes Home, Catalogue, Assistant, Official Documents, About, Branches, Regional History and Exhibitions.';
+ else answer=sources[0].description;
+ return {mode:'reference' as const,locale,answer,citations:sources.map(source=>({id:source.id,title:source.title,quote:source.title,provenance:'verified',url:source.url!}))};
 }

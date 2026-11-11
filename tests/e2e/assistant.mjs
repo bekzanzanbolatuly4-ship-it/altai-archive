@@ -137,6 +137,14 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
    assert.equal(await page.locator('a[href="/document/synthetic-public"]').count(),1);
    assert.ok(!(await page.locator('body').innerText()).includes('PRIVATE CONTENT'));
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+   if(mobile){
+    const greeting=locale==='ru'?'Привет!':locale==='kk'?'Сәлем!':'Hello!';
+    const greetingResponse=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/assistant');
+    await input.fill(greeting);await input.press('Enter');
+    const greetingBody=await (await greetingResponse).json();assert.equal(greetingBody.mode,'reference');assert.ok(greetingBody.citations.length>0);
+    const referenceLabel=locale==='ru'?'Справочный ответ по сведениям сайта · AI не использовался':locale==='kk'?'Сайт мәліметтеріне негізделген анықтамалық жауап · AI қолданылмады':'Local site reference · no AI used';
+    await page.getByText(referenceLabel,{exact:true}).last().waitFor();
+   }
    if(locale==='ru'&&mobile){
    const referenceResponse=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/assistant');
    await input.fill('How do I use the archive catalogue?');await input.press('Enter');
@@ -147,7 +155,7 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
    const localSearch=await (await localSearchResponse).json();assert.equal(localSearch.mode,'local-search');assert.equal(localSearch.citations[0].url,'/document/demo-02');
    await page.getByText(locale==='ru'?'Локальный поиск · AI не использовался':locale==='kk'?'Жергілікті іздеу · AI қолданылмады':'Local search · no AI used',{exact:true}).waitFor();
    await page.locator('a[href="/document/demo-02"]').waitFor();
-   const unmatched=locale==='ru'?'квантовая обсерватория на Марсе':locale==='kk'?'Марстағы ғарыш обсерваториясы':'quasar observatory on mars';
+   const unmatched=locale==='ru'?'Найди архивный документ с шифром 999-XYZ':locale==='kk'?'999-XYZ архивтік құжатты тап':'Find archive record with reference 999-XYZ';
    const noMatchResponse=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/assistant');
    await input.fill(unmatched);await input.press('Enter');
    const noMatch=await (await noMatchResponse).json();assert.equal(noMatch.mode,'no-match');assert.deepEqual(noMatch.citations,[]);

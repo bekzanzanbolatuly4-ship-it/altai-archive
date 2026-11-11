@@ -42,9 +42,15 @@ test('real route integrates input, public retrieval, provider, validation and sa
   const empty=await POST(request({message:'квантовая обсерватория на Марсе',locale:'ru'}));
   assert.equal(empty.status,200);assert.deepEqual(await empty.json(),{mode:'no-match',locale:'ru',answer:'По вашему запросу не найдено опубликованных архивных материалов.',citations:[]});
   assert.equal(providerCalls,0,'No provider request should run when there are no public documents');
+  for(const [message,locale,url] of [['привет','ru','/assistant'],['Что такое ALTAI ARCHIVE?','ru','/about'],['Где каталог?','ru','/catalog']]){
+   const response=await POST(request({message,locale}));assert.equal(response.status,200);
+   const body=await response.json();assert.equal(body.mode,'reference');assert.ok(body.citations.some(source=>source.url===url));
+  }
+  const missingDocument=await POST(request({message:'Найди архивный документ с шифром 999-XYZ',locale:'ru'}));
+  assert.equal(missingDocument.status,200);assert.equal((await missingDocument.json()).mode,'no-match');
   const missingReferenceConfig=await POST(request({message:'How do I use the archive catalogue?',locale:'en'}));
-  assert.equal(missingReferenceConfig.status,503);assert.deepEqual(await missingReferenceConfig.json(),{mode:'unavailable',error:'unconfigured'});
-  assert.equal(providerCalls,0,'A reference question without a configured provider must explain the missing provider, not synthesize AI');
+  assert.equal(missingReferenceConfig.status,200);assert.equal((await missingReferenceConfig.json()).mode,'reference');
+  assert.equal(providerCalls,0,'Local references and no-match must not call a model');
   process.env.OPENROUTER_API_KEY='synthetic-key';process.env.OPENROUTER_MODEL='test/model:free';
   globalThis.fetch=async(url,options)=>{
    assert.equal(url,'https://openrouter.ai/api/v1/chat/completions');
@@ -59,7 +65,7 @@ test('real route integrates input, public retrieval, provider, validation and sa
   globalThis.__assistantDocuments=[];
   globalThis.fetch=async()=>new Response('provider body must stay private',{status:429});
   const referenceLimited=await POST(request({message:'How do I use the archive catalogue?',locale:'en'}));
-  assert.equal(referenceLimited.status,429);assert.deepEqual(await referenceLimited.json(),{mode:'unavailable',error:'provider_limit'});
+  assert.equal(referenceLimited.status,200);assert.equal((await referenceLimited.json()).mode,'reference');
   delete globalThis.__assistantDocuments;
   process.env.OPENROUTER_API_KEY='synthetic-key';process.env.OPENROUTER_MODEL='test/model:free';
   globalThis.fetch=async(url,options)=>{

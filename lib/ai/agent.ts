@@ -7,7 +7,7 @@ import {acquire} from './limits.ts';
 import {searchDemonstration} from './demo-search.ts';
 import {isPublicDocument} from '../public-access.ts';
 import {redact,type Source} from './context.ts';
-import {approvedReferenceSources,classifyReferenceQuestion} from './reference-knowledge.ts';
+import {approvedReferenceSources,classifyReferenceQuestion,localReferenceReply} from './reference-knowledge.ts';
 
 function noMatch(locale:'ru'|'kk'|'en'){
  const answer=locale==='kk'?'Сұрауыңызға сәйкес жарияланған архив материалы табылмады.':locale==='ru'?'По вашему запросу не найдено опубликованных архивных материалов.':'No matching published archive material was found.';
@@ -16,6 +16,14 @@ function noMatch(locale:'ru'|'kk'|'en'){
 
 function asksForNonPublicContent(message:string){
  return /(?:\b(?:closed|restricted|confidential|private|personnel)\b|закрыт[\p{L}]*|ограничен[\p{L}]*|конфиденциал[\p{L}]*|личн[\p{L}]*|персональн[\p{L}]*|жабық[\p{L}]*|құпия[\p{L}]*|жеке[\p{L}]*)/iu.test(message);
+}
+
+function isSpecificArchiveSearch(message:string){
+ return /(?:archiv[\p{L}]*\s+(?:record|document|file|case)|(?:fonds?|fond|inventory|case|document)\s+(?:no\.?|number|id|\d)|архивн[\p{L}]*\s+(?:документ|дело|шифр|фонд)|(?:фонд|опись|дело|документ)\s*(?:№|номер|шифр|\d)|қор\s*\d|мұрағаттық\s+(?:құжат|іс))/iu.test(message);
+}
+
+function isCatalogueLocationQuestion(message:string){
+ return /(?:^|[^\p{L}])(?:где|where|қайда)(?=$|[^\p{L}])/iu.test(message);
 }
 
 function localPublicSearch(sources:Source[],locale:'ru'|'kk'|'en',documents:StoredDocument[]){
@@ -36,12 +44,20 @@ export async function runAgent(raw:unknown,dependencies:{documents:()=>Promise<S
   if(asksForNonPublicContent(input.message))return noMatch(input.locale);
   const referenceIntent=classifyReferenceQuestion(input.message);
   if(referenceIntent){
+   if(referenceIntent==='greeting'||referenceIntent==='platform'||referenceIntent==='site-sections'||(referenceIntent==='catalogue'&&isCatalogueLocationQuestion(input.message)))return localReferenceReply(referenceIntent,input.locale)!;
    const references=approvedReferenceSources(referenceIntent,input.locale);
-   const response=await complete(input.message,buildContext(references),input.locale,dependencies);
-   return {mode:'ai' as const,locale:input.locale,...validateResponse(response,references,[])};
+   try{
+    const response=await complete(input.message,buildContext(references),input.locale,dependencies);
+    return {mode:'ai' as const,locale:input.locale,...validateResponse(response,references,[])};
+   }catch(error){
+    const local=localReferenceReply(referenceIntent,input.locale);
+    if(local)return local;
+    throw error;
+   }
   }
   const sources=searchPublic(await dependencies.documents(),input.message);
   if(!sources.length){
+   if(isSpecificArchiveSearch(input.message))return noMatch(input.locale);
    const local=searchDemonstration(input.message,input.locale);
    if(local)return local;
    return noMatch(input.locale);
