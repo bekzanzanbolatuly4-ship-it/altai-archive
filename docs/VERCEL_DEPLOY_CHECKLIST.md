@@ -26,7 +26,7 @@
 | `UPLOAD_LIMIT_MB` | Необязательно | Нет | Лимит загрузки; по умолчанию 25 MB, но постоянное хранилище на Vercel всё равно отсутствует |
 | `AI_PROVIDER` | Только при разрешённом live AI | Нет | `openrouter` или `gemini`; по умолчанию `openrouter` |
 | `AI_API_KEY` | Только при разрешённом live AI | Да | Серверный ключ выбранного провайдера; никогда не использовать `NEXT_PUBLIC_` |
-| `AI_MODEL` | Только при разрешённом live AI | Нет | Для OpenRouter — `openrouter/free` или точный `:free` ID; без платных моделей |
+| `AI_MODEL` | Только при разрешённом live AI | Нет | OpenRouter — `openrouter/free` или точный `:free` ID; Gemini — только `gemini-2.5-flash-lite`; проверьте billing/тариф в Google AI Studio отдельно |
 | `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` | Временно при миграции | API key — да | Устаревшие алиасы; оставить только если новые `AI_*` значения не заданы |
 | `UPSTASH_REDIS_REST_URL` | Обязательно при включённом production AI | Да/endpoint | HTTPS REST endpoint Upstash Redis; приложение закрывает AI при отсутствии |
 | `UPSTASH_REDIS_REST_TOKEN` | Обязательно при включённом production AI | Да | Токен Upstash REST; приложение закрывает AI при отсутствии |

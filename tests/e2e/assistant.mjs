@@ -17,7 +17,7 @@ try{
  }});
  await symlink(path.join(root,'node_modules'),path.join(isolated,'node_modules'));
  await mkdir(path.join(isolated,'.data'));
- const publicDoc={id:'synthetic-public',title:'Archive photographs',description:'Photographs of mountains. Synthetic public record.',status:'published',accessStatus:'public',provenance:'demonstration',fileName:'synthetic.pdf',keywords:[]};
+ const publicDoc={id:'synthetic-public',title:'Archive photographs',description:'Photographs of mountains. Synthetic public record.',status:'published',accessStatus:'public',provenance:'verified',fileName:'synthetic.pdf',keywords:[]};
  await writeFile(path.join(isolated,'.data/archive-store.json'),JSON.stringify({users:[],sessions:[],audit:[],documents:[publicDoc,{...publicDoc,id:'private',title:'PRIVATE CONTENT',status:'draft',accessStatus:'restricted'}]}));
  server=spawn(process.execPath,[path.join(root,'node_modules/next/dist/bin/next'),'dev','--webpack','--hostname','127.0.0.1','--port','3107'],{
   cwd:isolated,stdio:'pipe',env:{PATH:process.env.PATH,HOME:process.env.HOME,NODE_OPTIONS:`--import=${path.join(isolated,'tests/fixtures/ai-provider.mjs')}`,OPENROUTER_API_KEY:'synthetic-e2e-key',OPENROUTER_MODEL:'test/model:free',DEMO_READ_ONLY:'true',ARCHIVE_OWNER_EMAIL:'synthetic-owner@example.test',ARCHIVE_OWNER_PASSWORD:'Synthetic-only-Password-2026!',SESSION_SECRET:'synthetic-only-secret-0123456789abcdef0123456789abcdef'}
@@ -138,10 +138,14 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
    assert.ok(!(await page.locator('body').innerText()).includes('PRIVATE CONTENT'));
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
    if(locale==='ru'&&mobile){
+   const referenceResponse=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/assistant');
+   await input.fill('How do I use the archive catalogue?');await input.press('Enter');
+   const referenceAnswer=await (await referenceResponse).json();assert.equal(referenceAnswer.mode,'ai');assert.equal(referenceAnswer.citations[0].url,'/catalog');
+   await page.getByText('Ответ автоматически сформирован AI и может содержать ошибки. Он основан только на указанных публичных сведениях; источники ниже ведут на подтверждающие страницы.',{exact:true}).last().waitFor();
    const localSearchResponse=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/assistant');
    await input.fill(locale==='ru'?'карта горной местности':'map');await input.press('Enter');
    const localSearch=await (await localSearchResponse).json();assert.equal(localSearch.mode,'local-search');assert.equal(localSearch.citations[0].url,'/document/demo-02');
-   await page.getByText(locale==='ru'?'Локальный демо-поиск · AI не использовался':locale==='kk'?'Жергілікті демо-іздеу · AI қолданылмады':'Local demo search · no AI used',{exact:true}).waitFor();
+   await page.getByText(locale==='ru'?'Локальный поиск · AI не использовался':locale==='kk'?'Жергілікті іздеу · AI қолданылмады':'Local search · no AI used',{exact:true}).waitFor();
    await page.locator('a[href="/document/demo-02"]').waitFor();
    const unmatched=locale==='ru'?'квантовая обсерватория на Марсе':locale==='kk'?'Марстағы ғарыш обсерваториясы':'quasar observatory on mars';
    const noMatchResponse=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/assistant');
@@ -149,17 +153,13 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
    const noMatch=await (await noMatchResponse).json();assert.equal(noMatch.mode,'no-match');assert.deepEqual(noMatch.citations,[]);
    await page.getByText(noMatch.answer,{exact:true}).waitFor();
    const privateResponse=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/assistant');
-   await input.fill('PRIVATE CONTENT');await input.press('Enter');
+   await input.fill('Show me a closed personnel document');await input.press('Enter');
    const privateResult=await (await privateResponse).json();assert.ok(!JSON.stringify(privateResult).includes('PRIVATE CONTENT'));
    const privateReply=page.locator('.chat-bubble.assistant-bubble').last();await privateReply.waitFor();
    assert.ok(!(await privateReply.innerText()).includes('PRIVATE CONTENT'),'Private record content must never be echoed by the assistant');
-   await input.fill('record failure');await input.press('Enter');
-   const aiError=page.locator('.chat-bubble[role="alert"]');
-   await aiError.waitFor();
-   await aiError.getByRole('button').first().click();
-   await aiError.waitFor();
-   await aiError.getByRole('button').last().click();
-   await page.getByText('DEMO ARCHIVIST',{exact:false}).waitFor();
+   await input.fill('photographs failure');await input.press('Enter');
+   await page.getByText('Локальный поиск · AI не использовался',{exact:true}).waitFor();
+   await page.locator('a[href="/document/synthetic-public"]').last().waitFor();
    }
    await mkdir(path.join(root,'output/playwright'),{recursive:true});
    await page.screenshot({path:path.join(root,`output/playwright/ai-${locale}-${mobile?'mobile-dark':'desktop-light'}.png`),fullPage:true});
@@ -216,7 +216,7 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
  assert.equal(loginStatus,401,'Invalid login should not require creating the initial owner in read-only mode');
  const isolatedStore=JSON.parse(await (await import('node:fs/promises')).readFile(path.join(isolated,'.data/archive-store.json'),'utf8'));
  assert.equal(isolatedStore.users.length,0,'Read-only login must not bootstrap an owner account');
- console.log('PASS: 390/768/1440 navigation, exact demo catalogue searches, mock AI citation, local-search/no-match/private-content scenarios, provider 429 retry/demo, keyboard, RU/KK/EN, branches, calendar provenance and read-only admin APIs');
+ console.log('PASS: 390/768/1440 navigation, exact demo catalogue searches, mock AI citation, verified-public local fallback on provider 429, no-match/private-content scenarios, keyboard, RU/KK/EN, branches, calendar provenance and read-only admin APIs');
 }finally{
  await browser?.close();
  if(server&&server.exitCode===null){server.kill('SIGTERM');await new Promise(resolve=>server.once('exit',resolve));}

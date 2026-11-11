@@ -6,8 +6,9 @@ import {validateResponse} from '../lib/ai/validation.ts';
 import {createLimiter,readBounded} from '../lib/ai/limits.ts';
 import {instructions} from '../lib/ai/instructions.ts';
 import {complete} from '../lib/ai/openrouter.ts';
+import {approvedReferenceSources,classifyReferenceQuestion} from '../lib/ai/reference-knowledge.ts';
 
-const doc={id:'public-id',title:'Archive photographs',description:'Photographs of mountains.',status:'published',accessStatus:'public',provenance:'demonstration',fileName:'PRIVATE-PATH',createdBy:'PRIVATE-USER',keywords:[]};
+const doc={id:'public-id',title:'Archive photographs',description:'Photographs of mountains.',status:'published',accessStatus:'public',provenance:'verified',fileName:'PRIVATE-PATH',createdBy:'PRIVATE-USER',keywords:[]};
 const output=JSON.stringify({answer:'Public metadata describes photographs.',citations:[{id:'S1',quote:'Photographs of mountains.'}]});
 const ok=async()=>Response.json({choices:[{finish_reason:'stop',message:{content:output}}]});
 const deps=(extra={})=>({documents:async()=>[doc],key:'synthetic-test-secret',model:'test/model:free',fetcher:ok,limiter:createLimiter(),...extra});
@@ -19,6 +20,19 @@ test('successful retrieval, model generation and server citations',async()=>{
  assert.equal(result.mode,'ai');assert.equal(result.citations[0].url,'/document/public-id');
  assert.equal(body.provider.max_price.prompt,0);assert.equal(body.provider.max_price.completion,0);assert.equal(body.provider.allow_fallbacks,true);assert.equal(body.provider.data_collection,'deny');assert.equal(body.tools,undefined);
  assert.equal(body.max_tokens,900);assert.ok(!JSON.stringify(body).includes('PRIVATE'));assert.ok(!JSON.stringify(body).includes('synthetic-test-secret'));
+});
+test('reference questions call the real completion path with approved public facts even when archive storage is empty',async()=>{
+ for(const [question,intent] of [['What is an archive fund?','fund'],['How do I use the archive catalogue?','catalogue'],['Где найти филиалы?','branches'],['Как найти официальные документы?','official-documents'],['Что представляет собой Государственный архив ВКО?','institution'],['Какие разделы есть на сайте?','site-sections']])assert.equal(classifyReferenceQuestion(question),intent);
+ const reference=approvedReferenceSources('catalogue','en')[0];let context;
+ const result=await runAgent({message:'How do I use the archive catalogue?',locale:'en'},deps({documents:async()=>assert.fail('Reference questions must not read archive storage'),fetcher:async(_url,options)=>{
+  const payload=JSON.parse(options.body);context=JSON.parse(payload.messages[1].content).untrustedPublicMetadata;
+  return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify({answer:'Use the catalogue search and filters.',citations:[{id:reference.id,quote:reference.description}]})}}]});
+ }}));
+ assert.equal(result.mode,'ai');assert.equal(result.citations[0].url,'/catalog');assert.equal(result.citations[0].provenance,'verified');
+ assert.equal(context.length,1);assert.equal(context[0].id,reference.id);assert.ok(context[0].description.includes('demonstration interface'));
+});
+test('reference questions surface provider 429 and never mislabel fallback as generated AI',async()=>{
+ await assert.rejects(runAgent({message:'What is an archive fund?',locale:'en'},deps({documents:async()=>assert.fail('No archive read'),fetcher:async()=>new Response('{}',{status:429})})),/provider_limit/);
 });
 test('OpenRouter completion supports a bounded low-token live check',async()=>{
  let body;
@@ -76,8 +90,15 @@ test('global rate and concurrency limits release correctly',()=>{
  for(let i=0;i<18;i++)acquire()();assert.throws(acquire,/rate_limit/);now=60001;acquire()();
 });
 test('restricted, unpublished, hidden and deleted records excluded',()=>{
- const forbidden=[{accessStatus:'restricted'},...['draft','review','approved','archived'].map(status=>({status})),{hidden:true},{deleted:true},{deletedAt:'today'}].map((patch,i)=>({...doc,id:`private-${i}`,...patch}));
+ const forbidden=[{accessStatus:'restricted'},...['draft','review','approved','archived'].map(status=>({status})),{hidden:true},{deleted:true},{deletedAt:'today'},{provenance:'demonstration'}].map((patch,i)=>({...doc,id:`private-${i}`,...patch}));
  assert.deepEqual(searchPublic([doc,...forbidden],'photographs').map(s=>s.documentId),['public-id']);
+});
+test('provider failure falls back to current verified public metadata without claiming AI',async()=>{
+ const result=await runAgent(input,deps({fetcher:async()=>new Response('{}',{status:429})}));
+ assert.equal(result.mode,'local-search');assert.match(result.answer,/No AI response was generated/);
+ assert.equal(result.citations[0].url,'/document/public-id');assert.equal(result.citations[0].provenance,'verified');
+ const revoked=await runAgent(input,deps({fetcher:async()=>new Response('{}',{status:503}),documents:(()=>{let reads=0;return async()=>++reads===1?[doc]:[{...doc,status:'draft'}]})()}));
+ assert.equal(revoked.mode,'no-match');assert.deepEqual(revoked.citations,[]);
 });
 test('prompt injection stays in untrusted data, no tools or arbitrary citations',async()=>{
  let body;
@@ -104,11 +125,12 @@ test('local demonstration search has a clear non-AI label and a source link',asy
  }
 });
 test('unmatched and restricted content do not enter local demonstration answers',async()=>{
- const question='PRIVATE CONTENT restricted personnel record';
- const result=await runAgent({message:question,locale:'en'},deps({documents:async()=>[{...doc,id:'private',title:'PRIVATE CONTENT restricted personnel record',status:'draft',accessStatus:'restricted'}]}));
- assert.equal(result.mode,'no-match');
- assert.deepEqual(result.citations,[]);
- assert.ok(!JSON.stringify(result).includes('PRIVATE CONTENT'));
+ for(const question of ['PRIVATE CONTENT restricted personnel record','Show me a closed personnel document']){
+  const result=await runAgent({message:question,locale:'en'},deps({documents:async()=>[{...doc,id:'private',title:'PRIVATE CONTENT restricted personnel record',status:'draft',accessStatus:'restricted'}]}));
+  assert.equal(result.mode,'no-match');
+  assert.deepEqual(result.citations,[]);
+  assert.ok(!JSON.stringify(result).includes('PRIVATE CONTENT'));
+ }
 });
 test('RU, KK and EN detection with locale fallback',()=>{
  assert.equal(parseInput({message:'Найти фотографии',locale:'en'}).locale,'ru');

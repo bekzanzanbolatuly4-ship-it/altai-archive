@@ -4,8 +4,13 @@ globalThis.fetch=async(input,options)=>{
  if(url.startsWith('https://openrouter.ai/')){
   const body=JSON.parse(options.body);
   if(JSON.stringify(body).includes('PRIVATE CONTENT'))throw new Error('Private context');
-  const question=JSON.parse(body.messages[1].content).question;
+  const input=JSON.parse(body.messages[1].content);
+  const question=input.question;
   if(question.includes('failure'))return new Response('{}',{status:429});
+  if(/catalogue|catalog/i.test(question)){
+   const source=input.untrustedPublicMetadata.find(item=>item.id.startsWith('R'));
+   return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify({answer:'Use the catalogue search and filters.',citations:[{id:source.id,quote:source.description}]})}}]});
+  }
   return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify({answer:'Public metadata describes photographs.',citations:[{id:'S1',quote:'Photographs of mountains.'}]})}}]});
  }
  if(!url.startsWith('http://127.0.0.1')&&!url.startsWith('http://localhost'))throw new Error('External network blocked in E2E');

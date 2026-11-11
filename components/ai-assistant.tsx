@@ -6,6 +6,7 @@ import {useApp} from './providers';
 
 type Reply={mode:'ai'|'local-search'|'no-match';answer:string;citations:{id:string;title:string;quote:string;url:string;provenance:string}[]};
 type Turn={question:string;reply?:Reply;error?:string};
+const AI_ERROR_MESSAGES:Record<string,'aiProviderLimit'|'aiRateLimit'|'aiUnconfigured'|'aiConfiguration'|'aiLimiterUnavailable'|'aiProviderUnavailable'|'aiTimeout'|'aiInvalidResponse'>={provider_limit:'aiProviderLimit',rate_limit:'aiRateLimit',unconfigured:'aiUnconfigured',configuration:'aiConfiguration',rate_limit_unavailable:'aiLimiterUnavailable',client_ip_unavailable:'aiLimiterUnavailable',provider_error:'aiProviderUnavailable',timeout:'aiTimeout',invalid_response:'aiInvalidResponse',source_changed:'aiInvalidResponse'};
 export function AIAssistant({demo}:{demo:React.ReactNode}){
  const {msg,locale}=useApp();
  const [query,setQuery]=useState('');
@@ -55,7 +56,7 @@ export function AIAssistant({demo}:{demo:React.ReactNode}){
        </div>):<p>{msg('aiNoSources')}</p>}
       </section>
      </div>}
-     {turn.error&&<div className="chat-bubble assistant-bubble" role="alert"><p>{msg(turn.error==='provider_limit'?'aiProviderLimit':turn.error==='rate_limit'?'aiRateLimit':'aiError')}</p><button type="button" disabled={loading} onClick={()=>void send(turn.question,i)}>{msg('aiRetry')}</button><button type="button" onClick={()=>setShowDemo(true)}>{msg('aiDemo')}</button><Link href="/catalog">{msg('catalog')} <ArrowRight size={14}/></Link></div>}
+     {turn.error&&<div className="chat-bubble assistant-bubble" role="alert"><p>{msg(AI_ERROR_MESSAGES[turn.error]||'aiError')}</p><button type="button" disabled={loading} onClick={()=>void send(turn.question,i)}>{msg('aiRetry')}</button><button type="button" onClick={()=>setShowDemo(true)}>{msg('aiDemo')}</button><Link href="/catalog">{msg('catalog')} <ArrowRight size={14}/></Link></div>}
     </div>)}
     {loading&&<p role="status">{msg('aiLoading')}</p>}
    </div>

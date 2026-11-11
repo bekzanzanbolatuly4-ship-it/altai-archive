@@ -4,9 +4,10 @@ import {readFile} from 'node:fs/promises';
 import {pathToFileURL} from 'node:url';
 import path from 'node:path';
 import ts from 'typescript';
+import {approvedReferenceSources} from '../lib/ai/reference-knowledge.ts';
 
 // Execute the real route with in-memory public metadata; never import the live store.
-const document={id:'public',title:'Archive photographs',description:'Photographs of mountains.',status:'published',accessStatus:'public',provenance:'demonstration',keywords:[]};
+const document={id:'public',title:'Archive photographs',description:'Photographs of mountains.',status:'published',accessStatus:'public',provenance:'verified',keywords:[]};
 let source=await readFile('app/api/assistant/route.ts','utf8');
 source=source.replace("import {readPublishedPublicDocuments} from '@/lib/archive-store';",`const readPublishedPublicDocuments=async()=>globalThis.__assistantDocuments??${JSON.stringify([document,{...document,id:'private',accessStatus:'restricted'}])};`);
 source=source.replace(/from '@\/([^']+)'/g,(_,name)=>`from '${pathToFileURL(path.resolve(`${name}.ts`)).href}'`);
@@ -23,7 +24,7 @@ test('real route integrates input, public retrieval, provider, validation and sa
  try{
   process.env.APP_ORIGIN='https://archive.test';
   delete process.env.AI_PROVIDER;delete process.env.AI_API_KEY;delete process.env.AI_MODEL;
-  delete process.env.OPENROUTER_API_KEY;
+  delete process.env.OPENROUTER_API_KEY;delete process.env.OPENROUTER_MODEL;
   globalThis.fetch=async()=>{providerCalls++;assert.fail('No live network permitted');};
   const missing=await POST(request({message:'Find photographs',locale:'en'}));
   assert.equal(missing.status,200);assert.equal((await missing.json()).mode,'local-search');
@@ -41,6 +42,24 @@ test('real route integrates input, public retrieval, provider, validation and sa
   const empty=await POST(request({message:'квантовая обсерватория на Марсе',locale:'ru'}));
   assert.equal(empty.status,200);assert.deepEqual(await empty.json(),{mode:'no-match',locale:'ru',answer:'По вашему запросу не найдено опубликованных архивных материалов.',citations:[]});
   assert.equal(providerCalls,0,'No provider request should run when there are no public documents');
+  const missingReferenceConfig=await POST(request({message:'How do I use the archive catalogue?',locale:'en'}));
+  assert.equal(missingReferenceConfig.status,503);assert.deepEqual(await missingReferenceConfig.json(),{mode:'unavailable',error:'unconfigured'});
+  assert.equal(providerCalls,0,'A reference question without a configured provider must explain the missing provider, not synthesize AI');
+  process.env.OPENROUTER_API_KEY='synthetic-key';process.env.OPENROUTER_MODEL='test/model:free';
+  globalThis.fetch=async(url,options)=>{
+   assert.equal(url,'https://openrouter.ai/api/v1/chat/completions');
+   const context=JSON.parse(JSON.parse(options.body).messages[1].content).untrustedPublicMetadata;
+   assert.equal(context.length,1);assert.ok(context[0].description.includes('demonstration interface'));
+   const reference=approvedReferenceSources('catalogue','en')[0];
+   return Response.json({choices:[{finish_reason:'stop',message:{content:JSON.stringify({answer:'Use the catalogue search and filters.',citations:[{id:reference.id,quote:reference.description}]})}}]});
+  };
+  const referenceSuccess=await POST(request({message:'How do I use the archive catalogue?',locale:'en'}));
+  assert.equal(referenceSuccess.status,200);const referenceBody=await referenceSuccess.json();
+  assert.equal(referenceBody.mode,'ai');assert.equal(referenceBody.citations[0].url,'/catalog');
+  globalThis.__assistantDocuments=[];
+  globalThis.fetch=async()=>new Response('provider body must stay private',{status:429});
+  const referenceLimited=await POST(request({message:'How do I use the archive catalogue?',locale:'en'}));
+  assert.equal(referenceLimited.status,429);assert.deepEqual(await referenceLimited.json(),{mode:'unavailable',error:'provider_limit'});
   delete globalThis.__assistantDocuments;
   process.env.OPENROUTER_API_KEY='synthetic-key';process.env.OPENROUTER_MODEL='test/model:free';
   globalThis.fetch=async(url,options)=>{

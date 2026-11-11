@@ -6,10 +6,12 @@ This document summarizes the current implementation. [`AI_HANDOFF.md`](../AI_HAN
 
 `components/ai-assistant.tsx` → same-origin `POST /api/assistant` → origin and shared rate checks → public metadata retrieval → configured provider → response and citation validation → UI.
 
-- Retrieval reads published records with public access and searches title/description only. Original files, private fields, staff records, and storage paths are not sent to a provider.
+For the six recognized reference intents (fund definition, catalogue use, branches, official documents, institution overview and site sections), the route instead builds context only from the curated, approved reference entries in `lib/ai/reference-knowledge.ts`. It can invoke the actual configured model when the archive catalogue is empty. The UI marks successful output as automatically generated and citations link to the corresponding ALTAI ARCHIVE or verified official page. Unrecognized/document queries keep the public-record retrieval rules below.
+
+- Retrieval reads only published records with public access and `provenance: verified`, and searches title/description only. Original files, demo records, private fields, staff records, and storage paths are not sent to a provider.
 - The provider receives the question, locale, and at most five matching public metadata entries. The model has no tools, web search, filesystem, SQL, admin, or archive write access.
 - Citations must reference retrieved request-local IDs and exact metadata excerpts; the server builds links and rechecks access before returning them. Exact quotes prove source matching, not that every generated sentence follows from the source.
-- If published metadata has no match, the API searches the separate synthetic demo set. A hit returns `mode: local-search` with an exact demo description and a link; this is not generative AI. If the provider fails after a public metadata match, the same local search is offered only when it finds a demo record. Otherwise the error stays visible. An unmatched request returns an empty no-match without calling the provider.
+- If verified published metadata has no match, the API searches the separate synthetic demo set. A hit returns `mode: local-search` with an exact demo description and a link; this is not generative AI. If the provider fails after a verified public metadata match, `mode: local-search` returns the current public metadata and source links, explicitly saying that no AI response was generated. Stale, unpublished, restricted and unverified records are excluded. An unmatched request returns an empty no-match without calling the provider.
 - Origin/Fetch Metadata checks and Upstash Redis production rate limiting remain enabled. In production the AI route fails closed if required Redis configuration or trusted Vercel client-IP metadata is missing.
 
 ## Configuration
@@ -40,7 +42,7 @@ AI_API_KEY=<server-side Google AI Studio key>
 AI_MODEL=gemini-2.5-flash-lite
 ```
 
-Google currently lists free input/output pricing for this model’s Free Tier, but also states that unpaid-tier submitted content may be used to improve Google products. A free quota does not guarantee availability, prevent future policy changes, or ensure that an account has no billing enabled. The adapter cannot enforce an account’s billing state. Do not enable Gemini for archive metadata until the archive owner approves the provider’s data terms and confirms the Google project cannot incur unauthorized charges. No paid API is configured by the repository.
+Google currently lists free input/output pricing for this model’s Free Tier, but also states that unpaid-tier submitted content may be used to improve Google products. A free quota does not guarantee availability, prevent future policy changes, or ensure that an account has no billing enabled. The adapter cannot enforce an account’s billing state. Do not enable Gemini for archive metadata until the archive owner approves the provider’s data terms and confirms the Google project cannot incur unauthorized charges. No paid API is configured by the repository. In the local environment checked on 2026-11-11, `AI_API_KEY`, `GEMINI_API_KEY` and `GOOGLE_API_KEY` were absent; only legacy OpenRouter credentials were present. Gemini could not be live-tested without a Gemini credential, which was not created or substituted.
 
 ## Data, errors, and limits
 
@@ -48,12 +50,12 @@ Google currently lists free input/output pricing for this model’s Free Tier, b
 - Common email, phone-like, national identifier, and credential patterns are redacted, but pattern matching cannot identify every personal or confidential detail. Public metadata requires editorial review before external processing.
 - Request bodies, provider context, response bodies, output tokens, concurrency, and timeout are bounded. Upstash enforces shared production limits; the process limiter also remains active.
 - API keys are server-only. Logs contain provider name, status and a sanitized provider error code, not prompts, credentials or upstream error bodies. Responses are `no-store`.
-- The browser’s local demo and API fallback use demonstration data and are labelled as non-AI search, never presented as provider output. Origin and Upstash failures remain fail-closed; the local search does not bypass those security gates.
+- The browser’s local demo uses synthetic data and is labelled as non-AI search. If generation fails after a verified public match, the API returns current metadata results labelled as non-AI local search. Origin and Upstash failures remain fail-closed; search does not bypass those security gates.
 
 ## Verification
 
 `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`, and `npm run test:e2e:ai` exercise mocks/synthetic data. They validate request construction, error handling, access filtering, same-origin enforcement, free-model restrictions and UI behavior. They do not prove that an external provider is currently reachable or that a particular account has free quota.
 
-Production audit on 2026-11-11 found eight requested pages returning HTTP 200, while `GET /api/documents` returned HTTP 500. Three assistant requests returned HTTP 200 with `mode: no-match` and no citations. A wrong Origin and a missing Origin each returned HTTP 403. The current Production provider/model, deployment commit and Upstash configuration cannot be established from public responses. No real provider call or generated answer was verified. The local read-only metadata fix and `local-search` fallback have not been deployed.
+Production audit on 2026-11-11: `GET /api/documents` returned HTTP 200 with an empty list; a same-origin unmatched assistant POST returned HTTP 200 with `mode: no-match`; a foreign-Origin POST returned HTTP 403; assistant GET returned HTTP 405. This predates reference-intent routing. A separate real local OpenRouter call for the public catalogue-use FAQ returned HTTP 429, so no generated answer was received. Local env inspection found legacy OpenRouter aliases but no `AI_*` variables; the legacy model passes the zero-cost allowlist. Production provider, model, deployment commit and Upstash configuration cannot be established from public responses. The current reference-route change is not deployed.
 
 For current environment variables, owner actions and test instructions, see [`AI_HANDOFF.md`](../AI_HANDOFF.md). For the current status of archive content and source permissions, see [`OFFICIAL_MATERIALS.md`](OFFICIAL_MATERIALS.md).
