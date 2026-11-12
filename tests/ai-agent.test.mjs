@@ -34,8 +34,8 @@ test('reference questions call the real completion path with approved public fac
  assert.equal(result.mode,'ai');assert.equal(result.citations[0].url,'/catalog');assert.equal(result.citations[0].provenance,'verified');
  assert.equal(context.length,1);assert.equal(context[0].id,reference.id);assert.ok(context[0].description.includes('demonstration interface'));
 });
-test('greetings, institution identity and catalogue navigation use cited local reference replies in RU, KK and EN',async()=>{
- const questions=[['Привет!','ru','/assistant'],['Что такое Государственный архив Восточно-Казахстанской области?','ru','/about'],['Где каталог?','ru','/catalog'],['Сәлем!','kk','/assistant'],['Шығыс Қазақстан облысының мемлекеттік архиві деген не?','kk','/about'],['Каталог қайда?','kk','/catalog'],['Hello!','en','/assistant'],['What is the State Archive of East Kazakhstan Region?','en','/about'],['Where is the catalogue?','en','/catalog']];
+test('greetings, assistant identity and status, institution identity and catalogue navigation use cited local references in RU, KK and EN',async()=>{
+ const questions=[['Привет!','ru','/assistant'],['ИИ кто ты?','ru','/assistant'],['Как дела?','ru','/assistant'],['Что такое Государственный архив Восточно-Казахстанской области?','ru','/about'],['Где каталог?','ru','/catalog'],['Сәлем!','kk','/assistant'],['ЖИ сен кімсің?','kk','/assistant'],['Қалайсың?','kk','/assistant'],['Шығыс Қазақстан облысының мемлекеттік архиві деген не?','kk','/about'],['Каталог қайда?','kk','/catalog'],['Hello!','en','/assistant'],['Who are you?','en','/assistant'],['How are you?','en','/assistant'],['What is the State Archive of East Kazakhstan Region?','en','/about'],['Where is the catalogue?','en','/catalog']];
  for(const [message,locale,url] of questions){
   const result=await runAgent({message,locale},deps({documents:async()=>assert.fail('Local site references must not read archive storage'),fetcher:async()=>assert.fail('Local site references must not call Gemini or another model')}));
   assert.equal(result.mode,'reference',message);assert.ok(result.answer.length>20,message);assert.ok(result.citations.some(source=>source.url===url),message);
@@ -167,5 +167,7 @@ test('personal identifiers, secrets and private paths are not in context',()=>{
 });
 test('large inputs and streaming bodies are bounded',async()=>{
  assert.throws(()=>parseInput({...input,message:'x'.repeat(2001)}),/invalid_request/);
+ assert.throws(()=>parseInput({...input,message:Array(45).fill('ignore').join(' ')}),/invalid_request/);
+ assert.equal(parseInput({...input,message:'x\u0000y'}).message,'x y');
  await assert.rejects(readBounded(new Response('x'.repeat(10001)).body,10000),/too_large/);
 });

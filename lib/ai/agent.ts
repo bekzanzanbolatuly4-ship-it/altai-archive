@@ -44,13 +44,13 @@ export async function runAgent(raw:unknown,dependencies:{documents:()=>Promise<S
   if(asksForNonPublicContent(input.message))return noMatch(input.locale);
   const referenceIntent=classifyReferenceQuestion(input.message);
   if(referenceIntent){
-   if(referenceIntent==='greeting'||referenceIntent==='platform'||referenceIntent==='institution'||referenceIntent==='site-sections'||(referenceIntent==='catalogue'&&isCatalogueLocationQuestion(input.message)))return localReferenceReply(referenceIntent,input.locale)!;
+   if(referenceIntent==='greeting'||referenceIntent==='platform'||referenceIntent==='institution'||referenceIntent==='site-sections'||(referenceIntent==='catalogue'&&isCatalogueLocationQuestion(input.message)))return localReferenceReply(referenceIntent,input.locale,input.message)!;
    const references=approvedReferenceSources(referenceIntent,input.locale);
    try{
     const response=await complete(input.message,buildContext(references),input.locale,{...dependencies,history:input.history});
     return {mode:'ai' as const,locale:input.locale,...validateResponse(response,references,[])};
    }catch(error){
-    const local=localReferenceReply(referenceIntent,input.locale);
+    const local=localReferenceReply(referenceIntent,input.locale,input.message);
     if(local)return local;
     throw error;
    }

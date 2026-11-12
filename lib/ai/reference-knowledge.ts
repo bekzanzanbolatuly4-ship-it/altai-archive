@@ -23,7 +23,7 @@ const entries:KnowledgeEntry[]=[
 
 export function classifyReferenceQuestion(message:string):ReferenceIntent|null{
  const q=message.toLocaleLowerCase();
- if(/^(?:(?:привет|здравствуй[\p{L}]*|доброе утро|добрый день|добрый вечер|сәлем|салем|қайырлы таң|қайырлы күн|қайырлы кеш|hello|hi|hey|good morning|good afternoon|good evening)(?=$|[\s!,.?]))/iu.test(q))return 'greeting';
+ if(/^(?:(?:(?:ии|ж\s*и|ai|assistant|помощник|бот)[\s,!:—-]*)?(?:кто ты|кто вы|как дела|как ты|как поживаешь|сен кімсің|сіз кімсіз|қалайсың|қал қалай|қалың қалай|who are you|how are you|how's it going)(?=$|[\s!,.?])|(?:привет|здравствуй[\p{L}]*|доброе утро|добрый день|добрый вечер|сәлем|салем|қайырлы таң|қайырлы күн|қайырлы кеш|hello|hi|hey|good morning|good afternoon|good evening)(?=$|[\s!,.?]))/iu.test(q))return 'greeting';
  if(/(?:что такое|что представляет собой|what is|define|деген не|не болып табылады).{0,60}altai\s+archive|altai\s+archive.{0,60}(?:что такое|what is|деген не)/iu.test(q))return 'platform';
  if(/(?:\b(?:что такое|что значит|определение|what is|define|анықтамасы|деген не)\b).{0,60}(?:архивн[\p{L}]* фонд|архивтік қор|archive fund)|(?:архивн[\p{L}]* фонд|архивтік қор|archive fund).{0,50}(?:что такое|what is|деген не)/u.test(q))return 'fund';
  if(/(?:что представляет собой|что такое|what is|who is|кто такой|мекеме қандай|не представляет собой).{0,100}(?:государственн[\p{L}]* архив|госархив|архив вко|архив восточно-казахстан|state archive|вко архив|мемлекеттік архив|мемлекеттік мұрағат)/u.test(q))return 'institution';
@@ -50,7 +50,7 @@ function sourcesById(ids:string[],locale:Language):Source[]{
  });
 }
 
-export function localReferenceReply(intent:ReferenceIntent,locale:Language){
+export function localReferenceReply(intent:ReferenceIntent,locale:Language,question=''){
  const sources=intent==='greeting'
   ?approvedReferenceSources('greeting',locale)
   :intent==='platform'
@@ -62,7 +62,12 @@ export function localReferenceReply(intent:ReferenceIntent,locale:Language){
   :approvedReferenceSources(intent,locale);
  if(!sources.length)return null;
  let answer:string;
- if(intent==='greeting')answer=locale==='kk'?'Сәлем! Мен архивтің анықтамалық көмекшісімін. Сайт бөлімдері туралы айтып, каталогтан жарияланған материалдарды іздеуге көмектесемін.':locale==='ru'?'Здравствуйте! Я справочный помощник архива. Подскажу разделы сайта и помогу искать опубликованные материалы в каталоге.':'Hello! I can guide you around the archive information portal and help you search published materials in the catalogue.';
+ if(intent==='greeting'){
+  const q=question.toLocaleLowerCase();
+  if(/(?:кто ты|кто вы|сен кімсің|сіз кімсіз|who are you)/iu.test(q))answer=locale==='kk'?'Мен — архив туралы ақпаратты табуға көмектесетін ЖИ-көмекшімін. Жауаптарымды сайттағы жарияланған деректермен шектеймін.':'ru'===locale?'Я ИИ-помощник портала: помогаю находить информацию об архиве и разделах сайта. Опираюсь на опубликованные материалы и сообщаю, когда данных недостаточно.':'I am the archive information assistant. I help visitors find site and archive information using the available published sources.';
+  else if(/(?:как дела|как ты|как поживаешь|қалайсың|қал қалай|қалың қалай|how are you|how's it going)/iu.test(q))answer=locale==='kk'?'Рақмет, көмектесуге дайынмын. Архив пен сайт бөлімдері туралы сұрай аласыз.':locale==='ru'?'Спасибо, готов помочь. Спросите меня об архиве или разделах сайта.':'Thanks for asking. I am ready to help with the archive and the site.';
+  else answer=locale==='kk'?'Сәлем! Мен архив туралы ақпарат табуға көмектесетін ЖИ-көмекшімін. Сайт бөлімдері мен жарияланған материалдар туралы сұрай аласыз.':locale==='ru'?'Здравствуйте! Я ИИ-помощник портала. Подскажу разделы сайта и помогу искать опубликованные материалы.':'Hello! I am the archive information assistant. Ask me about the site sections or published materials.';
+ }
  else if(intent==='platform')answer=locale==='kk'?'Ақпараттық портал мекеменің ресми сайты емес. Каталог /catalog бетінде орналасқан.':locale==='ru'?'Информационный портал не является официальным сайтом учреждения. Каталог находится на странице /catalog.':'This information portal is not the institution’s official website. The catalogue is at /catalog.';
  else if(intent==='catalogue')answer=locale==='kk'?'Каталог /catalog бетінде орналасқан. Бұл — демонстрациялық интерфейс; «демо» карточкалары түпнұсқа архивтік істер емес.':locale==='ru'?'Каталог находится на странице /catalog. Это демонстрационный интерфейс; карточки с пометкой «демо» не являются подлинными архивными делами.':'The catalogue is at /catalog. It is a demonstration interface; cards marked “demo” are not authentic archival files.';
  else if(intent==='site-sections')answer=locale==='kk'?'Сайтта басты бет, каталог, көмекші, ресми құжаттар, архив туралы мәлімет, филиалдар, өңір тарихы және көрмелер бөлімдері бар.':locale==='ru'?'На сайте есть главная, каталог, AI-помощник, официальные документы, сведения об архиве, филиалы, история региона и выставки.':'The site includes Home, Catalogue, Assistant, Official Documents, About, Branches, Regional History and Exhibitions.';

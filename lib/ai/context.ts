@@ -9,8 +9,13 @@ export function redact(text:string){return text.replace(sensitive,'[redacted]');
 export function parseInput(raw:unknown){
  if(!raw || typeof raw!=='object')throw new AIError('invalid_request',400);
  const input=raw as Record<string,unknown>;
- if(typeof input.message!=='string' || !input.message.trim() || input.message.length>2000 || !['ru','kk','en'].includes(String(input.locale)))throw new AIError('invalid_request',400);
- const message=redact(input.message.trim());
+ if(typeof input.message!=='string' || !['ru','kk','en'].includes(String(input.locale)))throw new AIError('invalid_request',400);
+ const normalized=input.message.normalize('NFKC').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u200B-\u200D\uFEFF]/gu,' ').trim();
+ if(!normalized || normalized.length>2000)throw new AIError('invalid_request',400);
+ const tokens=normalized.toLocaleLowerCase().match(/[\p{L}\p{N}]+/gu)||[];
+ if(tokens.length>300)throw new AIError('invalid_request',400);
+ if(tokens.length>=40){const counts=new Map<string,number>();for(const token of tokens)counts.set(token,(counts.get(token)||0)+1);if(Math.max(...counts.values())/tokens.length>0.45)throw new AIError('invalid_request',400);}
+ const message=redact(normalized);
  const locale:Language=/[әғқңөұүһі]/i.test(message)?'kk':/[а-яё]/i.test(message)?'ru':/\b(the|find|what|how|hello|archive|document|please)\b/i.test(message)?'en':input.locale as Language;
  const history=Array.isArray(input.history)?input.history.slice(-4).flatMap((turn)=>{
   if(!turn||typeof turn!=='object')return [];
