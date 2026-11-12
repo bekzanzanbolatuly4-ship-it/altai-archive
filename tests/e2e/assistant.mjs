@@ -13,7 +13,7 @@ let server,browser;
 try{
  await cp(root,isolated,{recursive:true,filter:source=>{
   const part=path.relative(root,source).split(path.sep)[0];
-  return !['.git','.data','.next','node_modules','.agents','.codex','.aws','output'].includes(part)&&!part.startsWith('.env');
+  return !['.data','.next','node_modules','output'].includes(part)&&!part.startsWith('.');
  }});
  await symlink(path.join(root,'node_modules'),path.join(isolated,'node_modules'));
  await mkdir(path.join(isolated,'.data'));
