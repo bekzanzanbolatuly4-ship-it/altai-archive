@@ -51,9 +51,8 @@ export function Portal({kind,demoReadOnly=false}:{kind:Kind;demoReadOnly?:boolea
         <PageHead
           eyebrow={tr('МЕСТО · ВРЕМЯ · ИСТОЧНИК','ОРЫН · УАҚЫТ · ДЕРЕККӨЗ','PLACE · TIME · SOURCE')}
           title={msg('atlas')}
-          lead={tr('Схематический атлас для демонстрации поиска исторических мест и связанных материалов.','Тарихи орындар мен байланысты материалдарды іздеуге арналған схемалық атлас.','A schematic atlas demonstrating discovery of historical places and related materials.')}
+          lead={tr('Иллюстративная схема помогает исследовать темы региона. Положения точек условны, точные координаты не подтверждены.','Өңір тақырыптарын зерттеуге арналған иллюстрациялық схема. Нүктелердің орны шартты, нақты координаттар расталмаған.','An illustrative map for exploring regional themes. Marker positions are indicative and coordinates are unverified.')}
         />
-        <Notice/>
         <div className="map-tools">
           <label className="catalog-search">
             <Search size={17}/>
@@ -73,7 +72,7 @@ export function Portal({kind,demoReadOnly=false}:{kind:Kind;demoReadOnly?:boolea
         <div className="atlas-layout">
           <SchematicMap active={active} onPick={setActive} markers={matchingPlaces}/>
           <aside className="place-list">
-            <span className="eyebrow">{tr('ТОЧКИ НА КАРТЕ · ДЕМО','КАРТАДАҒЫ НҮКТЕЛЕР · ДЕМО','MAP LOCATIONS · DEMO')}</span>
+            <span className="eyebrow">{tr('ТОЧКИ НА СХЕМЕ','СХЕМАДАҒЫ НҮКТЕЛЕР','SCHEMATIC LOCATIONS')}</span>
             {matchingPlaces.map(p=>(
               <button
                 type="button"
@@ -94,7 +93,7 @@ export function Portal({kind,demoReadOnly=false}:{kind:Kind;demoReadOnly?:boolea
             {activePlace&&(
               <div className="place-detail">
                 <button type="button" className="detail-close" onClick={()=>setActive('')} aria-label={msg('close')}>×</button>
-                <span className="eyebrow">PLACE NOTE · DEMO</span>
+                <span className="eyebrow">{msg('illustrativeMaterial')}</span>
                 <h3>{activePlace.name}</h3>
                 <p>{activePlace.description}</p>
                 <Link href={`/catalog?q=${encodeURIComponent(activePlace.name)}`}>
@@ -123,11 +122,10 @@ export function Portal({kind,demoReadOnly=false}:{kind:Kind;demoReadOnly?:boolea
     return (
       <div className="page-wrap">
         <PageHead
-          eyebrow={tr('КУРАТОРСКИЕ МАРШРУТЫ · ДЕМО','КУРАТОРЛЫҚ МАРШРУТТАР · ДЕМО','CURATED STORIES · DEMO')}
+          eyebrow={tr('ТЕМАТИЧЕСКИЕ ВЫСТАВКИ','ТАҚЫРЫПТЫҚ КӨРМЕЛЕР','THEMATIC EXHIBITIONS')}
           title={msg('exhibitions')}
-          lead={tr('Тематические маршруты по материалам и историям региона. Все представленные выставки — демонстрационные макеты.','Өңір материалдары мен оқиғалары бойынша тақырыптық маршруттар. Барлық көрмелер — демонстрациялық макет.','Thematic paths through regional materials and stories. Every exhibition shown is a demonstration mockup.')}
+          lead={tr('Представлены редакционные концепции и иллюстрации. Они не являются официальными выставками архива.','Редакциялық тұжырымдамалар мен иллюстрациялар берілген. Олар архивтің ресми көрмелері болып табылмайды.','Editorial concepts and illustrations are shown here. They are not official archive exhibitions.')}
         />
-        <Notice/>
         <div className="filter-chips">
           {exhibitionFilterOptions.map(x=>(
             <button
@@ -144,7 +142,7 @@ export function Portal({kind,demoReadOnly=false}:{kind:Kind;demoReadOnly?:boolea
           {matchingExhibitions.map((x,i)=>(
             <Link className={`exhibition-card ${i===0?'featured-exhibition':''}`} href={`/exhibitions/${x.slug}`} key={x.slug}>
               <div className="exhibition-image">
-                <Image src={x.image} alt={tr('Иллюстративный макет выставки','Демонстрациялық көрме иллюстрациясы','Illustration for a demonstration exhibition')} fill/>
+                <Image src={x.image} alt={tr('Иллюстративный материал к концепции выставки','Көрме тұжырымдамасына арналған иллюстрациялық материал','Illustration for the exhibition concept')} fill/>
                 <span>{msg('exhibitionDemo').toUpperCase()}</span>
               </div>
               <div className="exhibition-copy">
@@ -171,11 +169,10 @@ export function Portal({kind,demoReadOnly=false}:{kind:Kind;demoReadOnly?:boolea
     return (
       <div className="page-wrap">
         <PageHead
-          eyebrow={tr('ПУБЛИКАЦИИ · ДЕМО','ЖАРИЯЛАНЫМДАР · ДЕМО','UPDATES · DEMO ARTICLES')}
+          eyebrow={tr('ПУБЛИКАЦИИ','ЖАРИЯЛАНЫМДАР','PUBLICATIONS')}
           title={msg('news')}
-          lead={tr('Новости, события и публикации архива. Демонстрационные материалы не являются официальными сообщениями.','Архив жаңалықтары, оқиғалары мен жарияланымдары. Демонстрациялық материалдар ресми хабарлама болып табылмайды.','Archive news, events, and publications. Demo entries are not official announcements.')}
+          lead={tr('Ниже представлены редакционные образцы. Они не являются официальными сообщениями архива.','Төменде редакциялық үлгілер берілген. Олар архивтің ресми хабарламалары болып табылмайды.','Editorial samples are shown below. They are not official archive announcements.')}
         />
-        <Notice/>
         <div className="news-toolbar">
           <label className="catalog-search">
             <Search size={16}/>
@@ -217,7 +214,6 @@ export function Portal({kind,demoReadOnly=false}:{kind:Kind;demoReadOnly?:boolea
           title={msg('history')}
           lead={tr('Мультимедийный путеводитель по темам истории Восточного Казахстана. Проверенные истории и источники появятся после редакционной проверки.','Шығыс Қазақстан тарихы тақырыптарына арналған мультимедиалық жолбасшы. Тексерілген тарихтар редакциялық сараптамадан кейін жарияланады.','A thematic guide to East Kazakhstan history. Verified stories and sources await editorial review.')}
         />
-        <Notice/>
         <div className="history-intro">
           <div>
             <span className="eyebrow">{tr('РЕГИОН В РАЗНЫХ ИСТОРИЯХ','ӨҢІР ТАРИХЫНЫҢ САН ҚЫРЫ','A REGION IN MANY STORIES')}</span>
@@ -247,7 +243,7 @@ export function Portal({kind,demoReadOnly=false}:{kind:Kind;demoReadOnly?:boolea
             {documents.slice(0,3).map(d=>(
               <Link href={`/document/${d.id}`} key={d.id}>
                 <Image src={d.image} alt="" width={200} height={120}/>
-                <span>{d.category} · DEMO</span>
+                <span>{d.category} · {msg('sampleRecord')}</span>
                 <b>{d.title}</b>
               </Link>
             ))}
@@ -273,26 +269,10 @@ function PageHead({eyebrow,title,lead}:{eyebrow:string;title:string;lead:string}
   );
 }
 
-function Notice(){
-  const{msg,locale}=useApp();
-  return (
-    <div className="integrity-note">
-      <span className="note-dot"/>
-      <span>
-        {msg('demo')} · {locale==='ru'
-          ?'Контент, примеры мест и иллюстрации созданы для демонстрации интерфейса и не являются официальными архивными сведениями.'
-          :locale==='kk'
-          ?'Мазмұн, орындар мысалдары мен иллюстрациялар интерфейсті көрсету үшін жасалған және ресми архивтік мәліметтер болып табылмайды.'
-          :'Content, place samples, and illustrations are mockups for interface demonstration, not official archive records.'}
-      </span>
-    </div>
-  );
-}
-
 function SchematicMap({active,onPick,markers}:{active:string;onPick:(id:string)=>void;markers:{id:string;name:string;x:number;y:number}[]}){
   const{locale}=useApp();
   return (
-    <div className="schematic-map" role="group" aria-label="Схематическая демонстрационная карта">
+    <div className="schematic-map" role="group" aria-label={locale==='ru'?'Схематическая карта региона':locale==='kk'?'Өңірдің схемалық картасы':'Schematic map of the region'}>
       <div className="map-water"/>
       <svg className="map-lines" viewBox="0 0 800 500" preserveAspectRatio="none" aria-hidden="true">
         <path d="M0 330 Q130 235 210 294T390 250 580 294 800 125"/>
@@ -342,28 +322,28 @@ function Assistant(){
     const results=documents.filter(d=>`${d.title} ${d.description} ${d.category} ${d.tags}`.toLowerCase().split(/[ ,]+/).some(t=>t.length>2&&q.includes(t)));
     const text=guide
       ?(locale==='ru'
-        ?'В демонстрационной модели показана предложенная цепочка: архив → фонд → опись → дело → документ → страницы. Это иллюстрация интерфейса, а не подтверждённая схема учёта архива.'
+        ?'В справочном примере показана цепочка: архив → фонд → опись → дело → документ → страницы. Это схема описания в интерфейсе, а не подтверждённая структура учёта архива.'
         :locale==='kk'
-        ?'Демонстрациялық модельде ұсынылған тізбек көрсетілген: архив → қор → тізімдеме → іс → құжат → беттер. Бұл архивтің расталған есеп жүйесі емес.'
-        :'The demo model shows a proposed chain: archive → fond → inventory → case → document → pages. This illustrates the interface; it is not a verified archive arrangement.')
+        ?'Анықтамалық мысалда мына тізбек көрсетілген: архив → қор → тізімдеме → іс → құжат → беттер. Бұл интерфейстегі сипаттама схемасы, архивтің расталған есеп жүйесі емес.'
+        :'The guidance example shows this sequence: archive → fond → inventory → case → document → pages. It illustrates the interface, not a verified archival arrangement.')
       :results.length
       ?(locale==='ru'
-        ?'В демонстрационном каталоге нашлись подходящие материалы. Это локальный поиск по демонстрационным описаниям, не архивная консультация.'
+        ?'В образцах описаний есть совпадения. Это локальный поиск без AI; он не подтверждает наличие архивного дела.'
         :locale==='kk'
-        ?'Демонстрациялық каталогтан сәйкес материалдар табылды. Бұл демонстрациялық сипаттамалар бойынша жергілікті іздеу, ресми архивист кеңесі емес.'
-        :'I found matching materials in the demonstration catalogue. This is local search over demo descriptions, not an archival consultation.')
+        ?'Сипаттама үлгілерінен сәйкестіктер табылды. Бұл AI қолданбайтын жергілікті іздеу, архивтік істің бар екенін растамайды.'
+        :'There are matches in the description samples. This is local search without AI; it does not confirm the existence of an archival file.')
       :(locale==='ru'
-        ?'В локальном демонстрационном каталоге подходящих материалов не найдено. Попробуйте запросить документы, фотографии или карты.'
+        ?'В образцах описаний совпадений нет. Этот локальный поиск не охватывает полный состав архивных фондов.'
         :locale==='kk'
-        ?'Жергілікті демонстрациялық каталогтан сәйкес материалдар табылмады. Құжаттар, фотосуреттер немесе карталарды сұрап көріңіз.'
-        :'No matching materials were found in the local demonstration catalogue. Try documents, photographs, or maps.');
+        ?'Сипаттама үлгілерінен сәйкестік табылмады. Бұл жергілікті іздеу архив қорларының толық құрамын қамтымайды.'
+        :'No matches were found in the description samples. This local search does not cover the archive’s full holdings.');
     setAnswer({text,ids:results.map(x=>x.id).slice(0,3),guide});
   };
 
   return (
     <div className="page-wrap assistant-page">
       <PageHead
-        eyebrow="DISCOVERY COMPANION · DEMO MODE"
+        eyebrow={msg('aiLocalSearch')}
         title={msg('assistant')}
         lead={msg('ask')}
       />
@@ -376,13 +356,13 @@ function Assistant(){
           <div className="assistant-emblem">
             <MessageCircle size={28}/>
           </div>
-          <span className="eyebrow">ALTAI ARCHIVE · DEMO</span>
+          <span className="eyebrow">ALTAI ARCHIVE · {msg('aiLocalSearch')}</span>
           <h2>
             {locale==='ru'
               ?'Помогаю ориентироваться в материалах'
               :locale==='kk'
               ?'Материалдарды бағдарлауға көмектесемін'
-              :'Explore materials with a local demo guide'}
+              :'Explore sample records with local guidance'}
           </h2>
           <p>
             {locale==='ru'
@@ -403,15 +383,15 @@ function Assistant(){
         <section className="chat-panel">
           <div className="chat-head">
             <span className="online-dot"/>
-            DEMO ARCHIVIST <small>LOCAL SEARCH ONLY</small>
+            {locale==='ru'?'Локальный поиск':locale==='kk'?'Жергілікті іздеу':'Local search'} <small>{locale==='en'?'NO AI':locale==='kk'?'AI қолданылмайды':'БЕЗ AI'}</small>
           </div>
           <div className="chat-messages">
             <div className="chat-bubble assistant-bubble">
               {locale==='ru'
-                ?'Здравствуйте. Я могу помочь найти демонстрационные материалы и объяснить структуру каталога.'
+                ?'Здравствуйте. Я могу показать примеры описаний и объяснить структуру каталога. Поиск выполняется локально без AI.'
                 :locale==='kk'
-                ?'Сәлеметсіз бе. Мен демонстрациялық материалдарды табуға және каталог құрылымын түсіндіруге көмектесе аламын.'
-                :'Hello. I can help find demo materials and explain the catalogue structure.'}
+                ?'Сәлеметсіз бе. Сипаттама үлгілерін көрсетіп, каталог құрылымын түсіндіре аламын. Іздеу AI қолданбай жергілікті орындалады.'
+                :'Hello. I can show sample descriptions and explain the catalogue structure. Search runs locally without AI.'}
             </div>
             {answer&&(
               <>
@@ -427,7 +407,7 @@ function Assistant(){
                             <BookOpen size={14}/>
                             <span>
                               {d.title}
-                              <small>{d.category} · DEMO</small>
+                              <small>{d.category} · {msg('sampleRecord')}</small>
                             </span>
                             <ArrowUpRight size={13}/>
                           </Link>
@@ -457,10 +437,10 @@ function Assistant(){
           </form>
           <small className="chat-foot">
             {locale==='ru'
-              ?'Ответы носят иллюстративный характер · внешняя AI-служба не используется'
+              ?'Справочные ответы и поиск по образцам · внешняя AI-служба не используется'
               :locale==='kk'
-              ?'Жауаптар демонстрациялық сипатта · сыртқы AI қызметі пайдаланылмайды'
-              :'Responses are illustrative · no external AI · no private documents'}
+              ?'Үлгілер бойынша анықтама және іздеу · сыртқы AI қызметі пайдаланылмайды'
+              :'Guidance and sample search · no external AI service is used'}
           </small>
         </section>
       </div>

@@ -84,7 +84,7 @@ export function InstitutionPage(){
         </div>
         <div>
           <h3>{locale==='ru'?'Цифровая платформа':locale==='kk'?'Цифрлық платформа':'Digital platform'}</h3>
-          <p>ALTAI ARCHIVE · {msg('demo')}</p>
+          <p>ALTAI ARCHIVE · {locale==='ru'?'цифровая платформа':locale==='kk'?'цифрлық платформа':'digital platform'}</p>
         </div>
       </section>
 

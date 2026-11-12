@@ -38,22 +38,18 @@ export default function NewsDetail(){
         {item.category}
       </div>
       <article className="news-article">
-        <span className="eyebrow">{item.category} · {item.date} · DEMO</span>
+        <span className="eyebrow">{item.category} · {item.date}</span>
         <h1>{item.title}</h1>
         <p className="editorial-lead">{item.excerpt}</p>
         <div className="article-callout">
-          {locale==='ru'
-            ?'Демонстрационная публикация. Содержание, даты и события не являются официальной информацией архива.'
-            :locale==='kk'
-            ?'Демонстрациялық жарияланым. Мазмұны, күндері мен оқиғалары архивтің ресми ақпараты болып табылмайды.'
-            :'Demonstration publication. Content, dates, and events are not official archive announcements.'}
+          {msg('notOfficialPublication')}
         </div>
         <p>
           {locale==='ru'
-            ?'Эта демонстрационная статья показывает типографику и формат публикации. Материалы цифрового архива должны сохранять ссылку на происхождение, корректное описание и контекст.'
+            ?'Этот редакционный пример показывает формат публикации. Публикуемые материалы должны сохранять ссылку на происхождение, точное описание и контекст.'
             :locale==='kk'
-            ?'Бұл демонстрациялық мақала типографика мен жарияланым форматын көрсетеді. Цифрлық архив материалдары дереккөзге сілтемені, дұрыс сипаттама мен мәнмәтінді сақтауы қажет.'
-            :'This demonstration article showcases publication typography and layout. Digital archive materials preserve provenance links, accurate descriptions, and contextual records.'}
+            ?'Бұл редакциялық үлгі жарияланым пішімін көрсетеді. Жарияланатын материалдар дереккөз сілтемесін, дәл сипаттаманы және мәнмәтінді сақтауы керек.'
+            :'This editorial example shows a publication format. Published materials should preserve provenance links, accurate descriptions, and context.'}
         </p>
         <button type="button" className="outline-link" onClick={copy}>
           {copied?<Check size={14}/>:<Copy size={14}/>}

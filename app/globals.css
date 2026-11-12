@@ -472,13 +472,11 @@ input::placeholder, textarea::placeholder {
   margin-top: auto;
   border-top: 1px solid var(--line);
   background: var(--surface);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 4.5%;
+  display: grid;
+  gap: 20px;
+  padding: 24px 4.5% 28px;
   font-size: 12px;
   color: var(--muted);
-  gap: 18px;
 }
 
 .footer-lockup {
@@ -496,6 +494,46 @@ input::placeholder, textarea::placeholder {
 .footer-institution {
   font-size: 13px;
   color: var(--ink);
+}
+
+.footer-directory {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.footer-section {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  min-width: 0;
+}
+
+.footer-section h2 {
+  margin: 0 0 3px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+.footer-section a {
+  width: fit-content;
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+  text-underline-offset: 3px;
+}
+
+.footer-section a:hover,
+.footer-section a:focus-visible {
+  color: var(--forest);
+  text-decoration: underline;
 }
 
 /* HERO SECTION */
@@ -1167,7 +1205,10 @@ html[data-theme='dark'] .about-feature p {
 }
 
 .page-hero h1 {
-  font-size: 42px;
+  font-size: clamp(32px, 3.2vw, 40px);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
   margin: 0;
 }
 
@@ -3203,6 +3244,10 @@ html[data-theme='dark'] .assistant-disclosure {
   .main-column {
     margin-left: 0;
   }
+  .footer-directory {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 14px;
+  }
   .mobile-menu {
     display: grid;
     place-items: center;
@@ -3401,6 +3446,8 @@ html[data-theme='dark'] .assistant-disclosure {
 .feedback-panel { margin-top: 36px; padding: 24px; border: 1px solid var(--line); background: var(--surface); }
 .feedback-panel h2 { margin: 6px 0; font: 500 26px/1.25 'Playfair Display', Georgia, serif; }
 .feedback-panel p { max-width: 720px; line-height: 1.65; }
+.demo-mark { max-width: 140px; text-align: center; font-size: 10px; letter-spacing: .04em; line-height: 1.2; }
+.catalog-integrity-note { margin: 10px 0 20px; color: var(--muted); font-size: 14px; line-height: 1.55; }
 .feedback-form { display: grid; gap: 18px; margin-top: 24px; max-width: 820px; }
 .feedback-contact-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .feedback-field { display: grid; gap: 8px; min-width: 0; color: var(--ink); font-weight: 600; }
@@ -3501,6 +3548,7 @@ html[data-theme='dark'] .assistant-disclosure {
 }
 
 @media (max-width: 420px) {
+ .footer-directory { grid-template-columns: minmax(0, 1fr); gap: 12px; }
  .branch-list-item { grid-template-columns: 32px minmax(0, 1fr) 16px; gap: 8px; padding: 10px 8px; }
  .branch-list-item b { font-size: 14px; }
  .branch-map-panel { padding: 13px; }

@@ -46,7 +46,7 @@ export default function Home(){
         <Image
           className="hero-image"
           src="/images/altai-panorama.svg"
-          alt="Иллюстративная панорама гор Алтая, созданная для демонстрации интерфейса"
+          alt={locale==='kk'?'Алтай тауларының иллюстрациялық панорамасы':locale==='en'?'Illustrative panorama of the Altai Mountains':'Иллюстративная панорама гор Алтая'}
           fill
           priority
         />
@@ -124,7 +124,7 @@ export default function Home(){
           <div className="section-heading collection-heading">
             <div>
               <span className="eyebrow">
-                {locale==='ru'?'ИЗБРАННЫЕ МАТЕРИАЛЫ · ДЕМО':locale==='kk'?'ТАҢДАУЛЫ МАТЕРИАЛДАР · ДЕМО':'SELECTED MATERIALS · DEMO'}
+                {locale==='ru'?'ТЕМАТИЧЕСКИЕ ПОДБОРКИ':locale==='kk'?'ТАҚЫРЫПТЫҚ ТОПТАМАЛАР':'THEMATIC COLLECTIONS'}
               </span>
               <h2>{msg('collections')}</h2>
             </div>
@@ -144,7 +144,7 @@ export default function Home(){
                   <span className="collection-badge">
                     {locale==='ru'?c.category:locale==='kk'?['Фотосуреттер','Карталар','Құжаттар'][i]:['Photographs','Maps','Documents'][i]}
                   </span>
-                  <span className="demo-mark">DEMO</span>
+                  <span className="demo-mark">{msg('illustrativeMaterial')}</span>
                 </div>
                 <div className="collection-copy">
                   <h3>{title(i)}</h3>
@@ -152,8 +152,8 @@ export default function Home(){
                     {locale==='ru'
                       ?c.description
                       :locale==='kk'
-                      ?['Өңірдің тарихи бейнелерінің демонстрациялық топтамасы.','Картографиялық материалдардың иллюстрациялық топтамасы.','Құжат сипаттамаларының демонстрациялық үлгілері.'][i]
-                      :['A demonstration selection of historical regional imagery.','An illustrative selection of cartographic material.','Demonstration document description samples.'][i]}
+                      ?['Өңір тақырыбына арналған иллюстрациялық бейнелер.','Картографиялық тақырыптағы иллюстрациялар.','Құжат сипаттамаларының үлгілері.'][i]
+                      :['Illustrative images on regional themes.','Illustrations with a cartographic theme.','Sample document descriptions.'][i]}
                   </p>
                   <span className="collection-cta">
                     {msg('read')} <ArrowUpRight size={14}/>
@@ -168,7 +168,7 @@ export default function Home(){
           <div className="about-photo">
             <Image
               src="/images/archive-building.svg"
-              alt="Иллюстративный макет архивного здания"
+              alt={locale==='ru'?'Иллюстрация архивного здания; это не документальная фотография':locale==='kk'?'Архив ғимаратының иллюстрациялық бейнесі; деректі фотосурет емес':'Illustration of an archive building; not a documentary photograph'}
               fill
             />
           </div>
@@ -215,7 +215,7 @@ export default function Home(){
                     <Image src={d.image} alt="" fill/>
                   </div>
                   <div>
-                    <span>{d.category} · DEMO</span>
+                    <span>{d.category} · {msg('sampleRecord')}</span>
                     <b>{d.title}</b>
                     <small>{d.date}</small>
                   </div>
@@ -230,11 +230,7 @@ export default function Home(){
       <div className="integrity-note">
         <span className="note-dot"/>
         <span>
-          {msg('demo')} · {locale==='ru'
-            ?'Иллюстрации и описания созданы для демонстрации интерфейса, не являются официальными сведениями архива.'
-            :locale==='kk'
-            ?'Иллюстрациялар мен сипаттамалар интерфейсті көрсету үшін жасалған, архивтің ресми мәліметтері болып табылмайды.'
-            :'Illustrations and descriptions are created for interface demonstration and are not official archive records.'}
+          {msg('catalogSamplesNote')}
         </span>
       </div>
     </div>

@@ -26,11 +26,11 @@ export default function ExhibitionDetail(){
       <div className="breadcrumb">
         <Link href="/exhibitions"><ArrowLeft size={13}/>{msg('exhibitions')}</Link>
         <span>/</span>
-        DEMO
+        {msg('exhibitionConcept')}
       </div>
       <div className="editorial-hero">
-        <Image src={item.image} alt="Иллюстративный визуал демонстрационной выставки" fill/>
-        <span>DEMONSTRATION EXHIBITION</span>
+        <Image src={item.image} alt={locale==='ru'?'Иллюстрация к концепции выставки':locale==='kk'?'Көрме тұжырымдамасына арналған иллюстрация':'Illustration for an exhibition concept'} fill/>
+        <span>{msg('exhibitionConcept').toUpperCase()}</span>
       </div>
       <div className="editorial-copy">
         <span className="eyebrow">{item.category} · {item.year}</span>
@@ -39,11 +39,7 @@ export default function ExhibitionDetail(){
         <div className="integrity-note">
           <span className="note-dot"/>
           <span>
-            {locale==='ru'
-              ?'Демонстрационная редакционная концепция. Не является официальной выставкой.'
-              :locale==='kk'
-              ?'Демонстрациялық редакциялық тұжырымдама. Ресми көрме болып табылмайды.'
-              :'Demonstration editorial concept. Not an official exhibition.'}
+            {msg('notOfficialExhibition')}
           </span>
         </div>
         <h2>
@@ -51,14 +47,14 @@ export default function ExhibitionDetail(){
         </h2>
         <p>
           {locale==='ru'
-            ?'Этот макет показывает редакционный формат цифровой выставки: вступительный текст, изображения, связь с каталогом и указание на происхождение материалов. Архивные источники не приложены; тематическое содержание и исторические утверждения требуют проверки редактором архива.'
+            ?'Эта концепция показывает возможный формат цифровой выставки: вступительный текст, иллюстрации, связь с каталогом и указание происхождения материалов. Архивные источники не приложены; тематическое содержание и исторические утверждения требуют редакционной проверки.'
             :locale==='kk'
-            ?'Бұл макет цифрлық көрменің редакциялық форматын көрсетеді: кіріспе мәтін, иллюстрациялар, каталогпен байланыс және материалдардың шығу тегі. Архивтік түпнұсқалар тіркелмеген; тақырыптық мазмұн тексеруді қажет етеді.'
-            :'This mockup demonstrates the format of a digital exhibition: an introduction, visuals, catalogue links, and provenance labels. Archival sources are not attached; historical claims require archive editorial review.'}
+            ?'Бұл тұжырымдама цифрлық көрменің ықтимал форматын көрсетеді: кіріспе мәтін, иллюстрациялар, каталогпен байланыс және материалдардың шығу тегі. Архивтік дереккөздер тіркелмеген; тақырыптық мазмұн редакциялық тексеруді қажет етеді.'
+            :'This concept presents a possible digital exhibition format: an introduction, illustrations, catalogue links, and provenance labels. Archival sources are not attached; historical claims require editorial review.'}
         </p>
         <div className="editorial-sources">
           <span className="eyebrow">
-            {locale==='ru'?'МАТЕРИАЛЫ КАТАЛОГА · ДЕМО':locale==='kk'?'КАТАЛОГ МАТЕРИАЛДАРЫ · ДЕМО':'RELATED CATALOGUE MATERIALS · DEMO'}
+            {msg('sampleDescription')}
           </span>
           {documents.slice(0,2).map(d=>(
             <Link href={`/document/${d.id}`} key={d.id}>

@@ -123,6 +123,9 @@ export default function DocumentPage(){
    :locale==='en'
    ?doc.category==='Фотографии'?'Photographs':doc.category==='Карты'?'Maps':'Documents'
    :doc.category;
+ const displayId=doc.id.match(/^demo-(\d+)$/i)
+  ?`${msg('sampleRecord')} ${doc.id.slice(-2)}`
+  :doc.id;
 
  const downloadUrl=isUploaded?`/api/documents/${doc.id}/file?download=1`:doc.image;
 
@@ -133,13 +136,13 @@ export default function DocumentPage(){
     <span>/</span>
     {localizedCategory}
     <span>/</span>
-    {doc.id}
+    {displayId}
    </div>
 
    <div className="detail-heading">
     <div>
      <span className="eyebrow">
-      {localizedCategory} · {isUploaded?(locale==='ru'?'ОПУБЛИКОВАНО':locale==='kk'?'ЖАРИЯЛАНДЫ':'PUBLISHED'):'DEMO'}
+      {localizedCategory} · {isUploaded?(locale==='ru'?'ОПУБЛИКОВАНО':locale==='kk'?'ЖАРИЯЛАНДЫ':'PUBLISHED'):msg('sampleRecord')}
      </span>
      <h1>{doc.title}</h1>
      <p>{doc.description}</p>
@@ -165,7 +168,7 @@ export default function DocumentPage(){
    <div className="detail-layout">
     <section className="viewer-column">
      <div className="viewer-toolbar">
-      <span><span className="status-dot"/> {doc.status}</span>
+      <span><span className="status-dot"/> {isUploaded?doc.status:msg('sampleRecord')}</span>
       <div>
        <button type="button" onClick={()=>setZoom(Math.max(60,zoom-10))} aria-label="Zoom out">
         <Minus size={15}/>
@@ -210,13 +213,13 @@ export default function DocumentPage(){
        <div className="viewer-page" style={{transform:`scale(${zoom/100})`}}>
         <Image
          src={doc.image}
-         alt={isUploaded?doc.title:'Иллюстративный макет документа. Не является подлинным архивным материалом.'}
+         alt={isUploaded?doc.title:locale==='ru'?'Иллюстрация к образцу документа, не архивный источник':locale==='kk'?'Құжат үлгісінің иллюстрациясы, архив дереккөзі емес':'Illustration for a document sample, not an archival source'}
          fill
          unoptimized={isUploaded}
         />
         {!isUploaded&&(
          <div className="viewer-label">
-          DEMONSTRATION<br/>IMAGE · NOT A SOURCE
+          {locale==='ru'?'ИЛЛЮСТРАЦИЯ · НЕ ИСТОЧНИК':locale==='kk'?'ИЛЛЮСТРАЦИЯ · ДЕРЕККӨЗ ЕМЕС':'ILLUSTRATION · NOT A SOURCE'}
          </div>
         )}
        </div>
@@ -228,7 +231,7 @@ export default function DocumentPage(){
       <span>
        {isUploaded
         ?(locale==='ru'?'Оригинал загруженного файла':locale==='kk'?'Жүктелген файл түпнұсқасы':'Uploaded file original')
-        :(locale==='ru'?'Предпросмотр макета':locale==='kk'?'Макетті алдын ала қарау':'Mockup preview')}
+        :(locale==='ru'?'Иллюстративный просмотр':locale==='kk'?'Иллюстрациялық көрініс':'Illustrative preview')}
       </span>
      </div>
 
@@ -244,7 +247,7 @@ export default function DocumentPage(){
      <span className="eyebrow">
       {isUploaded
        ?(locale==='ru'?'ОПИСАНИЕ · ПУБЛИЧНАЯ ЗАПИСЬ':locale==='kk'?'СИПАТТАМА · ЖАРИЯЛАНҒАН':'DESCRIPTION · PUBLIC RECORD')
-       :(locale==='ru'?'АРХИВНОЕ ОПИСАНИЕ · ДЕМО':locale==='kk'?'АРХИВТІК СИПАТТАМА · ДЕМО':'ARCHIVAL DESCRIPTION · DEMO')}
+       :msg('sampleDescription').toUpperCase()}
      </span>
      <h2>{msg('source')}</h2>
 
@@ -263,7 +266,7 @@ export default function DocumentPage(){
       </div>
       <div key="ident">
        <dt>{locale==='kk'?'Идентификатор':locale==='en'?'Identifier':'Идентификатор'}</dt>
-       <dd>{isUploaded?uploaded?.documentIdentifier||(locale==='kk'?'Көрсетілмеген':locale==='en'?'Not specified':'Не указан'):doc.id}</dd>
+        <dd>{isUploaded?uploaded?.documentIdentifier||(locale==='kk'?'Көрсетілмеген':locale==='en'?'Not specified':'Не указан'):msg('sampleRecord')}</dd>
       </div>
       <div key="date">
        <dt>{locale==='kk'?'Күні':locale==='en'?'Date':'Дата'}</dt>
@@ -294,7 +297,7 @@ export default function DocumentPage(){
 
      {doc.tags&&doc.tags.length>0&&(
       <div style={{marginTop:'1.25rem',display:'flex',flexWrap:'wrap',gap:'0.35rem'}}>
-       {doc.tags.map(tag=>(
+       {doc.tags.filter(tag=>!/^демо$|^demo$/iu.test(tag)).map(tag=>(
         <Link
          key={tag}
          href={`/catalog?q=${encodeURIComponent(tag)}`}
@@ -312,7 +315,7 @@ export default function DocumentPage(){
        <span className="status-dot"/>
        {isUploaded
         ?(locale==='ru'?'Публичный доступ · опубликовано':locale==='kk'?'Ашық қолжетімділік · жарияланды':'Public access · published')
-        :doc.status}
+        :msg('sampleRecord')}
       </b>
      </div>
 
@@ -321,7 +324,7 @@ export default function DocumentPage(){
       <p>
        {isUploaded
         ?uploaded?.provenance||(locale==='kk'?'Дереккөз көрсетілмеген':locale==='en'?'Source not specified':'Источник не указан')
-        :`${doc.source}. ${locale==='ru'?'Данные демонстрационные, официальная архивная ссылка не присвоена.':locale==='kk'?'Деректер демонстрациялық, ресми архивтік шифр берілмеген.':'Demonstration data, no official archival code assigned.'}`}
+        :`${msg('catalogSamplesNote')} ${locale==='ru'?'Архивный шифр и оригинальный источник не указаны.':locale==='kk'?'Архивтік шифр мен түпнұсқа дереккөз көрсетілмеген.':'No archival reference or original source is provided.'}`}
       </p>
      </div>
 
@@ -349,7 +352,7 @@ export default function DocumentPage(){
      {documents.filter(x=>x.id!==doc.id).slice(0,3).map(x=>(
       <Link href={`/document/${x.id}`} key={x.id}>
        <Image src={x.image} alt="" width={200} height={120}/>
-       <span>{x.category} · DEMO</span>
+       <span>{x.category} · {msg('sampleRecord')}</span>
        <b>{x.title}</b>
       </Link>
      ))}

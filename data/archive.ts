@@ -14,34 +14,34 @@ export type UserRole='Main Administrator'|'Site Administrator'|'Editor'|'Archive
 export type DemoUser={id:string;role:UserRole;label:string;authenticated:false};
 
 export const documents:ArchiveDocument[]=[
- {id:'demo-01',title:'Вид на город у подножия гор',category:'Фотографии',date:'Середина XX века · демонстрационная датировка',year:1950,description:'Учебная карточка для демонстрации каталога. Название, дата, место и описание не являются архивной записью.',fonds:'Демо-фонд',inventory:'Демо-опись',caseName:'Демо-дело 01',creator:'Не установлен (демо)',place:'Восточный Казахстан (условно)',status:'Демонстрационный материал',source:'Синтетическая запись ALTAI ARCHIVE · версия 1',image:'/images/card-mountains.svg',tags:['город','фотография','демо']},
- {id:'demo-02',title:'Карта горной местности (макет)',category:'Карты',date:'XX век · условная дата',year:1930,description:'Иллюстративный макет описания карты. Географические сведения и архивный шифр отсутствуют.',fonds:'Демо-фонд',inventory:'Демо-опись',caseName:'Демо-дело 02',creator:'Не установлен (демо)',place:'Координаты не подтверждены',status:'Демонстрационный материал',source:'Синтетическая запись ALTAI ARCHIVE · версия 1',image:'/images/card-map.svg',tags:['карта','топография','демо']},
- {id:'demo-03',title:'Образец машинописного документа',category:'Документы',date:'Без подтверждённой даты',year:1940,description:'Образец карточки для проверки просмотра, цитирования и навигации. Это не подлинный архивный документ.',fonds:'Демо-фонд',inventory:'Демо-опись',caseName:'Демо-дело 03',creator:'Демо-автор',place:'Не указано',status:'Демонстрационный материал',source:'Синтетическая запись ALTAI ARCHIVE · версия 1',image:'/images/card-document.svg',tags:['документ','машинопись','демо']},
- {id:'demo-04',title:'Историческая улица — фотокарточка',category:'Фотографии',date:'Первая половина XX века · демонстрационная датировка',year:1925,description:'Пробный материал для демонстрации карточки фотоколлекции. Сведения условны.',fonds:'Демо-фонд',inventory:'Демо-опись',caseName:'Демо-дело 04',creator:'Не установлен (демо)',place:'Условное место',status:'Демонстрационный материал',source:'Синтетическая запись ALTAI ARCHIVE · версия 1',image:'/images/card-mountains.svg',tags:['фото','улица','демо']}
+ {id:'demo-01',title:'Вид на город у подножия гор',category:'Фотографии',date:'Середина XX века · условная датировка',year:1950,description:'Образец фотокарточки. Название, дата, место и описание не относятся к подтверждённой архивной записи.',fonds:'Образец фонда',inventory:'Образец описи',caseName:'Образец дела 01',creator:'Не установлен (пример)',place:'Восточный Казахстан (условно)',status:'Демонстрационный материал',source:'Пример интерфейса ALTAI ARCHIVE',image:'/images/card-mountains.svg',tags:['город','фотография','демо']},
+ {id:'demo-02',title:'Карта горной местности (макет)',category:'Карты',date:'XX век · условная дата',year:1930,description:'Иллюстративный образец описания карты. Географические сведения и архивный шифр отсутствуют.',fonds:'Образец фонда',inventory:'Образец описи',caseName:'Образец дела 02',creator:'Не установлен (пример)',place:'Координаты не подтверждены',status:'Демонстрационный материал',source:'Пример интерфейса ALTAI ARCHIVE',image:'/images/card-map.svg',tags:['карта','топография','демо']},
+ {id:'demo-03',title:'Образец машинописного документа',category:'Документы',date:'Без подтверждённой даты',year:1940,description:'Образец карточки для просмотра и цитирования. Изображение условное; это не архивный документ.',fonds:'Образец фонда',inventory:'Образец описи',caseName:'Образец дела 03',creator:'Не установлен (пример)',place:'Не указано',status:'Демонстрационный материал',source:'Пример интерфейса ALTAI ARCHIVE',image:'/images/card-document.svg',tags:['документ','машинопись','демо']},
+ {id:'demo-04',title:'Историческая улица — фотокарточка',category:'Фотографии',date:'Первая половина XX века · условная датировка',year:1925,description:'Образец карточки фотоколлекции с условными сведениями.',fonds:'Образец фонда',inventory:'Образец описи',caseName:'Образец дела 04',creator:'Не установлен (пример)',place:'Условное место',status:'Демонстрационный материал',source:'Пример интерфейса ALTAI ARCHIVE',image:'/images/card-mountains.svg',tags:['фото','улица','демо']}
 ];
 
 export const exhibitions:Exhibition[]=[
- {slug:'land-and-memory',title:'Земля и память',category:'Пространство',intro:'Демонстрационная редакционная выставка о том, как меняется взгляд на родной край через карты, фотографии и описания мест.',year:'Демо-выставка',image:'/images/card-mountains.svg'},
- {slug:'paper-traces',title:'Следы на бумаге',category:'Документы',intro:'Макет выставочного маршрута: от архивного описания к внимательному чтению источника.',year:'Демо-выставка',image:'/images/card-document.svg'},
- {slug:'lines-of-place',title:'Линии места',category:'Карты',intro:'Иллюстративная история картографического материала с пометками о проверке происхождения.',year:'Демо-выставка',image:'/images/card-map.svg'}
+ {slug:'land-and-memory',title:'Земля и память',category:'Пространство',intro:'Редакционная концепция о том, как меняется взгляд на родной край через карты, фотографии и описания мест. Изображения иллюстративные.',year:'Концепция выставки',image:'/images/card-mountains.svg'},
+ {slug:'paper-traces',title:'Следы на бумаге',category:'Документы',intro:'Пример выставочного маршрута: от архивного описания к внимательному чтению источника.',year:'Концепция выставки',image:'/images/card-document.svg'},
+ {slug:'lines-of-place',title:'Линии места',category:'Карты',intro:'Иллюстративный рассказ о картографических материалах с пометками о проверке происхождения.',year:'Концепция выставки',image:'/images/card-map.svg'}
 ];
 
 export const news:NewsItem[]=[
- {slug:'site-demo',title:'О цифровом макете ALTAI ARCHIVE',category:'Проект',date:'Демонстрационная публикация',excerpt:'Эта страница показывает формат новостной ленты. Текст не является официальным сообщением архива.'},
- {slug:'collections-demo',title:'Как читать архивное описание',category:'Просветительское',date:'Демонстрационная публикация',excerpt:'Краткий демонстрационный материал о связях между уровнями архивного описания.'},
- {slug:'heritage-demo',title:'Материалы региона в цифровой среде',category:'События',date:'Демонстрационная публикация',excerpt:'Макет анонса культурного события. Дата и организаторы не подтверждены.'}
+ {slug:'site-demo',title:'Об информационной платформе ALTAI ARCHIVE',category:'Проект',date:'Образец публикации',excerpt:'Редакционный пример описания информационной платформы. Это не официальное сообщение архива.'},
+ {slug:'collections-demo',title:'Как читать архивное описание',category:'Просветительское',date:'Образец публикации',excerpt:'Пример пояснительного материала о связях между уровнями архивного описания.'},
+ {slug:'heritage-demo',title:'Материалы региона в цифровой среде',category:'События',date:'Образец публикации',excerpt:'Пример анонса культурного события. Дата и организаторы не подтверждены.'}
 ];
 
 export const places:HistoricalPlace[]=[
- {id:'place-1',name:'Условная точка — долина',region:'Восточный Казахстан · демонстрация',period:'XX век · условная привязка',description:'Условная демонстрационная точка для показа интерфейса. Это не архивная географическая привязка.',x:52,y:41,provenance:'demonstration'},
- {id:'place-2',name:'Условная точка — хребет',region:'Алтай · демонстрация',period:'Период не подтверждён',description:'Положение точки схематично и не указывает на конкретный исторический объект.',x:72,y:29,provenance:'demonstration'},
- {id:'place-3',name:'Условная точка — поселение',region:'Регион · демонстрация',period:'XX век · условная привязка',description:'Демо-объект, координаты не основаны на архивных данных.',x:39,y:62,provenance:'demonstration'}
+ {id:'place-1',name:'Условная точка — долина',region:'Восточный Казахстан · схема',period:'XX век · условная привязка',description:'Иллюстративная отметка. Она не указывает подтверждённую архивную географическую привязку.',x:52,y:41,provenance:'demonstration'},
+ {id:'place-2',name:'Условная точка — хребет',region:'Алтай · схема',period:'Период не подтверждён',description:'Положение точки схематично и не указывает на конкретный подтверждённый исторический объект.',x:72,y:29,provenance:'demonstration'},
+ {id:'place-3',name:'Условная точка — поселение',region:'Регион · схема',period:'XX век · условная привязка',description:'Иллюстративная отметка без координат, основанных на архивных данных.',x:39,y:62,provenance:'demonstration'}
 ];
 
 export const demoCollections=[
- {title:'ВКО в XX веке',category:'Фотографии',image:'/images/card-mountains.svg',description:'Демонстрационная подборка исторических изображений региона.'},
- {title:'Исторические карты региона',category:'Карты',image:'/images/card-map.svg',description:'Иллюстративная подборка картографических материалов.'},
- {title:'Официальные документы',category:'Документы',image:'/images/card-document.svg',description:'Демонстрационные образцы описаний документов.'}
+ {title:'ВКО в XX веке',category:'Фотографии',image:'/images/card-mountains.svg',description:'Иллюстративные изображения на тему истории региона.'},
+ {title:'Исторические карты региона',category:'Карты',image:'/images/card-map.svg',description:'Иллюстрации на тему картографии региона.'},
+ {title:'Официальные документы',category:'Документы',image:'/images/card-document.svg',description:'Образцы оформления описаний документов.'}
 ];
 
 export const mainArchive:ArchiveLocation={id:'main',kind:'main',name:'Государственный архив Восточно-Казахстанской области',shortName:'Государственный архив Восточно-Казахстанской области',affiliation:'Государственный архив Восточно-Казахстанской области',city:'Усть-Каменогорск',address:null,phone:null,email:null,hours:null,sourceLabel:'Официальный портал управления цифровизации и архивов ВКО',sourceUrl:'https://www.gov.kz/org/vko-uca',sourceDate:'Проверено 09.11.2026',sourceDocument:'gov.kz',needsReview:false,reviewNotes:[],coordinatesStatus:'unavailable',affiliationStatus:'official-listing',addressStatus:'official-listing'};
@@ -56,16 +56,16 @@ export function getLocalizedPlace(place: HistoricalPlace, locale: Locale): Histo
       return {
         ...place,
         name: 'Шартты нүкте — алқап',
-        region: 'Шығыс Қазақстан · демонстрация',
+        region: 'Шығыс Қазақстан · схема',
         period: 'XX ғасыр · шартты байланыстыру',
-        description: 'Интерфейсті көрсетуге арналған шартты демо нүкте. Бұл архивтік географиялық байланыстыру емес.'
+        description: 'Иллюстрациялық белгі. Бұл расталған архивтік географиялық байланыстыру емес.'
       };
     }
     if (place.id === 'place-2') {
       return {
         ...place,
         name: 'Шартты нүкте — жота',
-        region: 'Алтай · демонстрация',
+        region: 'Алтай · схема',
         period: 'Кезеңі расталмаған',
         description: 'Нүктенің орналасуы схемалық сипатта және нақты тарихи нысанды білдірмейді.'
       };
@@ -74,9 +74,9 @@ export function getLocalizedPlace(place: HistoricalPlace, locale: Locale): Histo
       return {
         ...place,
         name: 'Шартты нүкте — елді мекен',
-        region: 'Өңір · демонстрация',
+        region: 'Өңір · схема',
         period: 'XX ғасыр · шартты байланыстыру',
-        description: 'Демо-нысан, координаттар архивтік деректерге негізделмеген.'
+        description: 'Иллюстрациялық белгі, координаттар архив деректеріне негізделмеген.'
       };
     }
   }
@@ -85,16 +85,16 @@ export function getLocalizedPlace(place: HistoricalPlace, locale: Locale): Histo
       return {
         ...place,
         name: 'Sample point — valley',
-        region: 'East Kazakhstan · demo',
+        region: 'East Kazakhstan · schematic',
         period: '20th c. · illustrative',
-        description: 'Illustrative demonstration marker. Not an archival geographic coordinate.'
+        description: 'Illustrative marker; not a verified archival geographic location.'
       };
     }
     if (place.id === 'place-2') {
       return {
         ...place,
         name: 'Sample point — ridge',
-        region: 'Altai · demo',
+        region: 'Altai · schematic',
         period: 'Period unverified',
         description: 'Location is schematic and does not indicate a specific verified site.'
       };
@@ -103,9 +103,9 @@ export function getLocalizedPlace(place: HistoricalPlace, locale: Locale): Histo
       return {
         ...place,
         name: 'Sample point — settlement',
-        region: 'Region · demo',
+        region: 'Region · schematic',
         period: '20th c. · illustrative',
-        description: 'Demonstration location; coordinates are not based on archival survey records.'
+        description: 'Illustrative marker; coordinates are not based on archival survey records.'
       };
     }
   }
@@ -119,8 +119,8 @@ export function getLocalizedExhibition(item: Exhibition, locale: Locale): Exhibi
         ...item,
         title: 'Жер және жад',
         category: 'Кеңістік',
-        intro: 'Карталар, фотосуреттер мен сипаттамалар арқылы туған өлкеге көзқарастың қалай өзгеретіні туралы демонстрациялық көрме.',
-        year: 'Демо-көрме'
+        intro: 'Карталар, фотосуреттер мен сипаттамалар арқылы туған өлке туралы көзқарасты зерттейтін редакциялық тұжырымдама. Бейнелер иллюстрациялық сипатта.',
+        year: 'Көрме тұжырымдамасы'
       };
     }
     if (item.slug === 'paper-traces') {
@@ -128,8 +128,8 @@ export function getLocalizedExhibition(item: Exhibition, locale: Locale): Exhibi
         ...item,
         title: 'Қағаздағы іздер',
         category: 'Құжаттар',
-        intro: 'Көрме маршрутының макеті: архивтік сипаттамадан бастап түпнұсқаны мұқият оқуға дейін.',
-        year: 'Демо-көрме'
+        intro: 'Архивтік сипаттамадан дереккөзді мұқият оқуға дейінгі көрме маршрутының үлгісі.',
+        year: 'Көрме тұжырымдамасы'
       };
     }
     if (item.slug === 'lines-of-place') {
@@ -138,7 +138,7 @@ export function getLocalizedExhibition(item: Exhibition, locale: Locale): Exhibi
         title: 'Мекен сызықтары',
         category: 'Карталар',
         intro: 'Шығу тегін тексеру белгілері бар картографиялық материалдардың иллюстрациялық тарихы.',
-        year: 'Демо-көрме'
+        year: 'Көрме тұжырымдамасы'
       };
     }
   }
@@ -148,8 +148,8 @@ export function getLocalizedExhibition(item: Exhibition, locale: Locale): Exhibi
         ...item,
         title: 'Land and Memory',
         category: 'Space',
-        intro: 'A demonstration exhibition on how perspective on the homeland evolves through maps, photographs, and records of places.',
-        year: 'Demo exhibition'
+        intro: 'An editorial concept exploring the homeland through maps, photographs, and descriptions of places. Images are illustrative.',
+        year: 'Exhibition concept'
       };
     }
     if (item.slug === 'paper-traces') {
@@ -157,8 +157,8 @@ export function getLocalizedExhibition(item: Exhibition, locale: Locale): Exhibi
         ...item,
         title: 'Traces on Paper',
         category: 'Documents',
-        intro: 'An illustrative exhibition path: from archival description to attentive reading of sources.',
-        year: 'Demo exhibition'
+        intro: 'An example exhibition path, from archival description to attentive reading of sources.',
+        year: 'Exhibition concept'
       };
     }
     if (item.slug === 'lines-of-place') {
@@ -167,7 +167,7 @@ export function getLocalizedExhibition(item: Exhibition, locale: Locale): Exhibi
         title: 'Lines of Place',
         category: 'Maps',
         intro: 'An illustrative narrative of cartographic records with provenance verification markers.',
-        year: 'Demo exhibition'
+        year: 'Exhibition concept'
       };
     }
   }
@@ -179,10 +179,10 @@ export function getLocalizedNews(item: NewsItem, locale: Locale): NewsItem {
     if (item.slug === 'site-demo') {
       return {
         ...item,
-        title: 'ALTAI ARCHIVE цифрлық макеті туралы',
+        title: 'ALTAI ARCHIVE ақпараттық платформасы туралы',
         category: 'Жоба',
-        date: 'Демонстрациялық жарияланым',
-        excerpt: 'Бұл бет жаңалықтар лентасының форматын көрсетеді. Мәтін архивтің ресми хабарламасы болып табылмайды.'
+        date: 'Жарияланым үлгісі',
+        excerpt: 'ALTAI ARCHIVE ақпараттық платформасы туралы редакциялық үлгі. Бұл архивтің ресми хабарламасы емес.'
       };
     }
     if (item.slug === 'collections-demo') {
@@ -190,8 +190,8 @@ export function getLocalizedNews(item: NewsItem, locale: Locale): NewsItem {
         ...item,
         title: 'Архивтік сипаттаманы қалай оқу керек',
         category: 'Ағартушылық',
-        date: 'Демонстрациялық жарияланым',
-        excerpt: 'Архивтік сипаттама деңгейлері арасындағы байланыстар туралы қысқаша түсіндірме материал.'
+        date: 'Жарияланым үлгісі',
+        excerpt: 'Архивтік сипаттама деңгейлері арасындағы байланыстар туралы қысқаша түсіндірме материал үлгісі.'
       };
     }
     if (item.slug === 'heritage-demo') {
@@ -199,8 +199,8 @@ export function getLocalizedNews(item: NewsItem, locale: Locale): NewsItem {
         ...item,
         title: 'Өңір материалдары цифрлық кеңістікте',
         category: 'Оқиғалар',
-        date: 'Демонстрациялық жарияланым',
-        excerpt: 'Мәдени іс-шара хабарландыруының макеті. Өткізілу күні мен ұйымдастырушылары расталмаған.'
+        date: 'Жарияланым үлгісі',
+        excerpt: 'Мәдени іс-шара хабарландыруының үлгісі. Өткізілу күні мен ұйымдастырушылары расталмаған.'
       };
     }
   }
@@ -208,10 +208,10 @@ export function getLocalizedNews(item: NewsItem, locale: Locale): NewsItem {
     if (item.slug === 'site-demo') {
       return {
         ...item,
-        title: 'About the ALTAI ARCHIVE digital mockup',
+        title: 'About the ALTAI ARCHIVE information platform',
         category: 'Project',
-        date: 'Demonstration article',
-        excerpt: 'This page illustrates the newsfeed format. The text is not an official archive announcement.'
+        date: 'Publication sample',
+        excerpt: 'An editorial example about the ALTAI ARCHIVE information platform. This is not an official archive announcement.'
       };
     }
     if (item.slug === 'collections-demo') {
@@ -219,8 +219,8 @@ export function getLocalizedNews(item: NewsItem, locale: Locale): NewsItem {
         ...item,
         title: 'How to read an archival description',
         category: 'Educational',
-        date: 'Demonstration article',
-        excerpt: 'A brief explanatory guide to connections across levels of archival descriptions.'
+        date: 'Publication sample',
+        excerpt: 'An example of a brief guide to connections across levels of archival descriptions.'
       };
     }
     if (item.slug === 'heritage-demo') {
@@ -228,8 +228,8 @@ export function getLocalizedNews(item: NewsItem, locale: Locale): NewsItem {
         ...item,
         title: 'Regional heritage in the digital environment',
         category: 'Events',
-        date: 'Demonstration article',
-        excerpt: 'Cultural event announcement mockup. Dates and organizers are unverified.'
+        date: 'Publication sample',
+        excerpt: 'An example cultural event announcement. Dates and organizers are unverified.'
       };
     }
   }

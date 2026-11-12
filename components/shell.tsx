@@ -187,9 +187,27 @@ export function Shell({children}:{children:React.ReactNode}){
             <span className="footer-platform">ALTAI ARCHIVE</span>
             <span className="footer-institution">{institutionTitle}</span>
           </div>
-          <span>
-            {msg('demo')} · {locale==='ru'?'Неофициальный демонстрационный макет':locale==='kk'?'Бейресми демонстрациялық макет':'Unofficial demonstration interface'}
-          </span>
+          <nav className="footer-directory" aria-label={msg('moreSections')}>
+            <section className="footer-section">
+              <h2>{msg('footerArchive')}</h2>
+              <Link href="/about">{msg('about')}</Link>
+              <Link href="/official-documents">{msg('officialDocuments')}</Link>
+            </section>
+            <section className="footer-section">
+              <h2>{msg('footerBranches')}</h2>
+              <Link href="/branches">{msg('branches')}</Link>
+            </section>
+            <section className="footer-section">
+              <h2>{msg('footerContacts')}</h2>
+              <Link href="/about#feedback">{msg('feedback')}</Link>
+            </section>
+            <section className="footer-section">
+              <h2>{msg('footerUseful')}</h2>
+              <Link href="/catalog">{msg('catalog')}</Link>
+              <Link href="/history">{msg('history')}</Link>
+              <Link href="/news">{msg('news')}</Link>
+            </section>
+          </nav>
         </footer>
       </div>
     </div>

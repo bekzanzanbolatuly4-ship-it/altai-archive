@@ -171,13 +171,14 @@ export default function Catalog(){
     <h1>{msg('catalog')}</h1>
     <p>
      {locale==='ru'
-      ?'Исследуйте демонстрационные описания и структуру каталога.'
+      ?'Изучите структуру архивного описания и найдите опубликованные материалы.'
       :locale==='kk'
-      ?'Демонстрациялық сипаттамалар мен каталог құрылымын зерттеңіз.'
-      :'Explore demonstration descriptions and the catalogue structure.'}
+      ?'Архивтік сипаттаманың құрылымын зерттеп, жарияланған материалдарды табыңыз.'
+      :'Explore the structure of archival descriptions and find published materials.'}
     </p>
-    <span className="demo-stamp">{msg('demo').toUpperCase()}</span>
    </div>
+
+   <p className="catalog-integrity-note">{msg('catalogSamplesNote')}</p>
 
    {loadError&&<p className="catalog-load-warning" role="status">{msg('catalogueSourceError')}</p>}
 
@@ -212,7 +213,7 @@ export default function Catalog(){
        {uploaded.length>0?(
         <span className="mini-demo">{locale==='ru'?`${uploaded.length} в архиве`:locale==='kk'?`${uploaded.length} архивте`:`${uploaded.length} in archive`}</span>
        ):(
-        <span className="mini-demo">DEMO</span>
+        <span className="mini-demo">{msg('sampleDescription')}</span>
        )}
       </>
      )}
@@ -273,7 +274,6 @@ export default function Catalog(){
       </span>
      ))}
     </span>
-    <span className="mini-demo">DEMO</span>
    </div>
 
    {pagedDocs.length>0?(
@@ -299,7 +299,7 @@ export default function Catalog(){
          </div>
          <div className="status-line">
           <span className="status-dot"/>
-          {uploaded.some(record=>record.id===d.id)?msg('published'):msg('demo')}
+          {uploaded.some(record=>record.id===d.id)?msg('published'):msg('sampleRecord')}
          </div>
         </div>
        </Link>
