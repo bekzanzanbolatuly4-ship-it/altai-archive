@@ -136,10 +136,15 @@ test('new branch and calendar interface labels exist in RU, KK and EN',()=>{
  for(const locale of ['ru','kk','en'])for(const key of keys)assert.equal(typeof messages[locale][key],'string',`${locale}.${key}`);
 });
 
-test('official documents navigation is localized and the route has no missing local PDF references',async()=>{
+test('official documents navigation is localized and archive-supplied PDFs are present',async()=>{
  const keys=['officialDocuments'];
  for(const locale of ['ru','kk','en'])for(const key of keys)assert.equal(typeof messages[locale][key],'string',`${locale}.${key}`);
  const page=await readFile(new URL('../app/official-documents/page.tsx',import.meta.url),'utf8');
  for(const url of ['https://adilet.zan.kz/rus/docs/G23V000289A','https://adilet.zan.kz/kaz/docs/G23V000289A','https://www.gov.kz/services/3014?lang=ru','https://www.gov.kz/situations/13/67'])assert.ok(page.includes(url),`Official source link missing: ${url}`);
- assert.doesNotMatch(page,/href=["']\/documents\//,'The source PDFs are unavailable; do not create broken local download links');
+ for(const file of ['archive-services-price-list-ru.pdf','archive-services-price-list-kk.pdf','vko-akimat-resolution-142-2026.pdf']){
+  assert.ok(page.includes(`/documents/${file}`),`Local source link missing: ${file}`);
+  const pdf=await readFile(new URL(`../public/documents/${file}`,import.meta.url));
+  assert.equal(pdf.subarray(0,4).toString(),'%PDF',`Invalid PDF asset: ${file}`);
+ }
+ assert.match(page,/нормативный акт, а не архивное дело/i,'The resolution must not be presented as an archival record');
 });
