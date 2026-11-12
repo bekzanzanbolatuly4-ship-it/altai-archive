@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {useEffect,useMemo,useState} from 'react';
 import {ArrowDownWideNarrow,ArrowUpRight,ChevronDown,ChevronLeft,ChevronRight,Filter,Search,SlidersHorizontal,Sparkles} from 'lucide-react';
-import {documents,type ArchiveDocument} from '@/data/archive';
+import type {ArchiveDocument} from '@/data/archive';
 import {useApp} from '@/components/providers';
 
 const PAGE_SIZE=12;
@@ -92,7 +92,7 @@ export default function Catalog(){
   setPage(1);
  },[q,category,from,to,sort]);
 
- const allDocs=useMemo(()=>[...uploaded,...documents],[uploaded]);
+ const allDocs=useMemo(()=>uploaded,[uploaded]);
 
  const visible=useMemo(()=>{
   const rawWords=q.toLowerCase().trim().split(/\s+/).filter(Boolean);
@@ -213,7 +213,7 @@ export default function Catalog(){
        {uploaded.length>0?(
         <span className="mini-demo">{locale==='ru'?`${uploaded.length} в архиве`:locale==='kk'?`${uploaded.length} архивте`:`${uploaded.length} in archive`}</span>
        ):(
-        <span className="mini-demo">{msg('sampleDescription')}</span>
+        <span className="mini-demo">{msg('catalogueEmptyTag')}</span>
        )}
       </>
      )}
@@ -299,7 +299,7 @@ export default function Catalog(){
          </div>
          <div className="status-line">
           <span className="status-dot"/>
-          {uploaded.some(record=>record.id===d.id)?msg('published'):msg('sampleRecord')}
+          {msg('published')}
          </div>
         </div>
        </Link>
@@ -337,8 +337,9 @@ export default function Catalog(){
    ):(
     <div className="empty-state">
      <Search size={25}/>
-     <h2>{msg('noResults')}</h2>
-     <p>{msg('searchEmptyHint')}</p>
+     <h2>{uploaded.length===0&&!q&&!category?msg('catalogueEmptyPublished'):msg('noResults')}</h2>
+     <p>{uploaded.length===0&&!q&&!category?msg('catalogSamplesNote'):msg('searchEmptyHint')}</p>
+     {uploaded.length===0&&!q&&!category&&<Link className="outline-link" href="/official-documents">{msg('officialDocuments')}</Link>}
      <button
       type="button"
       onClick={()=>{setQ('');setCategory('');setFrom('');setTo('');}}

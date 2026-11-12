@@ -4,7 +4,7 @@ import Image from 'next/image';
 import {useEffect,useState} from 'react';
 import {ArrowLeft,ArrowUpRight,Check,Copy,Download,FileText,Info,Minus,Plus,Share2} from 'lucide-react';
 import {useParams} from 'next/navigation';
-import {documents,type ArchiveDocument} from '@/data/archive';
+import type {ArchiveDocument} from '@/data/archive';
 import {useApp} from '@/components/providers';
 
 type PublicRecord = ArchiveDocument & {
@@ -20,17 +20,15 @@ type PublicRecord = ArchiveDocument & {
 export default function DocumentPage(){
  const{msg,locale}=useApp();
  const{id}=useParams<{id:string}>();
- const demo=documents.find(x=>x.id===id);
  const[uploaded,setUploaded]=useState<PublicRecord|null>(null);
- const[loading,setLoading]=useState(!demo);
+ const[loading,setLoading]=useState(true);
  const[loadError,setLoadError]=useState(false);
  const[zoom,setZoom]=useState(100);
  const[copied,setCopied]=useState(false);
- const doc=demo||uploaded;
- const isUploaded=!demo&&!!uploaded;
+ const doc=uploaded;
+ const isUploaded=!!uploaded;
 
  useEffect(()=>{
-  if(demo)return;
   setLoadError(false);
   fetch(`/api/documents/${id}`)
    .then(r=>{
@@ -76,7 +74,7 @@ export default function DocumentPage(){
     setUploaded(null);
    })
    .finally(()=>setLoading(false));
- },[demo,id,locale]);
+ },[id,locale]);
 
  useEffect(()=>{
   if(doc){
@@ -123,11 +121,9 @@ export default function DocumentPage(){
    :locale==='en'
    ?doc.category==='Фотографии'?'Photographs':doc.category==='Карты'?'Maps':'Documents'
    :doc.category;
- const displayId=doc.id.match(/^demo-(\d+)$/i)
-  ?`${msg('sampleRecord')} ${doc.id.slice(-2)}`
-  :doc.id;
+ const displayId=doc.id;
 
- const downloadUrl=isUploaded?`/api/documents/${doc.id}/file?download=1`:doc.image;
+ const downloadUrl=`/api/documents/${doc.id}/file?download=1`;
 
  return (
   <div className="page-wrap document-detail">
@@ -345,19 +341,13 @@ export default function DocumentPage(){
     <div className="section-heading">
      <div>
       <span className="eyebrow">
-       {locale==='ru'?'СВЯЗАННЫЕ МАТЕРИАЛЫ':locale==='kk'?'БАЙЛАНЫСТЫ МАТЕРИАЛДАР':'DISCOVER MORE'}
+      {locale==='ru'?'ОФИЦИАЛЬНЫЕ ДОКУМЕНТЫ':locale==='kk'?'РЕСМИ ҚҰЖАТТАР':'OFFICIAL DOCUMENTS'}
       </span>
-      <h2>{msg('related')}</h2>
+       <h2>{msg('officialDocuments')}</h2>
      </div>
     </div>
     <div className="related-grid">
-     {documents.filter(x=>x.id!==doc.id).slice(0,3).map(x=>(
-      <Link href={`/document/${x.id}`} key={x.id}>
-       <Image src={x.image} alt="" width={200} height={120}/>
-       <span>{x.category} · {msg('sampleRecord')}</span>
-       <b>{x.title}</b>
-      </Link>
-     ))}
+     <Link href="/official-documents">{msg('officialDocuments')} <ArrowUpRight size={14}/></Link>
     </div>
    </section>
   </div>
