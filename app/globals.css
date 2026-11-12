@@ -61,17 +61,41 @@ html[data-accessibility='large'] body {
 }
 
 html[data-accessibility='large'] {
-  --text-secondary: #202b25;
-  --muted: #26332c;
-  --border: #626e66;
-  --line: #626e66;
+  --background: #fff;
+  --paper: #fff;
+  --surface: #fff;
+  --surface-elevated: #fff;
+  --surface-selected: #e6eee9;
+  --text-primary: #111713;
+  --text-secondary: #202820;
+  --border: #526057;
+  --accent: #174833;
+  --ink: #111713;
+  --muted: #202820;
+  --line: #526057;
+  --forest: #173d2d;
+  --sage: #405b47;
+  --earth: #704515;
+  color-scheme: light;
 }
 
 html[data-theme='dark'][data-accessibility='large'] {
-  --text-secondary: #fff;
-  --muted: #f1f5f2;
-  --border: #d0dad3;
-  --line: #aebbb2;
+  --background: #050705;
+  --paper: #050705;
+  --surface: #111612;
+  --surface-elevated: #171e19;
+  --surface-selected: #25342b;
+  --text-primary: #fff;
+  --text-secondary: #f5f7f5;
+  --border: #d6e0d8;
+  --accent: #bce8cf;
+  --ink: #fff;
+  --muted: #f5f7f5;
+  --line: #c2d0c7;
+  --forest: #bce1c8;
+  --sage: #c4dccb;
+  --earth: #ffdc9b;
+  color-scheme: dark;
 }
 
 html[data-accessibility='large'] :where(p, li, dd, dt, label, button, a, input, select, textarea, small, .nav-caption, .eyebrow) {
@@ -79,6 +103,7 @@ html[data-accessibility='large'] :where(p, li, dd, dt, label, button, a, input, 
   line-height: 1.65;
 }
 html[data-accessibility='large'] :where(a:not(.brand), button) { text-decoration-thickness: 2px; text-underline-offset: 3px; }
+html[data-accessibility='large'] :where(a:not(.brand)) { text-decoration-line: underline; }
 html[data-accessibility='large'] :where(a, button, input, select, textarea):focus-visible { outline: 3px solid var(--earth); outline-offset: 3px; }
 html[data-accessibility='large'] :where(input, select, textarea) { border-width: 2px; }
 
