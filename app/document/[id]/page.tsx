@@ -149,15 +149,17 @@ export default function DocumentPage(){
     </div>
     <div style={{display:'flex',gap:'0.5rem',flexWrap:'wrap'}}>
      <Link href={`/assistant?q=${encodeURIComponent(`${msg('aiHelpDocument')}: ${doc.title}`)}`} className="outline-link">{msg('assistant')}</Link>
-     <a
-      href={downloadUrl}
-      download={isUploaded?(uploaded?.originalName||`${doc.id}`):undefined}
-      className="outline-link"
-      style={{display:'inline-flex',alignItems:'center',gap:'0.4rem'}}
-     >
-      <Download size={15}/>
-      {locale==='ru'?'Скачать':locale==='kk'?'Жүктеу':'Download'}
-     </a>
+     {isUploaded
+      ?<a
+        href={downloadUrl}
+        download={uploaded?.originalName||`${doc.id}`}
+        className="outline-link"
+        style={{display:'inline-flex',alignItems:'center',gap:'0.4rem'}}
+       >
+        <Download size={15}/>
+        {locale==='ru'?'Скачать':locale==='kk'?'Жүктеу':'Download'}
+       </a>
+      :<span className="outline-link" role="note">{msg('sampleFileUnavailable')}</span>}
      <button type="button" className="outline-link" onClick={copy}>
       {copied?<Check size={15}/>:<Copy size={15}/>}
       {copied?msg('copied'):msg('citation')}
