@@ -2,7 +2,7 @@
 
 ## Status and evidence
 
-**Confirmed by the project brief:** The working product name is ALTAI ARCHIVE; the tagline is “History preserved for the future.” The intended context is the East Kazakhstan Regional State Archive. The design direction is Editorial Heritage × Swiss Design × Altai Identity, with the palette recorded in the README. The assignment requests planning documents before application implementation.
+**Confirmed by the project brief:** The public site should retain the institution’s name, Государственный архив Восточно-Казахстанской области. The intended context is the East Kazakhstan Regional State Archive. The design direction is Editorial Heritage × Swiss Design × Altai regional identity, with the palette recorded in the README.
 
 **Not confirmed:** Legal operator and audience, official requirements, archive holdings and rights, languages required beyond the proposed Kazakh and Russian interfaces, accessibility target, integrations, hosting, budget, schedule, and any approved AI use.
 

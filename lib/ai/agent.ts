@@ -1,6 +1,6 @@
 import type {StoredDocument} from '../archive-store';
 import {parseInput,searchPublic,buildContext} from './context.ts';
-import {complete,type AIProvider} from './openrouter.ts';
+import {complete,type AIProvider} from './gemini.ts';
 import {validateResponse} from './validation.ts';
 import {AIError} from './errors.ts';
 import {acquire} from './limits.ts';
@@ -8,6 +8,7 @@ import {searchDemonstration} from './demo-search.ts';
 import {isPublicDocument} from '../public-access.ts';
 import {redact,type Source} from './context.ts';
 import {approvedReferenceSources,classifyReferenceQuestion,localReferenceReply} from './reference-knowledge.ts';
+import {searchCustomerKnowledge,localCustomerReply} from './customer-knowledge.ts';
 
 function noMatch(locale:'ru'|'kk'|'en'){
  const answer=locale==='kk'?'Сұрауыңызға сәйкес жарияланған архив материалы табылмады.':locale==='ru'?'По вашему запросу не найдено опубликованных архивных материалов.':'No matching published archive material was found.';
@@ -44,10 +45,10 @@ export async function runAgent(raw:unknown,dependencies:{documents:()=>Promise<S
   if(asksForNonPublicContent(input.message))return noMatch(input.locale);
   const referenceIntent=classifyReferenceQuestion(input.message);
   if(referenceIntent){
-   if(referenceIntent==='greeting'||referenceIntent==='platform'||referenceIntent==='site-sections'||(referenceIntent==='catalogue'&&isCatalogueLocationQuestion(input.message)))return localReferenceReply(referenceIntent,input.locale)!;
+   if(referenceIntent==='greeting'||referenceIntent==='platform'||referenceIntent==='institution'||referenceIntent==='site-sections'||(referenceIntent==='catalogue'&&isCatalogueLocationQuestion(input.message)))return localReferenceReply(referenceIntent,input.locale)!;
    const references=approvedReferenceSources(referenceIntent,input.locale);
    try{
-    const response=await complete(input.message,buildContext(references),input.locale,dependencies);
+    const response=await complete(input.message,buildContext(references),input.locale,{...dependencies,history:input.history});
     return {mode:'ai' as const,locale:input.locale,...validateResponse(response,references,[])};
    }catch(error){
     const local=localReferenceReply(referenceIntent,input.locale);
@@ -55,15 +56,28 @@ export async function runAgent(raw:unknown,dependencies:{documents:()=>Promise<S
     throw error;
    }
   }
-  const sources=searchPublic(await dependencies.documents(),input.message);
+  const documents=await dependencies.documents();
+  // Keep retrieval tied to the current request. Prior turns are supplied separately
+  // to Gemini as untrusted dialogue and must not broaden the evidence search.
+  const sources=searchPublic(documents,input.message);
   if(!sources.length){
    if(isSpecificArchiveSearch(input.message))return noMatch(input.locale);
+   const asksCustomerHistory=/(?:calendar|commemorative|date|year|history|historical|памятн[\p{L}]*|календар[\p{L}]*|дат[\p{L}]*|год[\p{L}]*|истор[\p{L}]*|күнтізбе|жыл|тарих)/iu.test(input.message);
+   const customerSources=asksCustomerHistory?searchCustomerKnowledge(input.message,input.locale):[];
+   if(customerSources.length){
+    try{
+     const response=await complete(input.message,buildContext(customerSources),input.locale,{...dependencies,history:input.history});
+     return {mode:'ai' as const,locale:input.locale,...validateResponse(response,customerSources,documents)};
+    }catch{
+     return localCustomerReply(customerSources,input.locale)!;
+    }
+   }
    const local=searchDemonstration(input.message,input.locale);
    if(local)return local;
    return noMatch(input.locale);
   }
   try{
-   const response=await complete(input.message,buildContext(sources),input.locale,dependencies);
+   const response=await complete(input.message,buildContext(sources),input.locale,{...dependencies,history:input.history});
    return {mode:'ai' as const,locale:input.locale,...validateResponse(response,sources,await dependencies.documents())};
   }catch{
    return localPublicSearch(sources,input.locale,await dependencies.documents());

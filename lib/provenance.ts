@@ -32,18 +32,7 @@ export const archiveFoundation:ProvenanceRecord={
  ]
 };
 
-export const branchConflicts=new Set([
- 'branch-source-01','branch-source-03','branch-source-05','branch-source-07','branch-source-09','branch-source-10','branch-source-12'
-]);
-
-export const branchConflictDetails:Record<string,{name:string;address:string|null;phone:string|null}>={
- 'branch-source-01':{name:'Алтай филиал',address:'ВКО, район Алтай, г. Алтай, ул. М. Горького, 33',phone:'8 72335 63016'},
- 'branch-source-03':{name:'Зайсанский филиал',address:'ВКО, Зайсанский район, г. Зайсан, ул. Жангельдина, 52',phone:'8 72340 21476'},
- 'branch-source-05':{name:'Государственный архив Курчумского района',address:null,phone:'8 (72339) 31447'},
- 'branch-source-07':{name:'Риддерский филиал',address:'ВКО, г. Риддер, ул. Ш. Уалиханова, 44',phone:'87 234 821 462'},
- 'branch-source-09':{name:'Государственный архив Тарбагатайского района',address:null,phone:'8 (72346) 22173'},
- 'branch-source-10':{name:'Государственный архив Уланского района',address:null,phone:'8 (72338) 27415'},
- 'branch-source-12':{name:'Усть-Каменогорский филиал по личному составу',address:'ВКО, г. Усть-Каменогорск, ул. Потанина, 12-а',phone:'8 7232 766561'}
-};
+export const branchConflicts=new Set<string>();
+export const branchConflictDetails:Record<string,{name:string;address:string|null;phone:null}>={};
 
 export const branchEvidenceUrl='https://e-memory.kz/en/archive/vostochno-kazakhstanskaya-oblast/';

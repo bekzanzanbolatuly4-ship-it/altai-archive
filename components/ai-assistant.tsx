@@ -3,6 +3,7 @@ import Link from 'next/link';
 import {useEffect,useRef,useState} from 'react';
 import {ArrowRight,Send,Sparkles} from 'lucide-react';
 import {useApp} from './providers';
+import {formatInstitutionName} from '@/locales/messages';
 
 type Reply={mode:'ai'|'reference'|'local-search'|'no-match';answer:string;citations:{id:string;title:string;quote:string;url:string;provenance:string}[]};
 type Turn={question:string;reply?:Reply;error?:string};
@@ -27,7 +28,8 @@ export function AIAssistant({demo}:{demo:React.ReactNode}){
   setQuery('');
   const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),25000);
   try{
-   const response=await fetch('/api/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:question,locale}),signal:controller.signal});
+   const history=turns.filter(turn=>turn.reply).slice(-4).map(turn=>({question:turn.question,answer:turn.reply!.answer}));
+   const response=await fetch('/api/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:question,locale,history}),signal:controller.signal});
    const reply=await response.json();
    if(!response.ok)throw new Error(typeof reply?.error==='string'?reply.error:'unavailable');
    if(!['ai','reference','local-search','no-match'].includes(reply.mode)||typeof reply.answer!=='string'||!Array.isArray(reply.citations))throw new Error('invalid');
@@ -36,11 +38,11 @@ export function AIAssistant({demo}:{demo:React.ReactNode}){
   finally{clearTimeout(timer);busy.current=false;setLoading(false);input.current?.focus();}
  }
  return <div className="page-wrap assistant-page">
-  <header className="page-head"><span className="eyebrow">ALTAI ARCHIVE · AI</span><h1>{msg('assistant')}</h1><p>{msg('aiIntro')}</p></header>
+  <header className="page-head"><span className="eyebrow">{formatInstitutionName(locale)} · AI</span><h1>{msg('assistant')}</h1><p>{msg('aiIntro')}</p></header>
   <div className="assistant-disclosure"><Sparkles size={18}/><span>{msg('aiPrivacy')}</span></div>
   <p className="ai-search-scope">{msg('aiWebSearchUnavailable')} <Link href="/catalog">{msg('catalog')} <ArrowRight size={14}/></Link></p>
   <section className="chat-panel" aria-label={msg('assistant')}>
-   <div className="chat-head">ALTAI AI <small>{msg('aiLabel')}</small></div>
+   <div className="chat-head">{locale==='ru'?'Помощник':locale==='kk'?'Көмекші':'Assistant'} <small>{msg('aiLabel')}</small></div>
    <div className="chat-messages ai-messages" role="log" aria-live="polite" aria-busy={loading}>
     <div className="chat-bubble assistant-bubble">{msg('aiWelcome')}</div>
     {!turns.length&&<div className="ai-example-questions"><b>{msg('aiExamples')}</b><div>{(['aiExampleOne','aiExampleTwo','aiExampleThree'] as const).map(key=><button type="button" key={key} disabled={loading} onClick={()=>void send(msg(key))}>{msg(key)}</button>)}</div></div>}
@@ -52,7 +54,7 @@ export function AIAssistant({demo}:{demo:React.ReactNode}){
       <section className="assistant-results" aria-label={msg('aiSources')}><h3>{msg('aiSources')}</h3>
        {turn.reply.citations.length?turn.reply.citations.map(source=><div key={source.id}>
         <Link href={source.url}>{source.title}</Link><blockquote className="ai-text">{source.quote}</blockquote>
-        <small>{source.provenance==='demonstration'?msg('aiDemoSource'):msg('aiMetadata')}</small>
+        <small>{source.provenance==='demonstration'?msg('aiDemoSource'):source.provenance.startsWith('customer-supplied')?msg('aiCustomerSource'):msg('aiMetadata')}</small>
        </div>):<p>{msg('aiNoSources')}</p>}
       </section>
      </div>}

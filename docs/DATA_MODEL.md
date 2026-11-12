@@ -1,4 +1,4 @@
-# ALTAI ARCHIVE data model
+# Archive portal data model
 
 This document distinguishes the local MVP from a proposed PostgreSQL model. The proposed schema is not implemented and must be validated against the archive's data dictionary, retention rules, rights decisions, and hosting requirements before migration.
 

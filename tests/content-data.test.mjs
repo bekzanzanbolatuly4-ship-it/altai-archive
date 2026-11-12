@@ -58,14 +58,22 @@ test('branch import preserves source and review markers, never invents coordinat
  const records=JSON.parse(await readFile(new URL('../data/branches.json',import.meta.url),'utf8'));
  assert.equal(records.length,13);
  for(const record of records){
-  assert.equal(record.sourceDocument,'Адреса и контакты филиалов(1).xls');
+  assert.equal(record.sourceDocument,'Постановление обл акимата 142.pdf');
+  assert.equal(record.addressSourceDocument,'Адреса и контакты филиалов.xls');
+  assert.equal(record.sourceDate,'2 июня 2026 года · перечень и переименование филиалов');
   assert.equal(record.needsReview,true);
   assert.equal(record.coordinatesStatus,'unavailable');
   assert.equal(record.hours,null);
+  assert.equal(record.phone,null,'Unverified staff phone numbers must not ship in the public branch dataset');
+  assert.equal(record.email,null,'Unverified staff email addresses must not ship in the public branch dataset');
   assert.ok(Array.isArray(record.reviewNotes));
  }
- assert.equal(records.find(x=>x.id==='branch-source-06').phone,null);
- assert.ok(records.find(x=>x.id==='branch-source-03').reviewNotes.some(x=>x.includes('qov.kz')));
+ assert.deepEqual(records.map(x=>x.shortName),[
+  'Филиал района Алтай','Глубоковский районный филиал','Зайсанский районный филиал','Катон-Карагайский районный филиал','Курчумский районный филиал','Филиал района Маркаколь','Риддерский городской филиал','Филиал района Самар','Тарбагатайский районный филиал','Уланский районный филиал','Филиал района Улькен Нарын','Усть-Каменогорский городской филиал по личному составу','Шемонаихинский районный филиал'
+ ]);
+ assert.equal(records.filter(x=>x.addressStatus==='official-listing').length,0);
+ const institution=await readFile(new URL('../components/institution.tsx',import.meta.url),'utf8');
+ assert.match(institution,/selected\.address&&selected\.addressStatus==='official-listing'/,'Map links must only use verified branch addresses');
 });
 
 test('2026 calendar retains both source language records and flags known discrepancies',async()=>{
@@ -75,6 +83,34 @@ test('2026 calendar retains both source language records and flags known discrep
  assert.ok(records.every(x=>x.year===2026&&x.sourceDocument==='календарь 2026 год каз рус.docx'));
  for(const phrase of ['телефонной станции 1946','школы, открытой в 1886','исследования Рудного Алтая']){
   assert.ok(records.some(x=>x.needsReview&&x.reviewNotes.some(note=>note.includes(phrase))));
+ }
+});
+
+test('customer calendars for 2022–2025 are preserved in both source languages',async()=>{
+ const records=JSON.parse(await readFile(new URL('../data/calendar-2022-2025.json',import.meta.url),'utf8'));
+ assert.equal(records.length,308);
+ for(const year of [2022,2023,2024,2025]){
+  const entries=records.filter(x=>x.year===year);
+  assert.equal(entries.filter(x=>x.language==='ru').length,entries.filter(x=>x.language==='kk').length);
+  assert.ok(entries.every(x=>x.sourceDocument===`календарь ${year} год каз рус.docx`));
+ }
+ assert.ok(records.every(x=>x.text.trim()&&x.sourceDate.trim()&&x.pairId));
+ assert.ok(records.some(x=>x.needsReview),'Source discrepancies should be flagged, not normalized away');
+ const combined=[...records,JSON.parse(await readFile(new URL('../data/calendar-2026.json',import.meta.url),'utf8'))];
+ assert.equal(combined.flat().filter(x=>x.language==='ru').length,196);
+ assert.equal(combined.flat().filter(x=>x.language==='kk').length,196);
+});
+
+test('archive history timeline quotes customer material in the original language',async()=>{
+ const records=JSON.parse(await readFile(new URL('../data/archive-history.json',import.meta.url),'utf8'));
+ assert.equal(records.length,10);
+ assert.deepEqual(records.map(x=>x.year),[1940,1963,1967,1997,2009,2012,2013,2019,2020,2022]);
+ assert.ok(records.every(x=>x.language==='ru'&&x.sourceDocument==='История архива.docx'&&x.provenance==='customer-supplied-primary-source'));
+ assert.ok(records[0].text.startsWith('Государственный архив Восточно-Казахстанской области образован в 1940 году'));
+ const archive=await readFile(new URL('../data/archive.ts',import.meta.url),'utf8');
+ assert.match(archive,/slug:'archive-chronology'.*?year:'1940–2022'/s);
+ for(const locale of ['ru','kk','en']){
+  assert.ok(messages[locale].exhibitionsLead&&messages[locale].exhibitionSourceBased,`Source-based exhibition labels must exist in ${locale}`);
  }
 });
 
@@ -88,6 +124,7 @@ test('provenance distinguishes archive source, official corroboration and branch
  assert.ok(records.some(record=>record.language==='ru'&&record.month===3&&record.text.includes('областной библиотеки')));
  assert.ok(records.some(record=>record.language==='kk'&&record.month===3&&record.text.includes('кітапханасының')));
  assert.equal(branchConflicts.size,Object.keys(branchConflictDetails).length);
+ assert.ok(Object.values(branchConflictDetails).every(record=>record.phone===null),'Unverified branch phone contacts must not appear in the public provenance register');
  assert.equal(branchEvidenceUrl,'https://e-memory.kz/en/archive/vostochno-kazakhstanskaya-oblast/');
 });
 

@@ -1,4 +1,4 @@
-# ALTAI ARCHIVE open decisions
+# Archive portal open decisions
 
 These decisions remain unresolved in the repository. Do not treat the future PostgreSQL model as approved or use this document as authorization to process real holdings.
 
@@ -33,8 +33,7 @@ These decisions remain unresolved in the repository. Do not treat the future Pos
 
 ## Current confirmed project facts
 
-- Product name: ALTAI ARCHIVE.
-- Tagline: “History preserved for the future.”
+- Public site name: Государственный архив Восточно-Казахстанской области.
 - The current repository includes a functional local MVP and demonstration/source-annotated data.
 - No Supabase project or external persistence service is connected.
 - Legal, regulatory, and standards compliance has not been established by this repository review.

@@ -2,7 +2,7 @@ import type {StoredDocument} from '../archive-store';
 import {isPublicDocument} from '../public-access.ts';
 import {AIError} from './errors.ts';
 export type Language='ru'|'kk'|'en';
-export type Source={id:string;documentId?:string;title:string;description:string;provenance:string;kind?:'archive'|'reference';url?:string};
+export type Source={id:string;documentId?:string;title:string;description:string;provenance:string;kind?:'archive'|'reference'|'customer-source';url?:string};
 
 const sensitive=/(?:[\w.+-]+@[\w.-]+\.[a-z]{2,}|\b\d{12}\b|\+?\d[\d ()-]{8,}\d|\b(?:sk-|Bearer\s)[\w-]{8,}|(?:password|пароль|token|api[_ -]?key)\s*[:=]\s*\S+)/gi;
 export function redact(text:string){return text.replace(sensitive,'[redacted]');}
@@ -12,7 +12,13 @@ export function parseInput(raw:unknown){
  if(typeof input.message!=='string' || !input.message.trim() || input.message.length>2000 || !['ru','kk','en'].includes(String(input.locale)))throw new AIError('invalid_request',400);
  const message=redact(input.message.trim());
  const locale:Language=/[әғқңөұүһі]/i.test(message)?'kk':/[а-яё]/i.test(message)?'ru':/\b(the|find|what|how|hello|archive|document|please)\b/i.test(message)?'en':input.locale as Language;
- return {message,locale};
+ const history=Array.isArray(input.history)?input.history.slice(-4).flatMap((turn)=>{
+  if(!turn||typeof turn!=='object')return [];
+  const item=turn as Record<string,unknown>;
+  if(typeof item.question!=='string'||typeof item.answer!=='string')return [];
+  return [{question:redact(item.question.trim()).slice(0,500),answer:redact(item.answer.trim()).slice(0,700)}];
+ }):[];
+ return {message,locale,history};
 }
 export function searchPublic(documents:StoredDocument[],query:string):Source[]{
  const terms=[...new Set(query.toLowerCase().match(/[\p{L}\p{N}]{3,}/gu)||[])];

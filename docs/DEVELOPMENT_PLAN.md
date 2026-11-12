@@ -1,4 +1,4 @@
-# ALTAI ARCHIVE development and migration plan
+# Archive portal development and migration plan
 
 ## Current MVP status
 

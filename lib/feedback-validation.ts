@@ -10,8 +10,7 @@ export type FeedbackSubmission={
 };
 
 const types=new Set<FeedbackType>(['site_feedback','suggestion','site_bug']);
-const allowedKeys=new Set(['type','name','email','message','contactConsent','website']);
-const emailPattern=/^[^\s@]+@[^\s@]+\.[^\s@]+$/u;
+const allowedKeys=new Set(['type','message','website','captchaToken','feedbackConsent']);
 const controlChars=/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u;
 
 export function validateFeedbackInput(input:unknown):FeedbackSubmission{
@@ -24,16 +23,9 @@ export function validateFeedbackInput(input:unknown):FeedbackSubmission{
  if(typeof value.message!=='string'||controlChars.test(value.message))throw new FeedbackError('invalid_feedback',400);
  const message=value.message.trim();
  if(message.length<10||message.length>2000)throw new FeedbackError('invalid_feedback',400);
- if(value.name!==undefined&&value.name!==null&&typeof value.name!=='string')throw new FeedbackError('invalid_feedback',400);
- if(value.email!==undefined&&value.email!==null&&typeof value.email!=='string')throw new FeedbackError('invalid_feedback',400);
- const name=typeof value.name==='string'?value.name.trim()||null:null;
- const email=typeof value.email==='string'?value.email.trim().toLowerCase()||null:null;
- if((name?.length||0)>80)throw new FeedbackError('invalid_feedback',400);
- if(email&&(email.length>254||!emailPattern.test(email)))throw new FeedbackError('invalid_feedback',400);
- const contactConsent=value.contactConsent===true;
- if(value.contactConsent!==undefined&&typeof value.contactConsent!=='boolean')throw new FeedbackError('invalid_feedback',400);
- if((name||email)&&!contactConsent)throw new FeedbackError('feedback_consent_required',400);
- return {type:value.type as FeedbackType,name,email,message,contactConsent};
+ if(typeof value.captchaToken!=='string'||value.captchaToken.length<1||value.captchaToken.length>2048)throw new FeedbackError('captcha_failed',400);
+ if(value.feedbackConsent!==true)throw new FeedbackError('feedback_consent_required',400);
+ return {type:value.type as FeedbackType,name:null,email:null,message,contactConsent:true};
 }
 
 export async function readFeedbackJson(request:Request,maxBytes=8192):Promise<unknown>{

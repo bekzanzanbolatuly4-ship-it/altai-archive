@@ -208,7 +208,7 @@ export function AdminWorkspace({readOnly=false}:{readOnly?:boolean}){
    </div>
 
    <p className="admin-identity">
-    ALTAI ARCHIVE · цифровая платформа Государственного архива Восточно-Казахстанской области
+    Государственный архив Восточно-Казахстанской области
    </p>
 
    <div className="admin-warning">
@@ -567,7 +567,7 @@ function AuditLog(){
 function PageTitle({title}:{title:string}){
  return (
   <header className="page-hero">
-   <div className="breadcrumb">ALTAI ARCHIVE <span>/</span> STAFF</div>
+   <div className="breadcrumb">Государственный архив Восточно-Казахстанской области <span>/</span> STAFF</div>
    <span className="eyebrow">STAFF · SECURE WORKSPACE</span>
    <h1>{title}</h1>
   </header>

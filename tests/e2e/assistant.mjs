@@ -20,7 +20,7 @@ try{
  const publicDoc={id:'synthetic-public',title:'Archive photographs',description:'Photographs of mountains. Synthetic public record.',status:'published',accessStatus:'public',provenance:'verified',fileName:'synthetic.pdf',keywords:[]};
  await writeFile(path.join(isolated,'.data/archive-store.json'),JSON.stringify({users:[],sessions:[],audit:[],documents:[publicDoc,{...publicDoc,id:'private',title:'PRIVATE CONTENT',status:'draft',accessStatus:'restricted'}]}));
  server=spawn(process.execPath,[path.join(root,'node_modules/next/dist/bin/next'),'dev','--webpack','--hostname','127.0.0.1','--port','3107'],{
-  cwd:isolated,stdio:'pipe',env:{PATH:process.env.PATH,HOME:process.env.HOME,NODE_OPTIONS:`--import=${path.join(isolated,'tests/fixtures/ai-provider.mjs')}`,OPENROUTER_API_KEY:'synthetic-e2e-key',OPENROUTER_MODEL:'test/model:free',DEMO_READ_ONLY:'true',ARCHIVE_OWNER_EMAIL:'synthetic-owner@example.test',ARCHIVE_OWNER_PASSWORD:'Synthetic-only-Password-2026!',SESSION_SECRET:'synthetic-only-secret-0123456789abcdef0123456789abcdef'}
+  cwd:isolated,stdio:'pipe',env:{PATH:process.env.PATH,HOME:process.env.HOME,NODE_OPTIONS:`--import=${path.join(isolated,'tests/fixtures/ai-provider.mjs')}`,GEMINI_API_KEY:'synthetic-e2e-key',DEMO_READ_ONLY:'true',ARCHIVE_OWNER_EMAIL:'synthetic-owner@example.test',ARCHIVE_OWNER_PASSWORD:'Synthetic-only-Password-2026!',SESSION_SECRET:'synthetic-only-secret-0123456789abcdef0123456789abcdef'}
  });
  let logs='';server.stdout.on('data',v=>{logs+=v;});server.stderr.on('data',v=>{logs+=v;});
  let ready=false;
@@ -32,32 +32,42 @@ try{
  assert.ok(ready,'Isolated server must start');
 browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_EXECUTABLE_PATH}:{})});
  const page=await browser.newPage();
+ if(process.env.ALT_ARCHIVE_SCREENSHOT_DIR)await mkdir(process.env.ALT_ARCHIVE_SCREENSHOT_DIR,{recursive:true});
  const assistantRequests=[];
  page.on('request',request=>{
   if(new URL(request.url()).pathname==='/api/assistant')assistantRequests.push(request);
  });
  await page.route('**/*',route=>new URL(route.request().url()).hostname==='127.0.0.1'?route.continue():route.abort());
- for(const width of [390,768,1440]){
+ for(const width of [360,390,430,768,1024,1440]){
   await page.setViewportSize({width,height:900});
   await page.goto('http://127.0.0.1:3107/');
+  assert.doesNotMatch(await page.locator('body').innerText(),/ALTAI\s*ARCHIVE/i,'Public site must use the official institution name, not the former product brand');
+  if(process.env.ALT_ARCHIVE_SCREENSHOT_DIR&&(width===390||width===1440))await page.screenshot({path:path.join(process.env.ALT_ARCHIVE_SCREENSHOT_DIR,`home-${width}.png`),fullPage:true});
   assert.equal(await page.locator('.admin-link').count(),0,'Guest navigation must not expose administration');
-  await page.locator('.quick-tile[href="/assistant"]').click();
+  await page.locator('.home-shortcuts a[href="/assistant"]').click();
   await page.waitForURL('**/assistant');
   assert.equal(new URL(page.url()).pathname,'/assistant');
   await page.goto('http://127.0.0.1:3107/');
   if(width<=800){
    await page.getByRole('button',{name:/Меню навигации|Навигация мәзірі|Navigation menu/}).click();
    assert.equal(await page.getByRole('button',{name:/Меню навигации|Навигация мәзірі|Navigation menu/}).getAttribute('aria-expanded'),'true');
+   await page.locator('.accessibility-button').click();
+   assert.equal(await page.locator('html').getAttribute('data-accessibility'),'large');
+   assert.ok(Number.parseFloat(await page.locator('body').evaluate(element=>getComputedStyle(element).fontSize))>=18);
+   await page.locator('.accessibility-button').click();
    await page.keyboard.press('Escape');
    assert.equal(await page.getByRole('button',{name:/Меню навигации|Навигация мәзірі|Navigation menu/}).getAttribute('aria-expanded'),'false');
    await page.getByRole('button',{name:/Меню навигации|Навигация мәзірі|Navigation menu/}).click();
-   await page.locator('.sidebar.sidebar-open a[href="/assistant"]').click();
+   await page.locator('.sidebar.sidebar-open a[href="/about"]').click();
   }else{
-   await page.locator('.sidebar a[href="/assistant"]').click();
+   await page.locator('.accessibility-button').click();
+   assert.equal(await page.locator('html').getAttribute('data-accessibility'),'large');
+   assert.ok(Number.parseFloat(await page.locator('body').evaluate(element=>getComputedStyle(element).fontSize))>=18);
+   await page.locator('.accessibility-button').click();
+   await page.locator('.sidebar a[href="/about"]').click();
   }
-  await page.waitForURL('**/assistant');
-  await page.getByRole('heading',{name:'ИИ-помощник'}).waitFor();
-  assert.equal(new URL(page.url()).pathname,'/assistant');
+  await page.waitForURL('**/about');
+  assert.equal(new URL(page.url()).pathname,'/about');
   assert.equal(await page.locator('.nav-link[aria-current="page"]').count(),1);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
  }
@@ -66,8 +76,8 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
   await page.goto('http://127.0.0.1:3107/');
   await page.evaluate(locale=>localStorage.setItem('altai-locale',locale),locale);
   await page.reload();
-  await page.getByRole('button',{name:/Меню навигации|Навигация мәзірі|Navigation menu/}).click();
-  const item=page.locator('.sidebar.sidebar-open a[href="/assistant"]');
+  const item=page.locator('footer a[href="/assistant"]');
+  await page.waitForFunction(expected=>document.querySelector('footer a[href="/assistant"]')?.textContent?.trim()===expected,label);
   assert.equal((await item.innerText()).trim(),label);
   await item.focus();
   await page.keyboard.press('Enter');
@@ -80,7 +90,7 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
  await page.getByRole('textbox',{name:'Поиск по городу или филиалу'}).fill('Риддер');
  await page.getByRole('button',{name:/Риддер/}).click();
  assert.ok((await page.locator('.branch-explorer').getAttribute('class')).includes('show-map'));
- assert.equal(await page.locator('a[href*="google.com/maps/search"]').count(),1);
+ assert.equal(await page.locator('a[href*="2gis.kz"]').count(),0,'Do not build directions from an unverified branch address');
  await page.goto('http://127.0.0.1:3107/catalog');
  assert.equal(await page.locator('.catalog-search').count(),1);
  assert.equal(await page.locator('.top-search').count(),0);
@@ -100,6 +110,10 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
  await page.goto('http://127.0.0.1:3107/exhibitions/land-and-memory');
  await page.getByRole('heading',{name:'Земля и память'}).waitFor();
  assert.doesNotMatch(await page.locator('body').innerText(),/\bDEMO\b|(?<![А-Яа-яЁё])ДЕМО(?![А-Яа-яЁё])|Mockup preview/i,'Exhibition concepts must retain their editorial labels without technical stamps');
+ await page.goto('http://127.0.0.1:3107/exhibitions/archive-chronology');
+ await page.getByRole('heading',{name:'История государственного архива ВКО'}).waitFor();
+ await page.getByText('Государственный архив Восточно-Казахстанской области образован в 1940 году',{exact:false}).waitFor();
+ await page.getByText('Материал передан архивом; даты и формулировки приведены по исходному документу.',{exact:true}).waitFor();
  await page.goto('http://127.0.0.1:3107/news');
  await page.getByRole('heading',{name:'Новости'}).waitFor();
  await page.goto('http://127.0.0.1:3107/catalog');
@@ -118,7 +132,14 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
   await page.reload();
   await page.getByRole('heading',{name:aboutTitle}).waitFor();
   await page.setViewportSize({width:1440,height:1000});
-  const themeButton=page.locator('.theme-button');
+  const accessibilityName=locale==='ru'?'Для слабовидящих':locale==='kk'?'Көру қабілеті төмен адамдарға':'Accessibility mode';
+  const accessibilityButton=page.getByRole('button',{name:accessibilityName});
+  await accessibilityButton.click();
+  assert.equal(await page.locator('html').getAttribute('data-accessibility'),'large','Accessibility control must enable large-text mode');
+  assert.equal(await page.locator('body').evaluate(node=>getComputedStyle(node).fontSize),'18px');
+  await accessibilityButton.click();
+  assert.equal(await page.locator('html').getAttribute('data-accessibility'),'standard','Accessibility control must restore the default mode');
+  const themeButton=page.locator('.theme-button:not(.accessibility-button)');
   await themeButton.click();
   assert.equal(await page.locator('html').getAttribute('data-theme'),'dark','Theme control must activate dark mode');
   await themeButton.click();
@@ -130,36 +151,32 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
   assert.equal(await footer.locator('a[href="/about#feedback"]').count(),1);
   assert.equal(await footer.locator('a[href="/catalog"]').count(),1);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Footer directory must fit a mobile viewport');
-  const feedbackCopy={ru:{heading:'Отзывы и предложения',type:'Тип сообщения',message:'Сообщение',submit:'Отправить сообщение',success:'Спасибо! Ваше сообщение получено.',error:'Не удалось отправить сообщение. Попробуйте позже.'},kk:{heading:'Пікірлер мен ұсыныстар',type:'Хабарлама түрі',message:'Хабарлама',submit:'Хабарламаны жіберу',success:'Рақмет! Хабарламаңыз қабылданды.',error:'Хабарламаны жіберу мүмкін болмады. Кейінірек қайталап көріңіз.'},en:{heading:'Feedback and suggestions',type:'Message type',message:'Message',submit:'Send message',success:'Thank you! Your message has been received.',error:'Could not send the message. Please try again later.'}}[locale];
+  const feedbackCopy={ru:{heading:'Отзывы и предложения',prompt:'Войдите или зарегистрируйтесь, чтобы оставить отзыв.',cta:'Войти или зарегистрироваться'},kk:{heading:'Пікірлер мен ұсыныстар',prompt:'Пікір қалдыру үшін кіріңіз немесе тіркеліңіз.',cta:'Кіру немесе тіркелу'},en:{heading:'Feedback and suggestions',prompt:'Sign in or register to leave feedback.',cta:'Sign in or register'}}[locale];
   await page.getByRole('heading',{name:feedbackCopy.heading}).scrollIntoViewIfNeeded();
-  const feedbackForm=page.locator('.feedback-form');
-  await feedbackForm.getByLabel(new RegExp(feedbackCopy.type)).selectOption('suggestion');
-  await feedbackForm.locator('textarea[name="message"]').fill('A helpful suggestion about the site');
-  await page.route('**/api/feedback',route=>route.fulfill({status:201,contentType:'application/json',body:JSON.stringify({received:true})}));
-  await feedbackForm.getByRole('button',{name:feedbackCopy.submit}).click();
-  await page.getByRole('status').filter({hasText:feedbackCopy.success}).waitFor();
-  assert.equal(await feedbackForm.locator('textarea[name="message"]').inputValue(),'','Successful submissions clear the form only after server confirmation');
-  await page.unroute('**/api/feedback');
-  await feedbackForm.locator('input[name="name"]').fill('Example');
-  assert.equal(await feedbackForm.locator('input[name="contactConsent"]').count(),1,'Contact details must reveal the consent checkbox');
-  await feedbackForm.locator('input[name="contactConsent"]').check();
-  await feedbackForm.locator('input[name="name"]').fill('');
-  await feedbackForm.getByLabel(new RegExp(feedbackCopy.type)).selectOption('site_feedback');
-  await feedbackForm.locator('textarea[name="message"]').fill('The search filter could be clearer');
-  await page.route('**/api/feedback',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'feedback_storage_unavailable'})}));
-  await feedbackForm.getByRole('button',{name:feedbackCopy.submit}).click();
-  await page.getByRole('alert').filter({hasText:feedbackCopy.error}).waitFor();
-  assert.equal(await feedbackForm.locator('textarea[name="message"]').inputValue(),'The search filter could be clearer','Failed submissions must preserve the draft');
-  await page.unroute('**/api/feedback');
+  await page.getByText(feedbackCopy.prompt,{exact:true}).waitFor();
+  const feedbackCta=page.getByRole('link',{name:feedbackCopy.cta});
+  assert.equal(await feedbackCta.getAttribute('href'),'/account');
+  await feedbackCta.click();await page.waitForURL('**/account');
+  assert.equal(await page.locator('input[type="password"]').count(),1,'Guest feedback leads to visitor login, not an anonymous submission form');
+  assert.equal(await page.locator('.admin-link').count(),0,'Visitor account page must not expose staff navigation');
+  await page.goto('http://127.0.0.1:3107/register');
+  await page.getByRole('heading',{name:locale==='ru'?'Регистрация посетителя':locale==='kk'?'Келушіні тіркеу':'Visitor registration'}).waitFor();
+  assert.equal(await page.locator('input[type="password"]').count(),2,'Registration asks for password and confirmation');
+  assert.equal(await page.getByRole('button',{name:locale==='ru'?'Зарегистрироваться':locale==='kk'?'Тіркелу':'Register'}).isDisabled(),true,'Auth stays fail-closed until CAPTCHA and Supabase configuration are provided');
+  await page.goto('http://127.0.0.1:3107/about');
+  await page.setViewportSize({width:390,height:844});
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Feedback form must fit a mobile viewport');
   await page.getByText('Жапаров Аскар Кенжебаевич',{exact:true}).waitFor();
+  assert.ok(await page.locator('a[href="mailto:arhiv-ukg@yandex.kz"]').count()>=1,'Show the official archive email from the current public procurement record');
+  assert.ok(await page.locator('a[href="https://egov.kz/services/K002/"]').count()>=1,'Use the official eGov online-service link');
+  assert.equal(await page.locator('a[href*="2gis.kz/oskemen/search/"]').count(),1,'Only provide a 2GIS search for the verified main archive address');
   await page.goto('http://127.0.0.1:3107/official-documents');
   await page.getByRole('heading',{name:locale==='ru'?'Государственные услуги и документы':locale==='kk'?'Мемлекеттік қызметтер мен құжаттар':'Public services and documents'}).waitFor();
   for(const section of ['#paid-services','#government-service','#legal-framework','#compliance','#reading-room','#useful-links'])await page.locator(section).waitFor();
   assert.equal(await page.locator('a[href^="/documents/"]').count(),0,'Missing customer PDFs must not be exposed as broken local links');
   const officialHosts=await page.locator('.official-info-link').evaluateAll(links=>links.map(link=>new URL(link.href).hostname));
   assert.ok(officialHosts.length>=10);
-  assert.ok(officialHosts.every(host=>host==='adilet.zan.kz'||host==='old.adilet.zan.kz'||host==='www.gov.kz'||host==='gov.kz'||host==='egov.kz'));
+  assert.ok(officialHosts.every(host=>host==='adilet.zan.kz'||host==='old.adilet.zan.kz'||host==='www.gov.kz'||host==='gov.kz'||host==='egov.kz'||host==='beta.egov.kz'));
   await page.setViewportSize({width:390,height:844});
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Official information page must fit a mobile viewport');
   await page.screenshot({path:path.join(root,`output/playwright/official-documents-${locale}-mobile.png`),fullPage:true});
@@ -243,13 +260,12 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
   await page.goto('http://127.0.0.1:3107/branches');
   const searchLabel=locale==='kk'?'Қала немесе филиал бойынша іздеу':locale==='en'?'Search by city or branch':'Поиск по городу или филиалу';
   await page.getByRole('textbox',{name:searchLabel}).fill('Риддер');
-  const ridder=page.getByRole('button',{name:/Риддер/});
+  const ridder=page.getByRole('button',{name:locale==='en'?/Ridder/:/Риддер/});
   await ridder.click();
   if(mobile)await page.locator('.branch-explorer').waitFor({state:'visible'});
   if(mobile)assert.ok((await page.locator('.branch-explorer').getAttribute('class')).includes('show-map'));
-  const route=page.locator('a[href*="google.com/maps/search"]');
-  assert.equal(await route.count(),1);
-  assert.match(await route.getAttribute('href'),/query=/);
+  const route=page.locator('a[href*="2gis.kz"]');
+  assert.equal(await route.count(),0,'Do not route to an address that is only present in an unverified spreadsheet');
   await page.locator('.branch-evidence a[href*="e-memory.kz"]').waitFor();
   if(mobile)await page.screenshot({path:path.join(root,`output/playwright/branches-${locale}-mobile-map.png`),fullPage:true});
   if(mobile)await page.locator('.branch-mobile-tabs button').first().click();
@@ -275,7 +291,7 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
  assert.equal(loginStatus,401,'Invalid login should not require creating the initial owner in read-only mode');
  const isolatedStore=JSON.parse(await (await import('node:fs/promises')).readFile(path.join(isolated,'.data/archive-store.json'),'utf8'));
  assert.equal(isolatedStore.users.length,0,'Read-only login must not bootstrap an owner account');
- console.log('PASS: 390/768/1440 navigation, feedback form success/error/draft retention and RU/KK/EN, exact demo catalogue searches, mock AI citation, verified-public local fallback on provider 429, no-match/private-content scenarios, keyboard, branches, calendar provenance and read-only admin APIs');
+ console.log('PASS: 390/768/1440 navigation, authenticated feedback gate and disabled unconfigured registration, RU/KK/EN, exact demo catalogue searches, mock AI citation, verified-public local fallback on provider 429, no-match/private-content scenarios, keyboard, unverified branch-directory safeguards, calendar provenance and read-only admin APIs');
 }finally{
  await browser?.close();
  if(server&&server.exitCode===null){server.kill('SIGTERM');await new Promise(resolve=>server.once('exit',resolve));}

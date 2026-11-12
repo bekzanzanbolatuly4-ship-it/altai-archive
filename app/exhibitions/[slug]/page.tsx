@@ -5,6 +5,7 @@ import {useParams} from 'next/navigation';
 import {ArrowLeft,ArrowUpRight} from 'lucide-react';
 import {exhibitions, documents, getLocalizedExhibition} from '@/data/archive';
 import {useApp} from '@/components/providers';
+import {ArchiveHistoryTimeline} from '@/components/archive-history-timeline';
 
 export default function ExhibitionDetail(){
   const{msg,locale}=useApp();
@@ -19,6 +20,18 @@ export default function ExhibitionDetail(){
         <Link href="/exhibitions">{msg('back')}</Link>
       </div>
     );
+  }
+
+  if(item.slug==='archive-chronology'){
+    return <div className="page-wrap editorial-detail">
+      <div className="breadcrumb"><Link href="/exhibitions"><ArrowLeft size={13}/>{msg('exhibitions')}</Link><span>/</span>{msg('exhibitionSourceBased')}</div>
+      <div className="editorial-hero"><Image src={item.image} alt={locale==='ru'?'Иллюстративное изображение здания архива':locale==='kk'?'Архив ғимаратының иллюстрациясы':'Illustration of an archive building'} fill/><span>{msg('exhibitionSourceBased').toUpperCase()}</span></div>
+      <div className="editorial-copy"><span className="eyebrow">{item.category} · {item.year}</span><h1>{item.title}</h1><p className="editorial-lead">{item.intro}</p>
+        <div className="integrity-note"><span className="note-dot"/><span>{msg('exhibitionsLead')}</span></div>
+        <ArchiveHistoryTimeline/>
+        <Link className="outline-link" href="/exhibitions"><ArrowLeft size={14}/>{msg('back')}</Link>
+      </div>
+    </div>;
   }
 
   return (

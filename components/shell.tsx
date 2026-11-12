@@ -1,41 +1,45 @@
 'use client';
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
+import {useRouter} from 'next/navigation';
 import {useEffect,useRef,useState} from 'react';
-import {Archive,ArrowUpRight,BookOpen,Compass,House,Map,Menu,Moon,Newspaper,Search,Settings,Sun,X,History,Sparkles,Mail} from 'lucide-react';
+import {ArrowUpRight,BookOpen,Eye,House,Map,Menu,Moon,Newspaper,Search,Settings,Sun,X,History} from 'lucide-react';
 import {useApp} from './providers';
 import {messages,formatInstitutionName} from '@/locales/messages';
+import {mainArchive} from '@/data/archive';
 
 type NavItem=readonly [string,keyof typeof messages.ru,typeof House];
 const primary:readonly NavItem[]=[
   ['/','home',House],
+  ['/about','about',House],
   ['/catalog','catalog',BookOpen],
-  ['/assistant','assistant',Sparkles],
   ['/history','history',History],
   ['/branches','branches',Map],
-  ['/exhibitions','exhibitions',Compass],
-];
-const institutional:readonly NavItem[]=[
-  ['/about','about',Archive],
-  ['/official-documents','officialDocuments',BookOpen],
   ['/news','news',Newspaper],
-  ['/about#feedback','feedback',Mail],
-  ['/atlas','atlas',Map]
 ];
 
 export function Shell({children}:{children:React.ReactNode}){
   const path=usePathname();
-  const{msg,locale,setLocale,dark,setDark}=useApp();
+  const router=useRouter();
+  const{msg,locale,setLocale,dark,setDark,accessible,setAccessible}=useApp();
   const[open,setOpen]=useState(false);
   const[staff,setStaff]=useState(false);
+  const[visitor,setVisitor]=useState(false);
   const searchRef=useRef<HTMLInputElement>(null);
 
   useEffect(()=>{
     let alive=true;
-    fetch('/api/auth/me').then(r=>r.ok?r.json():null).then(result=>{
-      if(alive)setStaff(Boolean(result?.user?.role));
-    }).catch(()=>{if(alive)setStaff(false);});
-    return()=>{alive=false;};
+    const refreshStaff=()=>fetch('/api/auth/me').then(r=>r.ok?r.json():null).then(result=>{if(alive)setStaff(Boolean(result?.user?.role))}).catch(()=>{if(alive)setStaff(false)});
+    const refreshVisitor=()=>fetch('/api/visitor/me',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(result=>{if(alive)setVisitor(Boolean(result?.user))}).catch(()=>{if(alive)setVisitor(false)});
+    void refreshStaff();void refreshVisitor();
+    let unsubscribe:undefined|(()=>void);
+    import('@/lib/supabase/browser').then(({createSupabaseBrowserClient})=>{
+      const auth=createSupabaseBrowserClient();
+      if(!alive||!auth)return;
+      const{data:{subscription}}=auth.auth.onAuthStateChange(()=>{void refreshVisitor()});
+      unsubscribe=()=>subscription.unsubscribe();
+    }).catch(()=>{});
+    return()=>{alive=false;unsubscribe?.();};
   },[]);
 
   useEffect(()=>{
@@ -85,23 +89,21 @@ export function Shell({children}:{children:React.ReactNode}){
           className="brand"
           href="/"
           onClick={()=>setOpen(false)}
-          aria-label="ALTAI ARCHIVE — цифровая платформа Государственного архива Восточно-Казахстанской области"
+          aria-label={institutionTitle}
         >
           <span className="brand-mark"><MountainMark/></span>
           <span className="brand-copy">
-            <b>ALTAI<br/><i>ARCHIVE</i></b>
-            <small>{institutionTitle}</small>
+            <b className="brand-institution">{institutionTitle}</b>
           </span>
         </Link>
         <nav className="side-nav-group" aria-label={locale==='ru'?'Основная навигация':locale==='kk'?'Негізгі навигация':'Primary navigation'}>
           <div className="nav-caption">{locale==='ru'?'ИССЛЕДОВАТЬ':locale==='kk'?'ЗЕРТТЕУ':'DISCOVER'}</div>
           {navLinks(primary)}
         </nav>
-        <nav className="side-nav-group institutional-nav" aria-label={msg('moreSections')}>
-          <div className="nav-caption">{msg('moreSections').toUpperCase()}</div>
-          {navLinks(institutional)}
-        </nav>
         <div className="sidebar-bottom">
+          <button className={`theme-button accessibility-button ${accessible?'accessibility-active':''}`} type="button" aria-pressed={accessible} onClick={()=>setAccessible(!accessible)}>
+            <Eye size={17}/><span>{locale==='ru'?'Для слабовидящих':locale==='kk'?'Көру қабілеті төмен адамдарға':'Accessibility mode'}</span>
+          </button>
           <button
             className="theme-button"
             onClick={()=>setDark(!dark)}
@@ -114,7 +116,7 @@ export function Shell({children}:{children:React.ReactNode}){
           <div className="sidebar-note">
             {locale==='ru'?'Цифровая платформа архива':locale==='kk'?'Архивтің цифрлық платформасы':'Digital platform of the archive'}
           </div>
-          {staff&&<div className="admin-area">
+          {staff&&!visitor&&<div className="admin-area">
             <span className="admin-caption">
               {locale==='ru'?'ДЛЯ СОТРУДНИКОВ':locale==='kk'?'ҚЫЗМЕТКЕРЛЕРГЕ':'STAFF ACCESS'}
             </span>
@@ -141,7 +143,7 @@ export function Shell({children}:{children:React.ReactNode}){
           >
             {open?<X size={21}/>:<Menu size={21}/>}
           </button>
-          <Link href="/" className="mobile-brand">ALTAI ARCHIVE</Link>
+          <Link href="/" className="mobile-brand" aria-label={institutionTitle} title={institutionTitle}>{locale==='ru'?'Госархив ВКО':locale==='kk'?'ШҚО мемлекеттік архиві':'State Archive'}</Link>
           {path==='/'||hasLocalSearch?null:(
             <form className="top-search" action="/catalog">
               <Search size={17}/>
@@ -150,6 +152,9 @@ export function Shell({children}:{children:React.ReactNode}){
             </form>
           )}
           <div className="top-actions">
+            <div className="visitor-actions">
+              {visitor?<><Link href="/account" className="visitor-account">{locale==='ru'?'Мой профиль':locale==='kk'?'Менің профилім':'My profile'}</Link><button type="button" className="visitor-logout" onClick={async()=>{const{createSupabaseBrowserClient}=await import('@/lib/supabase/browser');const auth=createSupabaseBrowserClient();if(auth)await auth.auth.signOut();await fetch('/api/auth/logout',{method:'POST'}).catch(()=>{});setVisitor(false);setStaff(false);router.push('/');router.refresh()}}>{locale==='ru'?'Выйти':locale==='kk'?'Шығу':'Sign out'}</button></>:<><Link href="/login" className="visitor-account">{locale==='ru'?'Войти':locale==='kk'?'Кіру':'Sign in'}</Link><Link href="/register" className="visitor-account">{locale==='ru'?'Регистрация':locale==='kk'?'Тіркелу':'Register'}</Link></>}
+            </div>
             <div className="language-switch" role="group" aria-label={msg('language')}>
               <button
                 type="button"
@@ -184,7 +189,6 @@ export function Shell({children}:{children:React.ReactNode}){
         <main id="main-content">{children}</main>
         <footer className="footer">
           <div className="footer-lockup">
-            <span className="footer-platform">ALTAI ARCHIVE</span>
             <span className="footer-institution">{institutionTitle}</span>
           </div>
           <nav className="footer-directory" aria-label={msg('moreSections')}>
@@ -192,6 +196,8 @@ export function Shell({children}:{children:React.ReactNode}){
               <h2>{msg('footerArchive')}</h2>
               <Link href="/about">{msg('about')}</Link>
               <Link href="/official-documents">{msg('officialDocuments')}</Link>
+              <Link href="/catalog">{msg('catalog')}</Link>
+              <Link href="/history">{msg('history')}</Link>
             </section>
             <section className="footer-section">
               <h2>{msg('footerBranches')}</h2>
@@ -199,13 +205,18 @@ export function Shell({children}:{children:React.ReactNode}){
             </section>
             <section className="footer-section">
               <h2>{msg('footerContacts')}</h2>
+              <span>{mainArchive.address}</span>
+              <a href={`mailto:${mainArchive.email}`}>{mainArchive.email}</a>
               <Link href="/about#feedback">{msg('feedback')}</Link>
             </section>
             <section className="footer-section">
-              <h2>{msg('footerUseful')}</h2>
-              <Link href="/catalog">{msg('catalog')}</Link>
-              <Link href="/history">{msg('history')}</Link>
+              <h2>{msg('footerResources')}</h2>
+              <Link href="/exhibitions">{msg('exhibitions')}</Link>
               <Link href="/news">{msg('news')}</Link>
+              <Link href="/atlas">{msg('atlas')}</Link>
+              <Link href="/assistant">{msg('assistant')}</Link>
+              <a href="https://egov.kz/services/K002/" target="_blank" rel="noreferrer">{locale==='ru'?'Заказать архивную справку на eGov.kz':locale==='kk'?'eGov.kz арқылы архивтік анықтамаға тапсырыс беру':'Request an archive certificate on eGov.kz'} <ArrowUpRight size={13}/></a>
+              <a href="https://egov.kz/cms/ru/articles/department_of_archives" target="_blank" rel="noreferrer">eGov.kz — {locale==='ru'?'архивное дело':locale==='kk'?'архив ісі':'archives directory'} <ArrowUpRight size={13}/></a>
             </section>
           </nav>
         </footer>

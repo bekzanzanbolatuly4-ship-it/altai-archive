@@ -163,7 +163,7 @@ export default function Catalog(){
   <div className="page-wrap">
    <div className="page-hero compact">
     <div className="breadcrumb">
-     ALTAI ARCHIVE <span>/</span> {msg('catalog')}
+     {locale==='kk'?'Шығыс Қазақстан облысының мемлекеттік архиві':'Государственный архив Восточно-Казахстанской области'} <span>/</span> {msg('catalog')}
     </div>
     <span className="eyebrow">
      {locale==='ru'?'КАТАЛОГ ОПИСАНИЙ':locale==='kk'?'СИПАТТАМАЛАР КАТАЛОГЫ':'CATALOGUE'}

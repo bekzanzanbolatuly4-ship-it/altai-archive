@@ -14,7 +14,9 @@ import {
 } from '@/data/archive';
 import {InstitutionPage} from './institution';
 import {BranchesDirectory as BranchesMapDirectory} from './branches-directory';
+import {formatInstitutionName} from '@/locales/messages';
 import {Calendar2026} from './calendar-2026';
+import {ArchiveHistoryTimeline} from './archive-history-timeline';
 import {AIAssistant} from './ai-assistant';
 import {AdminWorkspace} from './admin-workspace';
 import {useApp} from './providers';
@@ -112,7 +114,8 @@ export function Portal({kind,demoReadOnly=false}:{kind:Kind;demoReadOnly?:boolea
       tr('Все','Барлығы','All'),
       tr('Пространство','Кеңістік','Space'),
       tr('Документы','Құжаттар','Documents'),
-      tr('Карты','Карталар','Maps')
+      tr('Карты','Карталар','Maps'),
+      tr('История архива','Архив тарихы','Archive history')
     ];
 
     const matchingExhibitions = localizedExhibitions.filter(x =>
@@ -124,7 +127,7 @@ export function Portal({kind,demoReadOnly=false}:{kind:Kind;demoReadOnly?:boolea
         <PageHead
           eyebrow={tr('ТЕМАТИЧЕСКИЕ ВЫСТАВКИ','ТАҚЫРЫПТЫҚ КӨРМЕЛЕР','THEMATIC EXHIBITIONS')}
           title={msg('exhibitions')}
-          lead={tr('Представлены редакционные концепции и иллюстрации. Они не являются официальными выставками архива.','Редакциялық тұжырымдамалар мен иллюстрациялар берілген. Олар архивтің ресми көрмелері болып табылмайды.','Editorial concepts and illustrations are shown here. They are not official archive exhibitions.')}
+          lead={msg('exhibitionsLead')}
         />
         <div className="filter-chips">
           {exhibitionFilterOptions.map(x=>(
@@ -143,7 +146,7 @@ export function Portal({kind,demoReadOnly=false}:{kind:Kind;demoReadOnly?:boolea
             <Link className={`exhibition-card ${i===0?'featured-exhibition':''}`} href={`/exhibitions/${x.slug}`} key={x.slug}>
               <div className="exhibition-image">
                 <Image src={x.image} alt={tr('Иллюстративный материал к концепции выставки','Көрме тұжырымдамасына арналған иллюстрациялық материал','Illustration for the exhibition concept')} fill/>
-                <span>{msg('exhibitionDemo').toUpperCase()}</span>
+                <span>{msg(x.slug==='archive-chronology'?'exhibitionSourceBased':'exhibitionDemo').toUpperCase()}</span>
               </div>
               <div className="exhibition-copy">
                 <span className="eyebrow">{x.category} · {x.year}</span>
@@ -235,6 +238,7 @@ export function Portal({kind,demoReadOnly=false}:{kind:Kind;demoReadOnly?:boolea
             </Link>
           ))}
         </div>
+        <ArchiveHistoryTimeline/>
         <Calendar2026/>
         <div className="topic-materials">
           <span className="eyebrow">{msg('historySampleMaterials')}</span>
@@ -257,10 +261,11 @@ export function Portal({kind,demoReadOnly=false}:{kind:Kind;demoReadOnly?:boolea
 }
 
 function PageHead({eyebrow,title,lead}:{eyebrow:string;title:string;lead:string}){
+  const {locale}=useApp();
   return (
     <header className="page-hero">
       <div className="breadcrumb">
-        <Link href="/">ALTAI ARCHIVE</Link> <span>/</span> {title}
+        <Link href="/">{formatInstitutionName(locale)}</Link> <span>/</span> {title}
       </div>
       <span className="eyebrow">{eyebrow}</span>
       <h1>{title}</h1>
@@ -356,7 +361,7 @@ function Assistant(){
           <div className="assistant-emblem">
             <MessageCircle size={28}/>
           </div>
-          <span className="eyebrow">ALTAI ARCHIVE · {msg('aiLocalSearch')}</span>
+          <span className="eyebrow">{formatInstitutionName(locale)} · {msg('aiLocalSearch')}</span>
           <h2>
             {locale==='ru'
               ?'Помогаю ориентироваться в материалах'

@@ -2,6 +2,7 @@ import {createHmac,randomBytes,randomUUID,scrypt as scryptCb,timingSafeEqual} fr
 import {promisify} from 'node:util';
 import {cookies} from 'next/headers';
 import {appendAudit,readStore,updateStore,type StaffRole,type StaffUser} from './archive-store';
+import {createSupabaseServerClient} from './supabase/server';
 
 const scrypt=promisify(scryptCb);
 const cookieName='altai_session';
@@ -99,7 +100,19 @@ export async function issueSession(userId:string,actor?:string){
 }
 
 export async function currentUser():Promise<SafeUser|null>{
- const token=(await cookies()).get(cookieName)?.value;
+ const cookieJar=await cookies();
+ const hasVisitorAuthCookie=cookieJar.getAll().some(({name})=>/^sb-.+-auth-token(?:\.\d+)?$/u.test(name));
+ if(hasVisitorAuthCookie){
+  const auth=await createSupabaseServerClient();
+  if(!auth)return null;
+  try{
+   const{data:{user},error}=await auth.auth.getUser();
+   // The current legacy employee session is not a staff grant. A valid visitor
+   // Supabase session must never inherit a separate stale .data staff cookie.
+   if(error||user)return null;
+  }catch{return null;}
+ }
+ const token=cookieJar.get(cookieName)?.value;
  if(!token)return null;
  const [id,expiry,sig,...extra]=token.split('.');
  if(!id||!expiry||!sig||extra.length||Number(expiry)<Date.now())return null;

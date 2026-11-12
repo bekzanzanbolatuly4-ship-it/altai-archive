@@ -1,24 +1,25 @@
 # Feedback storage setup
 
-Feedback is stored in the existing Supabase project `altai-archive` (`isokkxsuqmcsaumbtxlt`) in the separate `public.feedback_messages` table. The additive migration is `supabase/migrations/20261111183714_feedback_messages.sql`; it does not alter archive tables.
+## Current status
 
-The table has RLS enabled and forced. `anon` and `authenticated` have no table grants; the server role has INSERT only. There is no public read endpoint. The Next.js `POST /api/feedback` validates the payload, checks Origin/Fetch Metadata, applies the feedback-specific Upstash limiter, and returns success only after Supabase confirms the insert. Opaque `sb_secret_` keys are sent only as `apikey`; the legacy JWT service-role key is supported with the Bearer header. The key is read only by server code and is not exposed to browser bundles. The endpoint does not log submitted content or upstream error bodies.
+Feedback is designed to use the existing Supabase project `altai-archive` (`isokkxsuqmcsaumbtxlt`) and existing `public.feedback_messages` table. The local additive identity migration is `supabase/migrations/20261112102918_visitor_auth_and_feedback_identity.sql`; it was not applied to the remote project.
 
-## Vercel environment
+The route code requires a verified Supabase session, confirmed email, a server-loaded profile name/email, consent, server-side Cloudflare Turnstile verification, Upstash rate limiting, and a successful Supabase insert. It returns success only after the insert. There is no public read endpoint for feedback. This external integration has not been verified with real credentials.
 
-Set these variables for the intended Vercel environments (Production and any Preview environments that should accept feedback):
+## Enable only after review
 
-- `SUPABASE_URL=https://isokkxsuqmcsaumbtxlt.supabase.co`
-- `SUPABASE_SECRET_KEY` — the existing project's server-side secret key (`sb_secret_...`). The older `SUPABASE_SERVICE_ROLE_KEY` name is accepted temporarily if the project has only that legacy key. Set one server-side key, never a `NEXT_PUBLIC_*` variable.
-- `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` — the existing Redis REST credentials. Feedback fails closed when the distributed limiter cannot be used.
-- `APP_ORIGIN=https://altai-archive.vercel.app` — required by the existing same-origin protection.
+The project owner must review and apply the migration through a controlled database workflow, configure Supabase Auth email confirmation and redirect URLs, configure the official Cloudflare Turnstile CAPTCHA in Supabase Auth, and provide the required Vercel environment variables:
 
-No environment variable was added to `.env.local`, Vercel was not changed, and no secret was created. Configure values using the Vercel dashboard's encrypted Environment Variables UI, then redeploy manually when ready. Without Supabase credentials or Redis credentials the endpoint returns an error and does not claim that a message was received.
+- `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — browser-safe values.
+- `SUPABASE_URL` and `SUPABASE_SECRET_KEY` (or the supported legacy service-role key) — server only.
+- `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` — server only; limiter fails closed.
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` — public widget key.
+- `TURNSTILE_SECRET_KEY` and `TURNSTILE_ALLOWED_HOSTNAMES` — server-only verification settings.
+- `APP_ORIGIN` and `NEXT_PUBLIC_SITE_URL` — exact HTTPS site origin.
+- `NEXT_PUBLIC_VISITOR_AUTH_ENABLED=true` and `VISITOR_AUTH_ENABLED=true` only after those prerequisites and tests are complete.
 
-## Administrator access
+No environment variables were added to `.env.local`, Vercel was not changed, and no remote migration was applied. Without configuration, registration and feedback fail closed and must not claim success.
 
-Use the authenticated Supabase Dashboard for the existing project and its Table Editor to review `feedback_messages` and update status (`new`, `viewed`, `processed`). The current application admin sessions/users are stored in local JSON files and are not a safe Vercel authorization layer, so this change does not add an application admin page or a public read/update API. Restrict Supabase project membership to authorized staff and follow the organization's access process. Feedback is not published automatically.
+## Review and retention
 
-## Consent and retention
-
-Name and email are optional. If either is provided, the form requires the displayed consent text; the row records the consent version `feedback-contact-v1`. The text is prepared for this project and needs legal review before the form is used with real personal data. Define a retention and deletion period with the archive before inviting public submissions.
+Authorized project members can review feedback in Supabase Dashboard. The app does not publish feedback or provide public access to other users’ messages. Name/email are sourced from the verified account profile; client overrides are ignored. The consent text needs legal review and the archive must approve retention/deletion periods before real public use.

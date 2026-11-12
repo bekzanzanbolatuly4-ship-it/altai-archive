@@ -3,6 +3,7 @@ import {test} from 'node:test';
 import {readFile} from 'node:fs/promises';
 import {pathToFileURL} from 'node:url';
 import path from 'node:path';
+import {randomBytes} from 'node:crypto';
 import ts from 'typescript';
 
 async function loadTs(relative){
@@ -15,15 +16,24 @@ const {validateFeedbackInput,readFeedbackJson}=await loadTs('lib/feedback-valida
 const {storeFeedback,feedbackConsentVersion}=await loadTs('lib/feedback-store.ts');
 const {enforceFeedbackRateLimit}=await loadTs('lib/feedback-rate-limit.ts');
 const {messages}=await loadTs('locales/messages.ts');
+const {validateRegistrationInput}=await loadTs('lib/visitor-auth-validation.ts');
+const identity={userId:'verified-user-id',name:'Visitor',email:'visitor@example.org'};
+const valid={type:'suggestion',message:'Make the catalog easier to use',captchaToken:'single-use-token',feedbackConsent:true};
+const normalized={type:'suggestion',name:null,email:null,message:valid.message,contactConsent:true};
 
-const valid={type:'suggestion',name:null,email:null,message:'Make the catalog easier to use',contactConsent:false};
+test('visitor registration validates name, email, strong password, confirmation and informed consent',()=>{
+ const pass=randomBytes(24).toString('base64url');const input={name:'Archive visitor',email:'visitor@example.org',password:pass,confirmPassword:pass,consent:true};
+ assert.equal(validateRegistrationInput(input),null);
+ assert.equal(validateRegistrationInput({...input,name:' '}),'invalid_name');
+ assert.equal(validateRegistrationInput({...input,email:'bad'}),'invalid_email');
+ assert.equal(validateRegistrationInput({...input,password:'short'}),'weak_password');
+ assert.equal(validateRegistrationInput({...input,confirmPassword:'different'}),'password_mismatch');
+ assert.equal(validateRegistrationInput({...input,consent:false}),'consent_required');
+});
 
-test('feedback validation accepts minimal input and requires consent for contact data',()=>{
- assert.deepEqual(validateFeedbackInput(valid),valid);
- assert.deepEqual(validateFeedbackInput({...valid,name:' A ',email:'USER@example.org',contactConsent:true}),{...valid,name:'A',email:'user@example.org',contactConsent:true});
- for(const input of [{...valid,message:'  '},{...valid,email:'bad'},{...valid,message:'x'.repeat(2001)},{...valid,type:'official_request'},{...valid,name:'x'.repeat(81)},{...valid,name:'A',contactConsent:false},{...valid,website:'spam'},{...valid,unexpected:'value'}]){
-  assert.throws(()=>validateFeedbackInput(input),error=>error instanceof Error&&error.name==='FeedbackError');
- }
+test('feedback accepts only the selected type, bounded message and one-use CAPTCHA token',()=>{
+ assert.deepEqual(validateFeedbackInput(valid),normalized);
+ for(const input of [{...valid,message:'  '},{...valid,message:'x'.repeat(2001)},{...valid,type:'official_request'},{...valid,captchaToken:''},{type:valid.type,message:valid.message},{...valid,name:'forged'},{...valid,feedbackConsent:false},{...valid,website:'spam'},{...valid,unexpected:'value'}])assert.throws(()=>validateFeedbackInput(input),error=>error.name==='FeedbackError');
 });
 
 test('feedback body reader enforces byte limit and rejects malformed JSON',async()=>{
@@ -33,65 +43,65 @@ test('feedback body reader enforces byte limit and rejects malformed JSON',async
  assert.deepEqual(await readFeedbackJson(new Request('https://archive.test',{method:'POST',headers,body:JSON.stringify(valid)})),valid);
 });
 
-test('Supabase store sends only server-controlled fields and confirms upstream success',async()=>{
+test('Supabase feedback store writes only server verified identity and reports upstream failure',async()=>{
  let sent,url;
- await storeFeedback({...valid,name:'Visitor',contactConsent:true},{url:'https://project.supabase.co',secret:'sb_secret_server_only_test_secret',fetcher:async(target,init)=>{url=String(target);sent={headers:init.headers,row:JSON.parse(init.body)};return new Response(null,{status:201});}});
+ await storeFeedback({...normalized,name:identity.name,email:identity.email,contactConsent:true},{userId:identity.userId,...identity},{url:'https://project.supabase.co',secret:'sb_secret_server_only_test_secret',fetcher:async(target,init)=>{url=String(target);sent={headers:init.headers,row:JSON.parse(init.body)};return new Response(null,{status:201});}});
  assert.equal(url,'https://project.supabase.co/rest/v1/feedback_messages');
- assert.equal(sent.headers.apikey,'sb_secret_server_only_test_secret');
- assert.equal(sent.headers.Authorization,undefined,'Opaque Supabase secret keys are not bearer tokens');
- assert.equal(sent.row.status,'new');
- assert.equal(sent.row.consent_version,feedbackConsentVersion);
- await storeFeedback(valid,{url:'https://project.supabase.co',secret:'legacy-service-role-jwt',fetcher:async(_target,init)=>{assert.equal(init.headers.Authorization,'Bearer legacy-service-role-jwt');return new Response(null,{status:201});}});
- await assert.rejects(storeFeedback(valid,{url:'',secret:''}),/feedback_storage_unavailable/);
- await assert.rejects(storeFeedback(valid,{url:'https://project.supabase.co',secret:'private-key',fetcher:async()=>new Response('sensitive database detail',{status:500})}),error=>error.code==='feedback_storage_unavailable'&&!error.message.includes('sensitive'));
+ assert.equal(sent.headers.apikey,'sb_secret_server_only_test_secret');assert.equal(sent.headers.Authorization,undefined);
+ assert.equal(sent.row.status,'new');assert.equal(sent.row.consent_version,feedbackConsentVersion);assert.equal(sent.row.auth_user_id,identity.userId);assert.equal(sent.row.name,identity.name);assert.equal(sent.row.email,identity.email);
+ await assert.rejects(storeFeedback(normalized,identity,{url:'',secret:''}),/feedback_storage_unavailable/);
+ await assert.rejects(storeFeedback(normalized,identity,{url:'https://project.supabase.co',secret:'private-key',fetcher:async()=>new Response('sensitive database detail',{status:500})}),error=>error.code==='feedback_storage_unavailable'&&!error.message.includes('sensitive'));
 });
 
 test('feedback rate limit uses isolated Upstash keys and fails closed in production',async()=>{
- let command;
- const request=new Request('https://archive.test/api/feedback',{headers:{'x-forwarded-for':'203.0.113.5'}});
+ let command;const request=new Request('https://archive.test/api/feedback',{headers:{'x-forwarded-for':'203.0.113.5'}});
  const options={url:'https://redis.example',token:'server-only-token',production:true,vercel:true,now:()=>3_600_000,fetcher:async(_url,init)=>{command=JSON.parse(init.body);return Response.json({result:[3,80]});}};
- await enforceFeedbackRateLimit(request,options);
- assert.match(command[3],/^altai:feedback:ip:[a-f0-9]{64}:1$/);
+ await enforceFeedbackRateLimit(request,options);assert.match(command[3],/^altai:feedback:ip:[a-f0-9]{64}:1$/);
  await assert.rejects(enforceFeedbackRateLimit(request,{...options,fetcher:async()=>Response.json({result:[4,80]})}),error=>error.code==='feedback_rate_limit');
  await assert.rejects(enforceFeedbackRateLimit(request,{...options,fetcher:async()=>{throw new Error('network');}}),error=>error.code==='feedback_limiter_unavailable');
  await assert.rejects(enforceFeedbackRateLimit(request,{...options,url:'',token:''}),error=>error.code==='feedback_limiter_unavailable');
 });
 
-test('feedback endpoint checks origin, validates, and returns success only after Supabase confirms storage',async()=>{
+test('feedback endpoint requires same origin, confirmed session, profile and verified CAPTCHA',async()=>{
  let source=await readFile('app/api/feedback/route.ts','utf8');
- source=source.replace("import {storeFeedback} from '@/lib/feedback-store';",`const storeFeedback=async(value)=>{globalThis.__feedbackStored=value;if(globalThis.__feedbackStoreFails)throw new Error('database failure');};`);
+ source=source.replace("import {storeFeedback} from '@/lib/feedback-store';",`const storeFeedback=async(value,identity)=>{globalThis.__feedbackStored={value,identity};if(globalThis.__feedbackStoreFails)throw Object.assign(new Error('storage'),{code:'feedback_storage_unavailable',status:503});};`);
  source=source.replace("import {enforceFeedbackRateLimit} from '@/lib/feedback-rate-limit';",`const enforceFeedbackRateLimit=async()=>{if(globalThis.__feedbackRateLimited)throw Object.assign(new Error('limited'),{code:'feedback_rate_limit',status:429});};`);
  source=source.replace("import {readFeedbackJson,validateFeedbackInput} from '@/lib/feedback-validation';",`const {readFeedbackJson,validateFeedbackInput}=globalThis.__feedbackValidation;`);
+ source=source.replace("import {createSupabaseServerClient} from '@/lib/supabase/server';",`const createSupabaseServerClient=globalThis.__createAuth;`);
  source=source.replace("import {safeFeedbackError} from '@/lib/feedback-errors';",`const safeFeedbackError=(error)=>({code:error.code||'feedback_storage_unavailable',status:error.status||503});`);
  source=source.replace(/from '@\/([^']+)'/g,(_,name)=>`from '${pathToFileURL(path.resolve(`${name}.ts`)).href}'`);
  const compiled=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
- const previous={origin:process.env.APP_ORIGIN,fetch:globalThis.fetch,stored:globalThis.__feedbackStored,fail:globalThis.__feedbackStoreFails,limited:globalThis.__feedbackRateLimited,validation:globalThis.__feedbackValidation};
+ const saved={origin:process.env.APP_ORIGIN,visitor:process.env.VISITOR_AUTH_ENABLED,secret:process.env.TURNSTILE_SECRET_KEY,hosts:process.env.TURNSTILE_ALLOWED_HOSTNAMES,fetch:globalThis.fetch,validation:globalThis.__feedbackValidation,createAuth:globalThis.__createAuth,stored:globalThis.__feedbackStored,failed:globalThis.__feedbackStoreFails,limited:globalThis.__feedbackRateLimited};
+ const user={id:identity.userId,email:identity.email,email_confirmed_at:'2026-01-01T00:00:00Z'};
+ let confirmed=true,captchaSuccess=true;
  globalThis.__feedbackValidation={readFeedbackJson,validateFeedbackInput};
+ globalThis.__createAuth=async()=>({auth:{getUser:async()=>({data:{user:confirmed?user:null},error:null})},from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:{display_name:identity.name},error:null})})})})});
+ globalThis.fetch=async()=>Response.json({success:captchaSuccess,hostname:'archive.test'});
  const {POST}=await import(`data:text/javascript,${encodeURIComponent(compiled)}`);
  const makeRequest=(body=valid,origin='https://archive.test')=>new Request('https://archive.test/api/feedback',{method:'POST',headers:{origin,'sec-fetch-site':'same-origin','content-type':'application/json'},body:JSON.stringify(body)});
  try{
-  process.env.APP_ORIGIN='https://archive.test';
-  const denied=await POST(makeRequest(valid,'https://attacker.test'));assert.equal(denied.status,403);
-  const bad=await POST(makeRequest({...valid,type:'other'}));assert.equal(bad.status,400);
+  process.env.APP_ORIGIN='https://archive.test';process.env.VISITOR_AUTH_ENABLED='true';process.env.TURNSTILE_SECRET_KEY='test-secret';process.env.TURNSTILE_ALLOWED_HOSTNAMES='archive.test';
+  assert.equal((await POST(makeRequest(valid,'https://attacker.test'))).status,403);
+  assert.equal((await POST(makeRequest({...valid,type:'other'}))).status,400);
+  confirmed=false;assert.equal((await POST(makeRequest())).status,401);confirmed=true;
+  captchaSuccess=false;assert.equal((await POST(makeRequest())).status,400);captchaSuccess=true;
   globalThis.__feedbackRateLimited=true;assert.equal((await POST(makeRequest())).status,429);globalThis.__feedbackRateLimited=false;
   globalThis.__feedbackStoreFails=true;assert.equal((await POST(makeRequest())).status,503);globalThis.__feedbackStoreFails=false;
-  const accepted=await POST(makeRequest());assert.equal(accepted.status,201);assert.deepEqual(await accepted.json(),{received:true});assert.equal(globalThis.__feedbackStored.message,valid.message);
+  const accepted=await POST(makeRequest());assert.equal(accepted.status,201);assert.deepEqual(await accepted.json(),{received:true});assert.equal(globalThis.__feedbackStored.value.message,valid.message);assert.deepEqual(globalThis.__feedbackStored.identity,{userId:identity.userId,name:identity.name,email:identity.email});
  }finally{
-  if(previous.origin===undefined)delete process.env.APP_ORIGIN;else process.env.APP_ORIGIN=previous.origin;
-  globalThis.fetch=previous.fetch;
-  for(const [key,value] of [['__feedbackStored',previous.stored],['__feedbackStoreFails',previous.fail],['__feedbackRateLimited',previous.limited],['__feedbackValidation',previous.validation]])if(value===undefined)delete globalThis[key];else globalThis[key]=value;
+  for(const[k,v]of Object.entries({APP_ORIGIN:saved.origin,VISITOR_AUTH_ENABLED:saved.visitor,TURNSTILE_SECRET_KEY:saved.secret,TURNSTILE_ALLOWED_HOSTNAMES:saved.hosts}))if(v===undefined)delete process.env[k];else process.env[k]=v;
+  globalThis.fetch=saved.fetch;
+  for(const[key,value]of[['__feedbackValidation',saved.validation],['__createAuth',saved.createAuth],['__feedbackStored',saved.stored],['__feedbackStoreFails',saved.failed],['__feedbackRateLimited',saved.limited]])if(value===undefined)delete globalThis[key];else globalThis[key]=value;
  }
 });
 
-test('feedback labels, warning, consent, success and errors are localized in RU/KK/EN',()=>{
- const keys=['feedbackTitle','feedbackText','feedbackType','feedbackChooseType','feedbackTypeReview','feedbackTypeSuggestion','feedbackTypeBug','feedbackName','feedbackEmail','feedbackMessage','feedbackConsent','feedbackWarning','feedbackSubmit','feedbackSending','feedbackSuccess','feedbackError','feedbackValidationError','feedbackCharacters'];
+test('feedback labels, warnings, outcomes and errors are localized in RU/KK/EN',()=>{
+ const keys=['feedbackTitle','feedbackText','feedbackType','feedbackChooseType','feedbackTypeReview','feedbackTypeSuggestion','feedbackTypeBug','feedbackName','feedbackEmail','feedbackMessage','feedbackWarning','feedbackSubmit','feedbackSending','feedbackSuccess','feedbackError','feedbackValidationError','feedbackCharacters'];
  for(const locale of ['ru','kk','en'])for(const key of keys)assert.equal(typeof messages[locale][key],'string',`${locale}.${key}`);
 });
 
-test('feedback SQL enables RLS and contains no public read policy or grants',async()=>{
+test('feedback SQL enables RLS, denies public reads and preserves legacy rows on identity migration',async()=>{
  const sql=await readFile('supabase/migrations/20261111183714_feedback_messages.sql','utf8');
- assert.match(sql,/enable row level security/i);assert.match(sql,/force row level security/i);
- assert.match(sql,/revoke all on table public\.feedback_messages from public, anon, authenticated, service_role/i);
- assert.match(sql,/grant insert on table public\.feedback_messages to service_role/i);
- assert.doesNotMatch(sql,/for select|grant select|grant all/i);
+ assert.match(sql,/enable row level security/i);assert.match(sql,/force row level security/i);assert.match(sql,/revoke all on table public\.feedback_messages from public, anon, authenticated, service_role/i);assert.match(sql,/grant insert on table public\.feedback_messages to service_role/i);assert.doesNotMatch(sql,/for select|grant select|grant all/i);
+ const identityMigration=await readFile('supabase/migrations/20261112102918_visitor_auth_and_feedback_identity.sql','utf8');assert.match(identityMigration,/add column if not exists auth_user_id uuid references auth\.users\(id\) on delete set null/i);assert.doesNotMatch(identityMigration,/delete from public\.feedback_messages/i);assert.match(identityMigration,/for select to authenticated[\s\S]*auth\.uid\(\) = auth_user_id/i);
 });

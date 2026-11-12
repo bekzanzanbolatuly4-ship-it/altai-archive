@@ -1,6 +1,11 @@
 node_modules/
 .next/
+.vercel/
 out/
+.coverage/
+coverage/
+playwright-report/
+test-results/
 .DS_Store
 *.tsbuildinfo
 .playwright-cli/
@@ -8,6 +13,7 @@ out/
 .env.*
 !.env.example
 .data/
+/supabase/.temp/
 .agents/mcp_config.json
 .cursor/mcp.json
 

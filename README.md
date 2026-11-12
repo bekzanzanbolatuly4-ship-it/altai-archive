@@ -1,77 +1,74 @@
-# ALTAI ARCHIVE
+# Государственный архив Восточно-Казахстанской области
 
-Демонстрационная цифровая платформа для знакомства с архивным наследием Восточного Казахстана.
+This repository contains a multilingual information portal for learning about the State Archive of East Kazakhstan Region and finding archive service information. It is a competition project and is not the archive’s official website.
 
-Текущая версия использует демонстрационные данные и иллюстрации, локальное JSON-хранилище и локальный вход для сотрудников. Она не является официальным сайтом учреждения и не подключена к Supabase. ALTAI AI поддерживает серверные OpenRouter и Gemini API через настройки окружения. Запросы на архивные услуги, заказы документов, платежи и официальные обращения не реализованы.
+**Рабочая публичная версия:** [altai-archive.vercel.app](https://altai-archive.vercel.app)
 
-## Запуск
+## Purpose
+
+The project demonstrates a single public starting point for finding archive service information and exploring a searchable catalogue, regional history, branches, exhibitions, and news. It addresses the user task of navigating these kinds of materials from one clear interface. The four catalogue records currently included are illustrative examples, not real archive holdings.
+
+## What is included
+
+- Public pages for the catalog, document descriptions, history, atlas, branches, exhibitions, news, institutional information, and official service links.
+- Archive-supplied commemorative calendars for 2022–2026 and a Russian-language institutional history timeline. The history is presented as educational content, distinct from an officially approved archive exhibition. Original wording is preserved, and discrepancies between calendar versions are flagged.
+- Russian, Kazakh, and English interface; light/dark themes; responsive layout; an optional large-text accessibility mode.
+- Search and filters over the included sample catalog. Sample records, illustrations, and exhibition copy are labelled as illustrative; they are not archival originals.
+- Visitor registration, sign-in, password reset, and feedback code using Supabase Auth and the existing feedback table. These features remain disabled until the owner applies the reviewed migrations and configures Supabase, email delivery, CAPTCHA, and Redis.
+- A role-checked staff interface and isolated local demonstration workflow. Production staff authentication and persistent document/file storage are not enabled.
+
+## Technology
+
+- Next.js 16.4.5 App Router, React 19, and TypeScript.
+- Supabase Auth and the existing feedback table have integration code, but visitor authentication and feedback submission remain disabled until the required database, email, CAPTCHA, and server settings are configured and verified.
+- Upstash Redis rate limiting is required for production assistant API requests; no AI provider credentials are included in this handoff.
+- Vercel hosts the public read-only version. The current archive content store is filesystem-based and is not durable on Vercel.
+
+## Run locally
 
 ```bash
 npm install
-npm run dev -- --port 3000
+cp .env.example .env.local
+npm run dev
 ```
 
-Откройте `http://localhost:3000`.
+The local public site works without external credentials. Keep `DEMO_READ_ONLY=true` unless testing in the isolated disposable demo. Never point the demo at production data. Build requires exact `APP_ORIGIN` and `NEXT_PUBLIC_SITE_URL` values, for example:
 
-## Проверки
+```bash
+APP_ORIGIN=https://altai-archive.example.test NEXT_PUBLIC_SITE_URL=https://altai-archive.example.test npm run build
+```
+
+## Checks
 
 ```bash
 npm test
 npm run typecheck
 npm run lint
 npm run build
+npm run test:e2e:ai
+npm run test:e2e:admin
 ```
 
-Для демонстрации без внешних сервисов держите сервер на `127.0.0.1`. Каталог, локальные изображения, JSON-хранилище и помощник с демонстрационным поиском не требуют Supabase или OpenRouter. Не запускайте демо поверх рабочего `.data`, если там есть данные, которые нельзя менять.
+## Important status
 
-В production задайте `APP_ORIGIN` точным origin сайта (схема, домен и порт, без пути). Проверка CSRF не использует входящие `Host` и `X-Forwarded-*`; за reverse proxy приложение должно получать корректный внешний `Origin`, а `APP_ORIGIN` должен совпадать с ним. Без `APP_ORIGIN` production mutation API закрыты.
+- `.data` and uploaded files use local filesystem storage and are not durable on Vercel. Keep administrative mutations read-only in hosted deployments.
+- Supabase migrations under `supabase/migrations/` are local review artifacts; none were applied to the connected project during this work.
+- No direct branch map is presented because current branch addresses and coordinates are not verified. A 2GIS address search is provided only for the main archive address listed by the government procurement portal.
+- The legacy archive website timed out during review. Current legal name and direct address/email are cited in [official materials](docs/OFFICIAL_MATERIALS.md); no unverified branch phone numbers or personal email addresses are shown publicly.
+- The archive supplied no standalone photographs or scans of archival holdings. The repository still uses SVG illustrations, which are labeled as illustrations; four catalogue cards remain illustrative examples. Supplied signed legal scans are not hosted publicly. See the [customer material inventory](docs/CUSTOMER_MATERIALS.md).
 
-## Основные маршруты
+## Documentation
 
-- `/` — главная, подборки и локальная история просмотров.
-- `/catalog`, `/document/[id]` — фильтруемый каталог и просмотр демонстрационной записи.
-- `/atlas`, `/branches`, `/history` — схематические места и тематическое исследование.
-- `/exhibitions`, `/exhibitions/[slug]` — демонстрационные выставки.
-- `/news`, `/news/[slug]`, `/about` — редакционные материалы и сведения об архиве.
-- `/official-documents` — официальные сведения об архивной госуслуге, правовых актах и прейскуранте; без оформления заказов и оплаты.
-- `/assistant` — локальный поиск и ответы по демонстрационному набору.
-- `/admin` — локальный макет управления содержимым с демонстрационным workflow.
+- [Administrator guide](docs/ADMIN_GUIDE.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Deployment configuration](docs/DEPLOYMENT.md)
+- [Security and access status](docs/SECURITY.md)
+- [Data sources and image provenance](docs/DATA_SOURCES.md)
+- [Project handover](docs/HANDOVER.md)
+- [Official sources and content provenance](docs/OFFICIAL_MATERIALS.md)
+- [Customer-supplied material inventory](docs/CUSTOMER_MATERIALS.md)
+- [Feedback and Supabase setup](docs/FEEDBACK_SETUP.md)
+- [Vercel readiness checklist](docs/VERCEL_DEPLOY_CHECKLIST.md)
+- [Readiness matrix](docs/READINESS_MATRIX.md)
 
-## Архитектура
-
-- `app/` — маршруты Next.js App Router, глобальные стили, sitemap и robots.
-- `components/` — общий shell, провайдер локали/темы и повторно используемые портальные интерфейсы.
-- `data/archive.ts` — типы и синтетический набор данных, отделённый от интерфейса.
-- `locales/messages.ts` — переводы RU/KZ/EN.
-- `public/images/` — локальные иллюстрации и схемы для макета.
-
-## Ограничения проверки
-
-Официальный файл `docs/ТЗ_ГосАрхивВКО.docx` в репозитории отсутствует. Требуют сверки официальная структура описаний, поля и идентификаторы, права и статусы доступа, филиалы и контакты, история учреждения, география, редакционная политика и допустимые способы публикации. Перед использованием реальных фондов, цифровых копий или AI-интеграции нужны согласованные источники и правила обработки.
-
-## Локальное администрирование и документы
-
-`/admin` использует локальные учётные записи и серверную проверку прав. При первом входе создаётся владелец из `ARCHIVE_OWNER_EMAIL` и `ARCHIVE_OWNER_PASSWORD`; сессии подписываются `SESSION_SECRET`, хранятся в `.data/archive-store.json` и выдаются через HTTP-only cookie. Роль `SUPERADMIN` может создавать и отключать сотрудников, назначать им роли и просматривать журнал. Публичной регистрации нет.
-
-Загруженные оригиналы лежат вне `public/` в `.data/uploads/`; лимит задаётся `UPLOAD_LIMIT_MB` (25 МБ по умолчанию). JSON-метаданные записываются атомарной заменой файла. Каталог и публичные маршруты показывают только записи со статусом `published` и доступом `public`. Хранилище рассчитано на один локальный экземпляр приложения: нет общей блокировки между несколькими процессами, резервного копирования или production-grade базы данных. Для развёртывания на нескольких экземплярах замените файловый адаптер общей транзакционной БД и объектным хранилищем.
-
-Для локального запуска используйте `npm run dev`; Next.js привязывается к `127.0.0.1`. Секреты находятся в игнорируемом `.env.local`; шаблон без секретов — `.env.example`. Перед production запуском задайте собственные безопасные значения переменных окружения.
-
-Матрица прав (`lib/archive-auth.ts`): `SUPERADMIN` — полный доступ; `SITE_ADMIN` — документы, публикация и журнал; `ARCHIVE_EMPLOYEE` — создание и редактирование материалов; `EDITOR` — проверка, редактирование и публикация; `BRANCH_ADMIN` — создание и редактирование материалов; `MODERATOR` — чтение и редактирование; `ANALYST` — чтение и журнал. Только `SUPERADMIN` управляет учётными записями и ролями. Серверная матрица — источник авторизации; скрытие кнопок в интерфейсе эту проверку не заменяет.
-
-
-## ALTAI AI
-
-`/assistant` подключён к `POST /api/assistant`: поиск опубликованных публичных документов, проверяемые выдержки из метаданных и серверные ссылки. При отсутствии публичных записей или ошибке провайдера локальный код может выполнить отдельно обозначенный поиск по синтетическим демо-карточкам; это `local-search`, а не генеративный AI. При отсутствии совпадений возвращается пустой `no-match`, без выдуманных источников.
-
-Настройка: `AI_PROVIDER`, `AI_API_KEY`, `AI_MODEL` и `APP_ORIGIN` в серверном окружении. OpenRouter ограничен моделями `:free` или `openrouter/free` с нулевой ценой; у бесплатных вариантов есть лимиты и возможны HTTP 429. `openrouter/free` может выбрать доступную бесплатную модель. Приложение не делает повторных запросов и не перебирает model IDs. Gemini использует совместимый endpoint и требует одобрения условий обработки данных и подтверждения отсутствия разрешённого платного биллинга. В Vercel AI fail-closed без Upstash Redis. Передаются только вопрос, локаль и подходящие опубликованные публичные метаданные, не оригинальные PDF. Если совпадений нет, ответ формируется локально без вызова провайдера. Подробности и статус проверки — в [AI handoff](AI_HANDOFF.md).
-
-Для демонстрации на бессерверном хостинге задайте `DEMO_READ_ONLY=true`; каталог, публикации, аккаунты и экспорт становятся недоступны для изменения. Локальное файловое хранилище и загрузки не являются постоянными в Vercel. Подробности и обязательные production-блокеры перечислены в [Vercel checklist](docs/VERCEL_DEPLOY_CHECKLIST.md).
-
-Запуск: `npm run dev`. Проверки: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`, `git diff --check`. Изолированный browser E2E: `npm run test:e2e:ai` с доступной установкой Playwright (см. документацию).
-
-[Архитектура, безопасность, ограничения и тестирование](docs/AI_INTEGRATION.md) · [Правила агента 1.0.0](docs/AI_AGENT_RULES.md).
-
-Материалы заказчика, официальные источники, отметки проверки и нерешённые подтверждения перечислены в [реестре официальных материалов](docs/OFFICIAL_MATERIALS.md).
-
-Production-проверка 2026-11-11: `GET /api/documents` вернул HTTP 200 с пустым каталогом; unmatched same-origin POST вернул `mode: no-match`, чужой Origin — HTTP 403. В локальном коде шесть справочных категорий используют отдельный утверждённый публичный контекст и могут вызвать модель при пустом каталоге; ответы будут явно отмечены как автоматически сформированные. Локальные legacy OpenRouter aliases найдены, но реальный запрос получил HTTP 429 и ответа модели не дал. Production-переменные не видны публично, изменение не развёрнуто, настоящий AI-ответ пока не подтверждён. См. [сценарий демонстрации](docs/DEMO_SCRIPT.md), [матрицу готовности](docs/READINESS_MATRIX.md) и [AI handoff](AI_HANDOFF.md).
+The company/customer provides the authoritative archive material, publication permissions, approved contacts, and production configuration before any live-content or write-enabled release.

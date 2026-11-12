@@ -15,7 +15,7 @@ export async function generateMetadata({
    title:`${demo.title} · Каталог`,
    description:demo.description,
    openGraph:{
-    title:`${demo.title} · ALTAI ARCHIVE`,
+     title:`${demo.title} · Государственный архив Восточно-Казахстанской области`,
     description:demo.description,
     type:'article',
     images:demo.image?[{url:demo.image}]:[]
@@ -31,7 +31,7 @@ export async function generateMetadata({
     title:`${doc.title} · Каталог`,
     description:doc.description||doc.title,
     openGraph:{
-     title:`${doc.title} · ALTAI ARCHIVE`,
+     title:`${doc.title} · Государственный архив Восточно-Казахстанской области`,
      description:doc.description||doc.title,
      type:'article',
      images:[{url:`/api/documents/${doc.id}/file`}]

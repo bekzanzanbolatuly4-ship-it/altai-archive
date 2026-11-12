@@ -4,12 +4,16 @@ import type {FeedbackSubmission} from './feedback-validation';
 export const feedbackConsentVersion='feedback-contact-v1';
 
 export type FeedbackRow=FeedbackSubmission&{
+ auth_user_id:string;
+ name:string;
+ email:string;
  status:'new';
  consent_version:string|null;
 };
 
 export async function storeFeedback(
  submission:FeedbackSubmission,
+ identity:{userId:string;name:string;email:string},
  {url=process.env.SUPABASE_URL,secret=process.env.SUPABASE_SECRET_KEY||process.env.SUPABASE_SERVICE_ROLE_KEY,fetcher=fetch}:{url?:string;secret?:string;fetcher?:typeof fetch}={},
 ):Promise<void>{
  if(!url||!secret)throw new FeedbackError('feedback_storage_unavailable',503);
@@ -21,6 +25,9 @@ export async function storeFeedback(
  }catch{throw new FeedbackError('feedback_storage_unavailable',503);}
  const row:FeedbackRow={
   ...submission,
+  auth_user_id:identity.userId,
+  name:identity.name,
+  email:identity.email,
   status:'new',
   consent_version:submission.contactConsent?feedbackConsentVersion:null,
  };

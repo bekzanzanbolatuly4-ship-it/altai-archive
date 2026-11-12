@@ -27,7 +27,7 @@ create table public.feedback_messages (
 );
 
 comment on table public.feedback_messages is
-  'Private feedback about the informational ALTAI ARCHIVE website. Not official requests or archive-service applications.';
+  'Private feedback about the informational archive portal. Not official requests or archive-service applications.';
 
 alter table public.feedback_messages enable row level security;
 alter table public.feedback_messages force row level security;

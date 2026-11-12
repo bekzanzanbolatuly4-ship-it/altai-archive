@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import {useState} from 'react';
 import {ArrowRight,ArrowUpRight,Clock3,ExternalLink,MapPin,Phone,BookOpen,Search} from 'lucide-react';
-import {branches,mainArchive,type ArchiveLocation} from '@/data/archive';
+import {branches,mainArchive,getLocalizedBranchTitle,type ArchiveLocation} from '@/data/archive';
 import {useApp} from './providers';
 import {FeedbackForm} from './feedback-form';
 import {formatCity,formatInstitutionName} from '@/locales/messages';
@@ -15,7 +15,7 @@ export function InstitutionPage(){
     <div className="page-wrap institution-page">
       <header className="page-hero">
         <div className="breadcrumb">
-          ALTAI ARCHIVE <span>/</span> {msg('about')}
+          {formatInstitutionName(locale)} <span>/</span> {msg('about')}
         </div>
         <span className="eyebrow">
           {locale==='ru'?'ПЛАТФОРМА ЦИФРОВОГО НАСЛЕДИЯ':locale==='kk'?'ЦИФРЛЫҚ МҰРА ПЛАТФОРМАСЫ':'DIGITAL HERITAGE PLATFORM'}
@@ -32,7 +32,7 @@ export function InstitutionPage(){
 
       <section className="institution-story">
         <div className="institution-copy">
-          <span className="eyebrow">ALTAI ARCHIVE · {locale==='ru'?'ЦИФРОВАЯ ПЛАТФОРМА':locale==='kk'?'ЦИФРЛЫҚ ПЛАТФОРМА':'DIGITAL PLATFORM'}</span>
+          <span className="eyebrow">{locale==='ru'?'ЦИФРОВОЕ НАСЛЕДИЕ':locale==='kk'?'ЦИФРЛЫҚ МҰРА':'DIGITAL HERITAGE'}</span>
           <h2>
             {locale==='ru'
               ?'История, сохранённая для будущего'
@@ -42,10 +42,10 @@ export function InstitutionPage(){
           </h2>
           <p>
             {locale==='ru'
-              ?'ALTAI ARCHIVE — цифровая платформа для знакомства с историческими материалами Восточного Казахстана. Она не является новым официальным наименованием учреждения.'
+              ?'Информационный портал помогает знакомиться с историческими материалами Восточного Казахстана. Он не является официальным сайтом учреждения.'
               :locale==='kk'
-              ?'ALTAI ARCHIVE — Шығыс Қазақстанның тарихи материалдарымен танысуға арналған цифрлық платформа. Бұл мекеменің жаңа ресми атауы емес.'
-              :'ALTAI ARCHIVE is the digital heritage platform identity. It is not a new legal or official name for the archive.'}
+              ?'Ақпараттық портал Шығыс Қазақстанның тарихи материалдарымен танысуға көмектеседі. Бұл мекеменің ресми сайты емес.'
+              :'This information portal introduces historical materials from East Kazakhstan. It is not the institution’s official website.'}
           </p>
           <Link href="/branches" className="outline-link">
             {msg('branches')} <ArrowRight size={15}/>
@@ -76,16 +76,29 @@ export function InstitutionPage(){
           <h3>{msg('branches')}</h3>
           <p>
             {locale==='ru'
-              ?`${branches.length} строк филиальной таблицы · требуется редакторская проверка`
+              ?`${branches.length} действующих филиалов по постановлению №142 от 02.06.2026 · адреса указаны по таблице заказчика и требуют проверки`
               :locale==='kk'
-              ?`Филиалдар кестесіндегі ${branches.length} жазба · редактор тексеруі қажет`
-              :`${branches.length} branch entries from the supplied directory · editorial review pending`}
+              ?`02.06.2026 жылғы №142 қаулы бойынша ${branches.length} филиал · мекенжайларды тексеру қажет`
+              :`${branches.length} branches listed by decree No. 142 dated 2 June 2026 · customer-supplied addresses need verification`}
           </p>
         </div>
         <div>
           <h3>{locale==='ru'?'Цифровая платформа':locale==='kk'?'Цифрлық платформа':'Digital platform'}</h3>
-          <p>ALTAI ARCHIVE · {locale==='ru'?'цифровая платформа':locale==='kk'?'цифрлық платформа':'digital platform'}</p>
+          <p>{locale==='ru'?'Информационный портал':locale==='kk'?'Ақпараттық портал':'Information portal'}</p>
         </div>
+      </section>
+
+      <section className="institution-notice" aria-labelledby="archive-contacts-title">
+        <span className="eyebrow">{locale==='ru'?'КОНТАКТЫ И ГОСУДАРСТВЕННАЯ УСЛУГА':locale==='kk'?'БАЙЛАНЫС ЖӘНЕ МЕМЛЕКЕТТІК ҚЫЗМЕТ':'CONTACTS AND GOVERNMENT SERVICE'}</span>
+        <h2 id="archive-contacts-title">{locale==='ru'?'Государственный архив ВКО':locale==='kk'?'ШҚО мемлекеттік архиві':'East Kazakhstan State Archive'}</h2>
+        <p><b>{locale==='ru'?'Полное наименование в актуальной записи госзакупок:':locale==='kk'?'Мемлекеттік сатып алу жазбасындағы толық атауы:':'Full name in the current procurement record:'}</b> {mainArchive.name}</p>
+        <p>{locale==='ru'?'Адрес и электронная почта приведены в записи государственного портала закупок. Телефон и часы приёма в текущем официальном источнике не указаны.':locale==='kk'?'Мекенжай мен электрондық пошта мемлекеттік сатып алу порталындағы жазбада көрсетілген. Қазіргі ресми дереккөзде телефон мен қабылдау уақыты жоқ.':'The address and email are listed in a government procurement record. The current official record does not list a phone number or public hours.'}</p>
+        <address>{locale==='ru'?'Адрес: ':locale==='kk'?'Мекенжайы: ':'Address: '}{mainArchive.address}<br/>{locale==='ru'?'Эл. почта: ':locale==='kk'?'Электрондық пошта: ':'Email: '}<a href={`mailto:${mainArchive.email}`}>{mainArchive.email}</a></address>
+        <a href={mainArchive.sourceUrl||'#'} target="_blank" rel="noopener noreferrer">{locale==='ru'?'Источник контактов · портал госзакупок РК':locale==='kk'?'Байланыс дереккөздері · ҚР мемлекеттік сатып алу порталы':'Contact source · Kazakhstan public procurement portal'} <ArrowUpRight size={14}/></a>
+        <a href={`https://2gis.kz/oskemen/search/${encodeURIComponent(mainArchive.address||'')}`} target="_blank" rel="noopener noreferrer">{locale==='ru'?'Найти адрес архива в 2ГИС':locale==='kk'?'Архив мекенжайын 2GIS-тен іздеу':'Find the archive address in 2GIS'} <ArrowUpRight size={14}/></a>
+        <p>{locale==='ru'?'Курирующий орган — Управление цифровизации и архивов ВКО: ул. Казахстан, 59/1; +7 (7232) 71-33-13; uca@akimvko.gov.kz. Это контакты управления, а не архива.':locale==='kk'?'Жетекшілік ететін орган — ШҚО цифрландыру және архивтер басқармасы: Қазақстан көшесі, 59/1; +7 (7232) 71-33-13; uca@akimvko.gov.kz. Бұл архивтің емес, басқарманың байланысы.':'Supervising authority — East Kazakhstan Department of Digitalization and Archives: 59/1 Kazakhstan Street; +7 (7232) 71-33-13; uca@akimvko.gov.kz. These are the authority’s contacts, not the archive’s.'}</p>
+        <a href="https://egov.kz/cms/ru/articles/department_of_archives" target="_blank" rel="noopener noreferrer">{locale==='ru'?'Контакты управлений архивов на eGov.kz':locale==='kk'?'Архив басқармаларының байланыстары · eGov.kz':'Archive authorities directory · eGov.kz'} <ArrowUpRight size={14}/></a>
+        <a href="https://egov.kz/services/K002/" target="_blank" rel="noopener noreferrer">{locale==='ru'?'Заказать архивную справку на eGov.kz':locale==='kk'?'Архивтік анықтамаға eGov.kz арқылы өтініш беру':'Apply for an archival certificate on eGov.kz'} <ArrowUpRight size={14}/></a>
       </section>
 
       <section className="institution-structure" aria-labelledby="institution-structure-title">
@@ -147,35 +160,14 @@ export function BranchesDirectory(){
 
   const branchTitle = (b: ArchiveLocation) => {
     if (b.kind === 'main') return formatInstitutionName(locale);
-    if (b.id === 'branch-ust-kamenogorsk-personnel') {
-      return locale === 'kk'
-        ? 'Өскемен жеке құрам бойынша филиалы'
-        : locale === 'en'
-        ? 'Oskemen Personnel Branch'
-        : 'Усть-Каменогорский филиал по личному составу';
-    }
-    if (b.id === 'branch-zaisan') {
-      return locale === 'kk'
-        ? 'Зайсан филиалы'
-        : locale === 'en'
-        ? 'Zaysan Branch'
-        : 'Зайсанский филиал';
-    }
-    if (b.id === 'branch-ridder') {
-      return locale === 'kk'
-        ? 'Риддер филиалы'
-        : locale === 'en'
-        ? 'Ridder Branch'
-        : 'Риддерский филиал';
-    }
-    return b.shortName;
+    return getLocalizedBranchTitle(b,locale);
   };
 
   return (
     <div className="page-wrap branches-page">
       <header className="page-hero">
         <div className="breadcrumb">
-          ALTAI ARCHIVE <span>/</span> {msg('about')}
+          {formatInstitutionName(locale)} <span>/</span> {msg('about')}
         </div>
         <span className="eyebrow">{formatInstitutionName(locale)}</span>
         <h1>{msg('branchesTitle')}</h1>
@@ -285,7 +277,7 @@ export function BranchesDirectory(){
             </div>
           </div>
 
-          {selected.address&&<a className="outline-link branch-route" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selected.address)}`} target="_blank" rel="noreferrer"><MapPin size={15}/>{msg('branchRoute')}</a>}
+          {selected.address&&selected.addressStatus==='official-listing'&&<a className="outline-link branch-route" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selected.address)}`} target="_blank" rel="noreferrer"><MapPin size={15}/>{msg('branchRoute')}</a>}
           {selected.needsReview&&<p className="branch-review-note" role="note">{msg('branchReviewNotice')} {selected.reviewNotes.join(' ')}</p>}
 
           <div className="branch-context-panel">

@@ -1,4 +1,4 @@
-# Сценарий демонстрации ALTAI ARCHIVE
+# Сценарий демонстрации портала архива
 
 Дата подготовки: 11 ноября 2026 года. Проверено на локальном коде `e5dfcd1` плюс незакоммиченные изменения этого рабочего сеанса. Production не обновлялся.
 
@@ -47,7 +47,7 @@
 - https://altai-archive.vercel.app/history
 - https://altai-archive.vercel.app/exhibitions
 
-Production browser rendered all eight pages without `pageerror` or console errors. On `/official-documents`, RU/KK/EN fit a 390px viewport, no Codex/Downloads text or local PDF links were found, and all ten unique external targets were checked: Adilet and gov.kz returned HTTP 200; eGov redirected to its identity page and returned HTTP 200.
+Production browser rendered all eight pages without `pageerror` or console errors. On `/official-documents`, RU/KK/EN fit a 390px viewport, no development-only labels or local PDF links were found, and all ten unique external targets were checked: Adilet and gov.kz returned HTTP 200; eGov redirected to its identity page and returned HTTP 200.
 
 Публичный `GET /api/documents` на проверенной версии ответил HTTP 500. `POST /api/assistant` вернул HTTP 200 с `mode: no-match`, пустыми цитатами и корректным языковым no-match на запросы `Find photographs`, `архивные документы`, `картографические материалы`. Значит ни подлинный генеративный ответ, ни источник из Production на проверке не получены. HTTP 200 здесь означает корректный no-match, а не успешный вызов модели.
 

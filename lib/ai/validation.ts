@@ -10,9 +10,10 @@ export function validateResponse(raw:string,sources:Source[],current:StoredDocum
  for(const c of value.citations){
   const source=sources.find(s=>s.id===c?.id);
   if(!source||typeof c.quote!=='string'||c.quote.length<3||![source.title,source.description].some(t=>t.includes(c.quote)))throw new AIError('invalid_response');
-  if(source.kind==='reference'){
+  if(source.kind==='reference'||source.kind==='customer-source'){
    if(!source.url||(!source.url.startsWith('/')&&!/^https:\/\/(?:adilet\.zan\.kz|www\.gov\.kz)\//.test(source.url)))throw new AIError('invalid_response');
-   if(!citations.some(s=>s.id===c.id))citations.push({id:c.id,title:source.title,quote:c.quote,provenance:'verified',url:source.url});
+   if(source.kind==='customer-source'&&source.url!=='/history')throw new AIError('invalid_response');
+   if(!citations.some(s=>s.id===c.id))citations.push({id:c.id,title:source.title,quote:c.quote,provenance:source.kind==='reference'?'verified':source.provenance,url:source.url});
    continue;
   }
   if(!source.documentId)throw new AIError('invalid_response');
@@ -24,6 +25,6 @@ export function validateResponse(raw:string,sources:Source[],current:StoredDocum
  }
  if(sources.length && !citations.length)throw new AIError('invalid_response');
  // Any retrieved record might have influenced the answer, even without a citation.
- if(sources.some(s=>s.kind!=='reference'&&!current.some(d=>d.id===s.documentId&&isPublicDocument(d)&&d.provenance==='verified'&&redact(d.title).slice(0,180)===s.title&&redact(d.description||'').slice(0,500)===s.description)))throw new AIError('source_changed');
+ if(sources.some(s=>s.kind==='archive'&&!current.some(d=>d.id===s.documentId&&isPublicDocument(d)&&d.provenance==='verified'&&redact(d.title).slice(0,180)===s.title&&redact(d.description||'').slice(0,500)===s.description)))throw new AIError('source_changed');
  return {answer:value.answer as string,citations};
 }
