@@ -4,7 +4,6 @@ import {complete,type AIProvider} from './gemini.ts';
 import {validateResponse} from './validation.ts';
 import {AIError} from './errors.ts';
 import {acquire} from './limits.ts';
-import {searchDemonstration} from './demo-search.ts';
 import {isPublicDocument} from '../public-access.ts';
 import {redact,type Source} from './context.ts';
 import {approvedReferenceSources,classifyReferenceQuestion,localReferenceReply} from './reference-knowledge.ts';
@@ -72,8 +71,6 @@ export async function runAgent(raw:unknown,dependencies:{documents:()=>Promise<S
      return localCustomerReply(customerSources,input.locale)!;
     }
    }
-   const local=searchDemonstration(input.message,input.locale);
-   if(local)return local;
    return noMatch(input.locale);
   }
   try{

@@ -121,12 +121,11 @@ test('missing specific archive documents remain no-match and do not hit the synt
  const result=await runAgent({message:'Найди архивный документ с шифром 999-XYZ',locale:'ru'},deps({documents:async()=>[],fetcher:async()=>assert.fail('No confirmed archive record must not call a provider')}));
  assert.equal(result.mode,'no-match');assert.deepEqual(result.citations,[]);
 });
-test('local demonstration search has a clear non-AI label and a source link',async()=>{
- for(const [locale,message,phrase] of [['ru','Найти фотографию','не генеративный ответ AI'],['kk','Фото іздеу','генеративті AI жауабы емес'],['en','Find photographs','not a generative AI response']]){
+test('empty published catalogue does not return synthetic sample records',async()=>{
+ for(const [locale,message] of [['ru','Найти фотографию'],['kk','Фото іздеу'],['en','Find photographs']]){
   const result=await runAgent({message,locale},deps({documents:async()=>[]}));
-  assert.equal(result.mode,'local-search');assert.match(result.answer,new RegExp(phrase));
-  assert.ok(result.citations.some(source=>source.url==='/document/demo-01'));
-  assert.ok(result.citations.every(source=>source.provenance==='demonstration'));
+  assert.equal(result.mode,'no-match');
+  assert.deepEqual(result.citations,[]);
  }
 });
 test('unmatched and restricted content do not enter local demonstration answers',async()=>{
