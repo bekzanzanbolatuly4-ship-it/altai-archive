@@ -608,6 +608,20 @@ input::placeholder, textarea::placeholder {
 .footer-section > span { max-width: 260px; color: var(--muted); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
 .footer-section > a { max-width: 100%; }
 
+@media (max-width: 430px) {
+  .footer-directory { grid-template-columns: minmax(0, 1fr); }
+  .footer-section, .footer-section > a, .footer-section > span { min-width: 0; width: 100%; overflow-wrap: anywhere; }
+  .branch-detail { padding: 18px 14px; }
+  .branch-detail-title { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .branch-city { min-width: 0; flex: 0 1 auto; }
+  .branch-contact-grid, .branch-contact-grid > div, .branch-contact-grid > div > span { min-width: 0; }
+  .branch-contact-grid small { overflow-wrap: anywhere; }
+  .branch-detail-title h2, .page-hero h1, .hero h1.home-institution-title, .quick-tile, .collection-card h3 { max-width: 100%; overflow-wrap: anywhere; }
+  .topbar > *, .mobile-brand { min-width: 0; }
+  .mobile-brand { max-width: min(54vw, 220px); }
+  .quick-section-compact .quick-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
 html[data-theme='dark'] .hero-institution { color: var(--ink); }
 html[data-theme='dark'] .home-shortcuts > .home-egov { color: var(--sage); }
 

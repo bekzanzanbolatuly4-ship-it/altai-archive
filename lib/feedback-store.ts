@@ -1,5 +1,6 @@
 import {FeedbackError} from './feedback-errors';
 import type {FeedbackSubmission} from './feedback-validation';
+import type {FeedbackModeration} from './ai/moderation';
 
 export const feedbackConsentVersion='feedback-contact-v1';
 
@@ -9,12 +10,16 @@ export type FeedbackRow=FeedbackSubmission&{
  email:string;
  status:'new';
  consent_version:string|null;
+ moderation_category:FeedbackModeration['category'];
+ moderation_summary:FeedbackModeration['summary'];
+ moderation_reason:FeedbackModeration['reason'];
+ moderation_status:FeedbackModeration['status'];
 };
 
 export async function storeFeedback(
  submission:FeedbackSubmission,
  identity:{userId:string;name:string;email:string},
- {url=process.env.SUPABASE_URL,secret=process.env.SUPABASE_SECRET_KEY||process.env.SUPABASE_SERVICE_ROLE_KEY,fetcher=fetch}:{url?:string;secret?:string;fetcher?:typeof fetch}={},
+ {url=process.env.SUPABASE_URL,secret=process.env.SUPABASE_SECRET_KEY||process.env.SUPABASE_SERVICE_ROLE_KEY,fetcher=fetch,moderation}:{url?:string;secret?:string;fetcher?:typeof fetch;moderation?:FeedbackModeration}={},
 ):Promise<void>{
  if(!url||!secret)throw new FeedbackError('feedback_storage_unavailable',503);
  let endpoint:URL;
@@ -30,6 +35,10 @@ export async function storeFeedback(
   email:identity.email,
   status:'new',
   consent_version:submission.contactConsent?feedbackConsentVersion:null,
+  moderation_category:moderation?.category??null,
+  moderation_summary:moderation?.summary??null,
+  moderation_reason:moderation?.reason??null,
+  moderation_status:moderation?.status??'needs_review',
  };
  const headers:Record<string,string>={
   apikey:secret,

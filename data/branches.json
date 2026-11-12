@@ -271,7 +271,7 @@
     "affiliation": "КГУ «Государственный архив Восточно-Казахстанской области» управления цифровизации и архивов Восточно-Казахстанской области",
     "city": "Усть-Каменогорск",
     "address": "ВКО, г. Усть-Каменогорск, ул. Потанина, 12/2",
-    "phone": null,
+    "phone": "8 (7232) 76-65-60, 8 (7232) 76-81-64",
     "email": null,
     "hours": null,
     "sourceLabel": "Постановление Восточно-Казахстанского областного акимата №142 от 2 июня 2026 года, приложения 1–2",
@@ -285,7 +285,8 @@
     "coordinatesStatus": "unavailable",
     "affiliationStatus": "official-listing",
     "addressStatus": "source-listing",
-    "addressSourceDocument": "Адреса и контакты филиалов.xls"
+    "addressSourceDocument": "Адреса и контакты филиалов.xls",
+    "contactSourceDocument": "Контакты предоставлены заказчиком 12.11.2026"
   },
   {
     "id": "branch-source-13",

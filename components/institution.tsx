@@ -5,7 +5,7 @@ import {ArrowRight,ArrowUpRight,Clock3,ExternalLink,MapPin,Phone,BookOpen,Search
 import {branches,mainArchive,getLocalizedBranchTitle,type ArchiveLocation} from '@/data/archive';
 import {useApp} from './providers';
 import {FeedbackForm} from './feedback-form';
-import {formatCity,formatInstitutionName} from '@/locales/messages';
+import {formatCity,formatInstitutionName,formatOfficeHours} from '@/locales/messages';
 
 export function InstitutionPage(){
   const{msg,locale}=useApp();
@@ -251,21 +251,21 @@ export function BranchesDirectory(){
               <MapPin size={16}/>
               <span>
                 <b>{msg('address')}</b>
-                <small>{selected.address || msg('unconfirmed')}</small>
+                <small>{selected.address ? `${selected.address}${selected.postalCode?`, ${selected.postalCode}`:''}` : msg('unconfirmed')}</small>
               </span>
             </div>
             <div>
               <Phone size={16}/>
               <span>
                 <b>{msg('phone')}</b>
-                <small>{selected.phone || msg('unconfirmed')}</small>
+                <small>{selected.phone ? selected.phone.split(',').map(number=><a key={number} href={`tel:${number.replace(/\D/g,'')}`}>{number.trim()}</a>) : msg('unconfirmed')}</small>
               </span>
             </div>
             <div>
               <Clock3 size={16}/>
               <span>
                 <b>{msg('hours')}</b>
-                <small>{selected.hours || msg('unconfirmed')}</small>
+                <small>{selected.id==='main'&&selected.hours ? formatOfficeHours(locale) : selected.hours || msg('unconfirmed')}</small>
               </span>
             </div>
             <div>
@@ -276,6 +276,8 @@ export function BranchesDirectory(){
               </span>
             </div>
           </div>
+
+          {selected.kind==='main'&&selected.websiteUrl&&<a className="outline-link branch-route" href={selected.websiteUrl} target="_blank" rel="noreferrer">{msg('archiveOfficialSite')} <ExternalLink size={15}/></a>}
 
           {selected.address&&selected.addressStatus==='official-listing'&&<a className="outline-link branch-route" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selected.address)}`} target="_blank" rel="noreferrer"><MapPin size={15}/>{msg('branchRoute')}</a>}
           {selected.needsReview&&<p className="branch-review-note" role="note">{msg('branchReviewNotice')} {selected.reviewNotes.join(' ')}</p>}

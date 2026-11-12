@@ -4,7 +4,7 @@
 
 The hosted portal is an informational demonstration. Keep `DEMO_READ_ONLY=true`. Do not enable archive mutations on Vercel: documents, sessions, staff demo data, and uploads still use `.data` on the local filesystem.
 
-The checked-in visitor-auth migration is a review artifact and has not been applied to the connected Supabase project. `VISITOR_AUTH_ENABLED` and `NEXT_PUBLIC_VISITOR_AUTH_ENABLED` must remain false until the owner reviews and applies the migration, configures Auth email delivery, CAPTCHA and Upstash Redis, then completes real integration tests. Production staff migration and bootstrap are not implemented. No staff assignment or production account was created during this work.
+The checked-in visitor-auth and feedback-moderation migration is a review artifact and has not been applied to the connected Supabase project. `VISITOR_AUTH_ENABLED` and `NEXT_PUBLIC_VISITOR_AUTH_ENABLED` must remain false until the owner reviews and applies the migration, configures Auth email delivery and Upstash Redis, then completes real integration tests. CAPTCHA is not used by the application. Feedback classifications are private to Supabase Dashboard; there is no in-app review queue. Production staff migration and bootstrap are not implemented. No staff assignment or production account was created during this work.
 
 ## Isolated local staff demonstration
 

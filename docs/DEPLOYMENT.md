@@ -2,7 +2,7 @@
 
 ## Vercel
 
-Use the repository’s Next.js build command `npm run build`. Configure `APP_ORIGIN` and `NEXT_PUBLIC_SITE_URL` to the exact HTTPS deployment origin. Keep `DEMO_READ_ONLY=true`. Do not enable visitor or staff Auth feature flags until the owner has applied and verified the reviewed SQL migrations, configured email confirmation/redirect URLs, CAPTCHA and Upstash, and tested the real service path.
+Use the repository’s Next.js build command `npm run build`. Configure `APP_ORIGIN` and `NEXT_PUBLIC_SITE_URL` to the exact HTTPS deployment origin. Keep `DEMO_READ_ONLY=true`. Do not enable visitor or staff Auth feature flags until the owner has applied and verified the reviewed SQL migrations, configured email confirmation/redirect URLs and Upstash, and tested the real service path. CAPTCHA is not used by this application; disable it in Supabase Auth if it is enabled there.
 
 The Vercel filesystem is ephemeral. `.data` metadata, staff demo accounts, sessions, and uploads are not durable there. Do not present document upload/publication or staff management as production-ready.
 
@@ -15,9 +15,6 @@ Server-only keys: `SUPABASE_SECRET_KEY` (preferred) or the supported legacy `SUP
 ## Other configuration
 
 - `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`: server-only; needed for distributed public rate limiting.
-- `NEXT_PUBLIC_TURNSTILE_SITE_KEY`: public widget identifier.
-- `TURNSTILE_SECRET_KEY`: server-only verification secret.
-- `TURNSTILE_ALLOWED_HOSTNAMES`: exact allowed hostnames.
 - `AI_PROVIDER`, `AI_API_KEY`, and `AI_MODEL`: server-only model configuration; enable only with archive privacy approval.
 
 Set these values using the Vercel encrypted Environment Variables UI. `.env.example` contains placeholders only. No secrets or hosted settings were changed during this work. Deployment itself remains the owner’s action.

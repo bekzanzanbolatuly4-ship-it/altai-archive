@@ -8,7 +8,7 @@ import ts from 'typescript';
 
 async function loadTs(relative){
  let source=await readFile(relative,'utf8');
- source=source.replace(/from '\.\/([^']+)'/g,(_,name)=>`from '${pathToFileURL(path.resolve(path.dirname(relative),`${name}.ts`)).href}'`);
+ source=source.replace(/from '\.\/([^']+)'/g,(_,name)=>`from '${pathToFileURL(path.resolve(path.dirname(relative),name.endsWith('.ts')?name:`${name}.ts`)).href}'`);
  const compiled=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
  return import(`data:text/javascript,${encodeURIComponent(compiled)}`);
 }
@@ -17,8 +17,9 @@ const {storeFeedback,feedbackConsentVersion}=await loadTs('lib/feedback-store.ts
 const {enforceFeedbackRateLimit}=await loadTs('lib/feedback-rate-limit.ts');
 const {messages}=await loadTs('locales/messages.ts');
 const {validateRegistrationInput}=await loadTs('lib/visitor-auth-validation.ts');
+const {moderateFeedback}=await loadTs('lib/ai/moderation.ts');
 const identity={userId:'verified-user-id',name:'Visitor',email:'visitor@example.org'};
-const valid={type:'suggestion',message:'Make the catalog easier to use',captchaToken:'single-use-token',feedbackConsent:true};
+const valid={type:'suggestion',message:'Make the catalog easier to use',feedbackConsent:true};
 const normalized={type:'suggestion',name:null,email:null,message:valid.message,contactConsent:true};
 
 test('visitor registration validates name, email, strong password, confirmation and informed consent',()=>{
@@ -31,9 +32,9 @@ test('visitor registration validates name, email, strong password, confirmation 
  assert.equal(validateRegistrationInput({...input,consent:false}),'consent_required');
 });
 
-test('feedback accepts only the selected type, bounded message and one-use CAPTCHA token',()=>{
+test('feedback accepts valid content without CAPTCHA and rejects malformed or unexpected fields',()=>{
  assert.deepEqual(validateFeedbackInput(valid),normalized);
- for(const input of [{...valid,message:'  '},{...valid,message:'x'.repeat(2001)},{...valid,type:'official_request'},{...valid,captchaToken:''},{type:valid.type,message:valid.message},{...valid,name:'forged'},{...valid,feedbackConsent:false},{...valid,website:'spam'},{...valid,unexpected:'value'}])assert.throws(()=>validateFeedbackInput(input),error=>error.name==='FeedbackError');
+ for(const input of [{...valid,message:'  '},{...valid,message:'x'.repeat(2001)},{...valid,type:'official_request'},{type:valid.type,message:valid.message},{...valid,name:'forged'},{...valid,feedbackConsent:false},{...valid,website:'spam'},{...valid,captchaToken:'unexpected'},{...valid,unexpected:'value'}])assert.throws(()=>validateFeedbackInput(input),error=>error.name==='FeedbackError');
 });
 
 test('feedback body reader enforces byte limit and rejects malformed JSON',async()=>{
@@ -49,6 +50,10 @@ test('Supabase feedback store writes only server verified identity and reports u
  assert.equal(url,'https://project.supabase.co/rest/v1/feedback_messages');
  assert.equal(sent.headers.apikey,'sb_secret_server_only_test_secret');assert.equal(sent.headers.Authorization,undefined);
  assert.equal(sent.row.status,'new');assert.equal(sent.row.consent_version,feedbackConsentVersion);assert.equal(sent.row.auth_user_id,identity.userId);assert.equal(sent.row.name,identity.name);assert.equal(sent.row.email,identity.email);
+ assert.equal(sent.row.moderation_status,'needs_review');assert.equal(sent.row.moderation_category,null);
+ const marked={category:'suggestion',summary:'Improve catalogue search',reason:'Concrete improvement idea',status:'classified'};
+ await storeFeedback(normalized,{userId:identity.userId,...identity},{url:'https://project.supabase.co',secret:'sb_secret_server_only_test_secret',moderation:marked,fetcher:async(_url,init)=>{sent={row:JSON.parse(init.body)};return new Response(null,{status:201});}});
+ assert.equal(sent.row.moderation_category,'suggestion');assert.equal(sent.row.moderation_status,'classified');
  await assert.rejects(storeFeedback(normalized,identity,{url:'',secret:''}),/feedback_storage_unavailable/);
  await assert.rejects(storeFeedback(normalized,identity,{url:'https://project.supabase.co',secret:'private-key',fetcher:async()=>new Response('sensitive database detail',{status:500})}),error=>error.code==='feedback_storage_unavailable'&&!error.message.includes('sensitive'));
 });
@@ -62,37 +67,46 @@ test('feedback rate limit uses isolated Upstash keys and fails closed in product
  await assert.rejects(enforceFeedbackRateLimit(request,{...options,url:'',token:''}),error=>error.code==='feedback_limiter_unavailable');
 });
 
-test('feedback endpoint requires same origin, confirmed session, profile and verified CAPTCHA',async()=>{
+test('feedback endpoint requires same origin, confirmed session, profile and rate limit without CAPTCHA',async()=>{
  let source=await readFile('app/api/feedback/route.ts','utf8');
- source=source.replace("import {storeFeedback} from '@/lib/feedback-store';",`const storeFeedback=async(value,identity)=>{globalThis.__feedbackStored={value,identity};if(globalThis.__feedbackStoreFails)throw Object.assign(new Error('storage'),{code:'feedback_storage_unavailable',status:503});};`);
+ source=source.replace("import {storeFeedback} from '@/lib/feedback-store';",`const storeFeedback=async(value,identity,options)=>{globalThis.__feedbackStored={value,identity,options};if(globalThis.__feedbackStoreFails)throw Object.assign(new Error('storage'),{code:'feedback_storage_unavailable',status:503});};`);
+ source=source.replace("import {moderateFeedback} from '@/lib/ai/moderation';",`const moderateFeedback=globalThis.__moderateFeedback;`);
  source=source.replace("import {enforceFeedbackRateLimit} from '@/lib/feedback-rate-limit';",`const enforceFeedbackRateLimit=async()=>{if(globalThis.__feedbackRateLimited)throw Object.assign(new Error('limited'),{code:'feedback_rate_limit',status:429});};`);
  source=source.replace("import {readFeedbackJson,validateFeedbackInput} from '@/lib/feedback-validation';",`const {readFeedbackJson,validateFeedbackInput}=globalThis.__feedbackValidation;`);
  source=source.replace("import {createSupabaseServerClient} from '@/lib/supabase/server';",`const createSupabaseServerClient=globalThis.__createAuth;`);
  source=source.replace("import {safeFeedbackError} from '@/lib/feedback-errors';",`const safeFeedbackError=(error)=>({code:error.code||'feedback_storage_unavailable',status:error.status||503});`);
  source=source.replace(/from '@\/([^']+)'/g,(_,name)=>`from '${pathToFileURL(path.resolve(`${name}.ts`)).href}'`);
  const compiled=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
- const saved={origin:process.env.APP_ORIGIN,visitor:process.env.VISITOR_AUTH_ENABLED,secret:process.env.TURNSTILE_SECRET_KEY,hosts:process.env.TURNSTILE_ALLOWED_HOSTNAMES,fetch:globalThis.fetch,validation:globalThis.__feedbackValidation,createAuth:globalThis.__createAuth,stored:globalThis.__feedbackStored,failed:globalThis.__feedbackStoreFails,limited:globalThis.__feedbackRateLimited};
+ const saved={origin:process.env.APP_ORIGIN,visitor:process.env.VISITOR_AUTH_ENABLED,validation:globalThis.__feedbackValidation,createAuth:globalThis.__createAuth,moderate:globalThis.__moderateFeedback,stored:globalThis.__feedbackStored,failed:globalThis.__feedbackStoreFails,limited:globalThis.__feedbackRateLimited};
  const user={id:identity.userId,email:identity.email,email_confirmed_at:'2026-01-01T00:00:00Z'};
- let confirmed=true,captchaSuccess=true;
+ let confirmed=true;
  globalThis.__feedbackValidation={readFeedbackJson,validateFeedbackInput};
+ globalThis.__moderateFeedback=async()=>({category:'suggestion',summary:'Improve the catalogue',reason:'Constructive proposal',status:'classified'});
  globalThis.__createAuth=async()=>({auth:{getUser:async()=>({data:{user:confirmed?user:null},error:null})},from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:{display_name:identity.name},error:null})})})})});
- globalThis.fetch=async()=>Response.json({success:captchaSuccess,hostname:'archive.test'});
  const {POST}=await import(`data:text/javascript,${encodeURIComponent(compiled)}`);
  const makeRequest=(body=valid,origin='https://archive.test')=>new Request('https://archive.test/api/feedback',{method:'POST',headers:{origin,'sec-fetch-site':'same-origin','content-type':'application/json'},body:JSON.stringify(body)});
  try{
-  process.env.APP_ORIGIN='https://archive.test';process.env.VISITOR_AUTH_ENABLED='true';process.env.TURNSTILE_SECRET_KEY='test-secret';process.env.TURNSTILE_ALLOWED_HOSTNAMES='archive.test';
+  process.env.APP_ORIGIN='https://archive.test';process.env.VISITOR_AUTH_ENABLED='true';
   assert.equal((await POST(makeRequest(valid,'https://attacker.test'))).status,403);
   assert.equal((await POST(makeRequest({...valid,type:'other'}))).status,400);
   confirmed=false;assert.equal((await POST(makeRequest())).status,401);confirmed=true;
-  captchaSuccess=false;assert.equal((await POST(makeRequest())).status,400);captchaSuccess=true;
   globalThis.__feedbackRateLimited=true;assert.equal((await POST(makeRequest())).status,429);globalThis.__feedbackRateLimited=false;
   globalThis.__feedbackStoreFails=true;assert.equal((await POST(makeRequest())).status,503);globalThis.__feedbackStoreFails=false;
-  const accepted=await POST(makeRequest());assert.equal(accepted.status,201);assert.deepEqual(await accepted.json(),{received:true});assert.equal(globalThis.__feedbackStored.value.message,valid.message);assert.deepEqual(globalThis.__feedbackStored.identity,{userId:identity.userId,name:identity.name,email:identity.email});
+  const accepted=await POST(makeRequest());assert.equal(accepted.status,201);assert.deepEqual(await accepted.json(),{received:true});assert.equal(globalThis.__feedbackStored.value.message,valid.message);assert.deepEqual(globalThis.__feedbackStored.identity,{userId:identity.userId,name:identity.name,email:identity.email});assert.equal(globalThis.__feedbackStored.options.moderation.status,'classified');
  }finally{
-  for(const[k,v]of Object.entries({APP_ORIGIN:saved.origin,VISITOR_AUTH_ENABLED:saved.visitor,TURNSTILE_SECRET_KEY:saved.secret,TURNSTILE_ALLOWED_HOSTNAMES:saved.hosts}))if(v===undefined)delete process.env[k];else process.env[k]=v;
-  globalThis.fetch=saved.fetch;
-  for(const[key,value]of[['__feedbackValidation',saved.validation],['__createAuth',saved.createAuth],['__feedbackStored',saved.stored],['__feedbackStoreFails',saved.failed],['__feedbackRateLimited',saved.limited]])if(value===undefined)delete globalThis[key];else globalThis[key]=value;
+  for(const[k,v]of Object.entries({APP_ORIGIN:saved.origin,VISITOR_AUTH_ENABLED:saved.visitor}))if(v===undefined)delete process.env[k];else process.env[k]=v;
+  for(const[key,value]of[['__feedbackValidation',saved.validation],['__createAuth',saved.createAuth],['__moderateFeedback',saved.moderate],['__feedbackStored',saved.stored],['__feedbackStoreFails',saved.failed],['__feedbackRateLimited',saved.limited]])if(value===undefined)delete globalThis[key];else globalThis[key]=value;
  }
+});
+
+test('AI feedback moderation redacts email, validates Gemini JSON and fails safely to human review',async()=>{
+ let sent;
+ const response=(value)=>new Response(JSON.stringify({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(value)}]}}]}),{status:200,headers:{'content-type':'application/json'}});
+ const result=await moderateFeedback('Исправьте поиск, мой email visitor@example.org',{key:'synthetic-key',fetcher:async(_url,init)=>{sent=JSON.parse(init.body);return response({category:'constructive_criticism',summary:'Пожелание улучшить поиск',reason:'Есть конкретное предложение',needsReview:false});}});
+ assert.equal(result.status,'classified');assert.equal(result.category,'constructive_criticism');assert.doesNotMatch(JSON.stringify(sent),/visitor@example\.org/);
+ const invalid=await moderateFeedback('Сообщение для проверки',{key:'synthetic-key',fetcher:async()=>response({category:'unknown',summary:'x',reason:'y',needsReview:false})});
+ assert.deepEqual(invalid,{category:null,summary:null,reason:null,status:'needs_review'});
+ const noKey=await moderateFeedback('Обычный отзыв',{key:'',fetcher:async()=>{throw new Error('must not call');}});assert.equal(noKey.status,'needs_review');
 });
 
 test('feedback labels, warnings, outcomes and errors are localized in RU/KK/EN',()=>{
@@ -100,8 +114,8 @@ test('feedback labels, warnings, outcomes and errors are localized in RU/KK/EN',
  for(const locale of ['ru','kk','en'])for(const key of keys)assert.equal(typeof messages[locale][key],'string',`${locale}.${key}`);
 });
 
-test('feedback SQL enables RLS, denies public reads and preserves legacy rows on identity migration',async()=>{
+test('feedback SQL enables RLS, denies public reads, preserves legacy rows and validates moderation metadata',async()=>{
  const sql=await readFile('supabase/migrations/20261111183714_feedback_messages.sql','utf8');
  assert.match(sql,/enable row level security/i);assert.match(sql,/force row level security/i);assert.match(sql,/revoke all on table public\.feedback_messages from public, anon, authenticated, service_role/i);assert.match(sql,/grant insert on table public\.feedback_messages to service_role/i);assert.doesNotMatch(sql,/for select|grant select|grant all/i);
- const identityMigration=await readFile('supabase/migrations/20261112102918_visitor_auth_and_feedback_identity.sql','utf8');assert.match(identityMigration,/add column if not exists auth_user_id uuid references auth\.users\(id\) on delete set null/i);assert.doesNotMatch(identityMigration,/delete from public\.feedback_messages/i);assert.match(identityMigration,/for select to authenticated[\s\S]*auth\.uid\(\) = auth_user_id/i);
+ const identityMigration=await readFile('supabase/migrations/20261112102918_visitor_auth_and_feedback_identity.sql','utf8');assert.match(identityMigration,/add column if not exists auth_user_id uuid references auth\.users\(id\) on delete set null/i);assert.doesNotMatch(identityMigration,/delete from public\.feedback_messages/i);assert.match(identityMigration,/for select to authenticated[\s\S]*auth\.uid\(\) = auth_user_id/i);assert.match(identityMigration,/moderation_category text/i);assert.match(identityMigration,/moderation_status in \('classified','needs_review'\)/i);
 });

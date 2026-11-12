@@ -5,7 +5,7 @@
 - Next.js 16 App Router and React 19. Route handlers are the HTTP boundary; the public catalog, exhibitions, news, atlas, and branch directory are static TypeScript/JSON data.
 - `components/` contains the portal shell, page UI, localization, themes, accessible text preference, and staff workspace. RU/KK/EN strings are in `locales/messages.ts` and page-level dictionaries.
 - Sample catalog records, news, exhibitions, atlas points, and local SVG illustrations are explicitly illustrative; they are not archive originals.
-- Supabase Auth SSR clients and visitor/feedback route code are present but disabled by feature flags. The local visitor and staff SQL migrations were not applied remotely. Real SMTP, CAPTCHA, Redis and Supabase Auth have not been verified.
+- Supabase Auth SSR clients and visitor/feedback route code are present but disabled by feature flags. The local visitor and staff SQL migrations were not applied remotely. Real SMTP, Redis and Supabase Auth have not been verified. CAPTCHA is not part of the current application flow.
 - `public.feedback_messages` is an existing separate Supabase table with private RLS. Feedback code checks a verified session and only returns success after a confirmed insert. The route is unavailable until configured.
 - Legacy administrative documents, staff accounts, sessions, audit, and uploads use `.data/archive-store.json` and `.data/uploads`. This is local filesystem storage and not durable or suitable for write-enabled Vercel deployments.
 - `lib/archive-auth.ts` contains the existing role matrix and server-side authorization. Local staff login is a demonstration; keep `DEMO_READ_ONLY=true` on hosted deployments.

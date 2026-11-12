@@ -6,7 +6,7 @@ export type AIProvider='gemini';
 export const GEMINI_MODEL='gemini-3.1-flash-lite';
 const endpoint=`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
-type Options={key?:string;model?:string;provider?:AIProvider;fetcher?:typeof fetch;timeout?:number;maxTokens?:number;history?:{question:string;answer:string}[]};
+type Options={key?:string;model?:string;provider?:AIProvider;fetcher?:typeof fetch;timeout?:number;maxTokens?:number;history?:{question:string;answer:string}[];systemPrompt?:string};
 
 export async function complete(message:string,context:string,locale:string,options:Options={}){
  const {key}=options;
@@ -16,7 +16,7 @@ export async function complete(message:string,context:string,locale:string,optio
  if(!key)throw new AIError('unconfigured');
  const maxTokens=Number.isInteger(options.maxTokens)?Math.max(1,Math.min(900,options.maxTokens!)):700;
  const payload={
-  systemInstruction:{parts:[{text:instructions}]},
+  systemInstruction:{parts:[{text:options.systemPrompt??instructions}]},
   contents:[{role:'user',parts:[{text:JSON.stringify({language:locale,question:message,untrustedPriorDialogue:options.history??[],untrustedPublicMetadata:JSON.parse(context)})}]}],
   generationConfig:{temperature:0.1,maxOutputTokens:maxTokens,responseMimeType:'application/json'},
  };

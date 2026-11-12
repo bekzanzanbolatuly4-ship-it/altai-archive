@@ -162,7 +162,8 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
   await page.goto('http://127.0.0.1:3107/register');
   await page.getByRole('heading',{name:locale==='ru'?'Регистрация посетителя':locale==='kk'?'Келушіні тіркеу':'Visitor registration'}).waitFor();
   assert.equal(await page.locator('input[type="password"]').count(),2,'Registration asks for password and confirmation');
-  assert.equal(await page.getByRole('button',{name:locale==='ru'?'Зарегистрироваться':locale==='kk'?'Тіркелу':'Register'}).isDisabled(),true,'Auth stays fail-closed until CAPTCHA and Supabase configuration are provided');
+  assert.equal(await page.getByRole('button',{name:locale==='ru'?'Зарегистрироваться':locale==='kk'?'Тіркелу':'Register'}).isDisabled(),false,'Account form does not require a CAPTCHA widget');
+  assert.equal(await page.getByText(/CAPTCHA/i).count(),0,'No CAPTCHA prompt is shown');
   await page.goto('http://127.0.0.1:3107/about');
   await page.setViewportSize({width:390,height:844});
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Feedback form must fit a mobile viewport');
@@ -291,7 +292,7 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
  assert.equal(loginStatus,401,'Invalid login should not require creating the initial owner in read-only mode');
  const isolatedStore=JSON.parse(await (await import('node:fs/promises')).readFile(path.join(isolated,'.data/archive-store.json'),'utf8'));
  assert.equal(isolatedStore.users.length,0,'Read-only login must not bootstrap an owner account');
- console.log('PASS: 390/768/1440 navigation, authenticated feedback gate and disabled unconfigured registration, RU/KK/EN, exact demo catalogue searches, mock AI citation, verified-public local fallback on provider 429, no-match/private-content scenarios, keyboard, unverified branch-directory safeguards, calendar provenance and read-only admin APIs');
+ console.log('PASS: 390/768/1440 navigation, authenticated feedback gate, CAPTCHA-free registration, RU/KK/EN, exact demo catalogue searches, mock AI citation, verified-public local fallback on provider 429, no-match/private-content scenarios, keyboard, unverified branch-directory safeguards, calendar provenance and read-only admin APIs');
 }finally{
  await browser?.close();
  if(server&&server.exitCode===null){server.kill('SIGTERM');await new Promise(resolve=>server.once('exit',resolve));}

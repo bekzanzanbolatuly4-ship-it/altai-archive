@@ -23,7 +23,9 @@ The example file contains only a blank placeholder. Model is fixed in code as `g
 
 ## Feedback moderation
 
-AI moderation is not enabled. The live `public.feedback_messages` schema was inspected on 2026-11-12 and has no moderation result fields. Existing feedback/auth schema also differs from the un-applied local visitor identity migration. Do not claim feedback AI moderation or Production feedback persistence until a reviewed additive migration is separately approved and the real Supabase flow is verified. No migration was applied.
+Feedback submissions are classified with the same Gemini model on the server. The classifier receives only bounded feedback text after email/phone/token redaction; the original message is preserved unchanged. It stores one category, a short summary and reason, plus `classified` or `needs_review` status. Provider errors, missing keys, malformed output and uncertain cases become `needs_review`; feedback is never deleted or published automatically.
+
+The additive fields are in the local visitor-identity migration. The connected production database was inspected read-only on 2026-11-12 and does not yet have these fields or `visitor_profiles`; the migration is not applied and visitor Auth is disabled by feature flags. Production feedback and moderation are therefore not active yet. After the owner reviews/applies the migration and configures Auth/Upstash, the metadata remains private in `public.feedback_messages` and can be inspected in Supabase Dashboard by an authorized project member. There is no in-app feedback review queue.
 
 ## Verification status (2026-11-12)
 

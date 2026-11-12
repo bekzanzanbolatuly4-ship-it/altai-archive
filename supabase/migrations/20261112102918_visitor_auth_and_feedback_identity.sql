@@ -55,6 +55,33 @@ for each row execute function public.create_visitor_profile_from_signup();
 alter table public.feedback_messages
   add column if not exists auth_user_id uuid references auth.users(id) on delete set null;
 
+-- Store assistive moderation metadata without changing original feedback text or legacy rows.
+alter table public.feedback_messages
+  add column if not exists moderation_category text,
+  add column if not exists moderation_summary text,
+  add column if not exists moderation_reason text,
+  add column if not exists moderation_status text not null default 'needs_review';
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'feedback_moderation_category_valid') then
+    alter table public.feedback_messages add constraint feedback_moderation_category_valid
+      check (moderation_category is null or moderation_category in ('constructive_criticism','suggestion','website_error','positive_feedback','spam','advertising','irrelevant','abusive'));
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'feedback_moderation_status_valid') then
+    alter table public.feedback_messages add constraint feedback_moderation_status_valid
+      check (moderation_status in ('classified','needs_review'));
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'feedback_moderation_summary_length') then
+    alter table public.feedback_messages add constraint feedback_moderation_summary_length
+      check (moderation_summary is null or char_length(moderation_summary) <= 240);
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'feedback_moderation_reason_length') then
+    alter table public.feedback_messages add constraint feedback_moderation_reason_length
+      check (moderation_reason is null or char_length(moderation_reason) <= 300);
+  end if;
+end $$;
+
 comment on column public.feedback_messages.auth_user_id is
   'Verified visitor account for submissions made after visitor auth rollout; nullable to preserve legacy rows.';
 

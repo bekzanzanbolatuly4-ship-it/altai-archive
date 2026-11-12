@@ -186,6 +186,7 @@ export const messages = {
     address: 'Адрес',
     phone: 'Телефон',
     hours: 'Часы работы',
+    archiveOfficialSite: 'Сайт Государственного архива ВКО',
     email: 'Электронная почта',
     unconfirmed: 'Не подтверждено официальным источником',
     sourceLabel: 'Источник',
@@ -422,6 +423,7 @@ export const messages = {
     address: 'Мекенжай',
     phone: 'Телефон',
     hours: 'Жұмыс уақыты',
+    archiveOfficialSite: 'ШҚО мемлекеттік архивінің сайты',
     email: 'Электрондық пошта',
     unconfirmed: 'Ресми деректе расталмаған',
     sourceLabel: 'Дереккөз',
@@ -658,6 +660,7 @@ export const messages = {
     address: 'Address',
     phone: 'Phone',
     hours: 'Working hours',
+    archiveOfficialSite: 'East Kazakhstan State Archive website',
     email: 'Email',
     unconfirmed: 'Not confirmed by official source',
     sourceLabel: 'Source',
@@ -735,5 +738,12 @@ export function formatRegion(locale: Locale): string {
 
 export function formatInstitutionName(locale: Locale): string {
   if (locale === 'kk') return 'Шығыс Қазақстан облысының мемлекеттік архиві';
+  if (locale === 'en') return 'State Archive of East Kazakhstan Region';
   return 'Государственный архив Восточно-Казахстанской области';
+}
+
+export function formatOfficeHours(locale: Locale): string {
+  if (locale === 'kk') return 'Дүйсенбі–жұма, 09:00–18:00 (түскі үзіліс: 13:00–14:00)';
+  if (locale === 'en') return 'Monday–Friday, 09:00–18:00 (lunch break: 13:00–14:00)';
+  return 'Понедельник–пятница, 09:00–18:00 (обед: 13:00–14:00)';
 }

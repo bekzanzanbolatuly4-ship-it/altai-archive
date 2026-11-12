@@ -10,7 +10,7 @@ Use individual named accounts with MFA. Review the member list and remove the fo
 
 - Public application and local test suites are in this repository.
 - Supabase migrations are local files and were not applied remotely.
-- Supabase visitor Auth/Turnstile flags are off by default; Production Auth and CAPTCHA have not been verified. Staff identity still uses the local demo store.
+- Supabase visitor Auth is off by default and has not been verified in Production. CAPTCHA is not used by the application. Staff identity still uses the local demo store.
 - Staff local JSON and uploaded files are not durable on Vercel. Keep the hosted admin read-only.
 - Contact and source status is tracked in `docs/OFFICIAL_MATERIALS.md`.
 

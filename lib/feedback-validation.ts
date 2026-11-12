@@ -10,7 +10,7 @@ export type FeedbackSubmission={
 };
 
 const types=new Set<FeedbackType>(['site_feedback','suggestion','site_bug']);
-const allowedKeys=new Set(['type','message','website','captchaToken','feedbackConsent']);
+const allowedKeys=new Set(['type','message','website','feedbackConsent']);
 const controlChars=/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u;
 
 export function validateFeedbackInput(input:unknown):FeedbackSubmission{
@@ -23,7 +23,6 @@ export function validateFeedbackInput(input:unknown):FeedbackSubmission{
  if(typeof value.message!=='string'||controlChars.test(value.message))throw new FeedbackError('invalid_feedback',400);
  const message=value.message.trim();
  if(message.length<10||message.length>2000)throw new FeedbackError('invalid_feedback',400);
- if(typeof value.captchaToken!=='string'||value.captchaToken.length<1||value.captchaToken.length>2048)throw new FeedbackError('captcha_failed',400);
  if(value.feedbackConsent!==true)throw new FeedbackError('feedback_consent_required',400);
  return {type:value.type as FeedbackType,name:null,email:null,message,contactConsent:true};
 }

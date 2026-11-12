@@ -10,7 +10,7 @@
 
 ## Release limits
 
-Visitor Auth, CAPTCHA, distributed rate limiting, and Supabase staff membership remain disabled until configured and tested with the real project. Local E2E and mocked integrations do not establish production readiness. Keep `DEMO_READ_ONLY=true`; do not use sample accounts or passwords in production. Do not place staff credentials in user metadata or client storage.
+Visitor Auth, distributed rate limiting, and Supabase staff membership remain disabled until configured and tested with the real project. CAPTCHA is not used. Local E2E and mocked integrations do not establish production readiness. Keep `DEMO_READ_ONLY=true`; do not use sample accounts or passwords in production. Do not place staff credentials in user metadata or client storage.
 
 The existing Supabase project has a `public.profiles` role model, but staff sign-in and role assignment are not integrated into the application. Do not enable an undocumented feature flag as a workaround for missing persistence.
 

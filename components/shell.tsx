@@ -3,9 +3,9 @@ import Link from 'next/link';
 import {usePathname} from 'next/navigation';
 import {useRouter} from 'next/navigation';
 import {useEffect,useRef,useState} from 'react';
-import {ArrowUpRight,BookOpen,Eye,House,Map,Menu,Moon,Newspaper,Search,Settings,Sun,X,History} from 'lucide-react';
+import {ArrowUpRight,BookOpen,Eye,House,Map,Menu,Moon,Newspaper,Search,Settings,Sun,X,History,Sparkles} from 'lucide-react';
 import {useApp} from './providers';
-import {messages,formatInstitutionName} from '@/locales/messages';
+import {messages,formatInstitutionName,formatOfficeHours} from '@/locales/messages';
 import {mainArchive} from '@/data/archive';
 
 type NavItem=readonly [string,keyof typeof messages.ru,typeof House];
@@ -16,6 +16,7 @@ const primary:readonly NavItem[]=[
   ['/history','history',History],
   ['/branches','branches',Map],
   ['/news','news',Newspaper],
+  ['/assistant','assistant',Sparkles],
 ];
 
 export function Shell({children}:{children:React.ReactNode}){
@@ -205,8 +206,11 @@ export function Shell({children}:{children:React.ReactNode}){
             </section>
             <section className="footer-section">
               <h2>{msg('footerContacts')}</h2>
-              <span>{mainArchive.address}</span>
+              <span>{mainArchive.address}, {mainArchive.postalCode}</span>
+              {mainArchive.phone&&<a href={`tel:${mainArchive.phone.replace(/\D/g,'')}`}>{mainArchive.phone}</a>}
+              <span>{formatOfficeHours(locale)}</span>
               <a href={`mailto:${mainArchive.email}`}>{mainArchive.email}</a>
+              {mainArchive.websiteUrl&&<a href={mainArchive.websiteUrl} target="_blank" rel="noreferrer">{msg('archiveOfficialSite')} <ArrowUpRight size={13}/></a>}
               <Link href="/about#feedback">{msg('feedback')}</Link>
             </section>
             <section className="footer-section">

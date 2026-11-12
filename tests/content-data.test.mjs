@@ -64,7 +64,10 @@ test('branch import preserves source and review markers, never invents coordinat
   assert.equal(record.needsReview,true);
   assert.equal(record.coordinatesStatus,'unavailable');
   assert.equal(record.hours,null);
-  assert.equal(record.phone,null,'Unverified staff phone numbers must not ship in the public branch dataset');
+  if(record.id==='branch-source-12'){
+   assert.equal(record.phone,'8 (7232) 76-65-60, 8 (7232) 76-81-64');
+   assert.equal(record.contactSourceDocument,'Контакты предоставлены заказчиком 12.11.2026');
+  }else assert.equal(record.phone,null,'Unprovided branch phone numbers must not ship in the public branch dataset');
   assert.equal(record.email,null,'Unverified staff email addresses must not ship in the public branch dataset');
   assert.ok(Array.isArray(record.reviewNotes));
  }
