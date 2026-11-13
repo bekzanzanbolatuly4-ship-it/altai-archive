@@ -1,2 +1,2 @@
 import {requireUser} from '@/lib/archive-auth';import {readStore} from '@/lib/archive-store';
-export async function GET(){const auth=await requireUser('audit');if(auth.response)return auth.response;return Response.json({audit:(await readStore()).audit},{headers:{'Cache-Control':'no-store'}})}
+export async function GET(){const auth=await requireUser('audit');if(auth.response)return auth.response;if(process.env.VERCEL==='1')return Response.json({audit:[],storageReady:false},{headers:{'Cache-Control':'no-store'}});return Response.json({audit:(await readStore()).audit,storageReady:true},{headers:{'Cache-Control':'no-store'}})}

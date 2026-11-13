@@ -19,8 +19,12 @@ function clean(x:FormDataEntryValue|null,max=500):string{
 export async function GET(){
  const auth=await requireUser('read');
  if(auth.response)return auth.response;
+ // The local .data store is ephemeral/unavailable to Vercel serverless
+ // functions. Keep the authenticated admin UI usable without pretending
+ // Production documents were loaded from persistent storage.
+ if(process.env.VERCEL==='1')return Response.json({documents:[],storageReady:false},{headers:{'Cache-Control':'no-store'}});
  const s=await readStore();
- return Response.json({documents:s.documents},{headers:{'Cache-Control':'no-store'}});
+ return Response.json({documents:s.documents,storageReady:true},{headers:{'Cache-Control':'no-store'}});
 }
 
 export async function POST(request:Request){

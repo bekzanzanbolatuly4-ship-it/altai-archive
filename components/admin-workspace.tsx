@@ -24,6 +24,7 @@ export function AdminWorkspace({readOnly=false,persistentAuth=false}:{readOnly?:
  const[error,setError]=useState('');
  const[notice,setNotice]=useState('');
  const[docs,setDocs]=useState<Doc[]>([]);
+ const[documentStorageReady,setDocumentStorageReady]=useState(true);
  const[users,setUsers]=useState<User[]>([]);
  const[feedback,setFeedback]=useState<Feedback[]>([]);
  const[feedbackSort,setFeedbackSort]=useState<'newest'|'oldest'|'highest'|'lowest'>('newest');
@@ -46,7 +47,7 @@ export function AdminWorkspace({readOnly=false,persistentAuth=false}:{readOnly?:
  useEffect(()=>{
   if(!user)return;
   request('/api/admin/documents')
-   .then(x=>setDocs(x.documents))
+   .then(x=>{setDocs(x.documents);setDocumentStorageReady(x.storageReady!==false)})
    .catch(e=>setError(e.message));
 
   if(user.role==='SUPERADMIN'){
@@ -248,6 +249,7 @@ export function AdminWorkspace({readOnly=false,persistentAuth=false}:{readOnly?:
     <ShieldAlert size={17}/>
     {persistentAuth?'Каталог документов остаётся в режиме чтения. Сотруднические роли и отзывы хранятся в Supabase и проверяются сервером.':readOnly?'Демонстрация доступна только для чтения. Изменения каталога, аккаунтов и экспорт отключены.':'Локальное файловое хранилище для одного экземпляра приложения. Вход и операции управления проверяются сервером.'}
    </div>
+   {persistentAuth&&!documentStorageReady&&<p className="admin-warning">Документы не загружены: постоянное хранилище архивных файлов для Production пока не подключено. Публикация документов здесь отключена.</p>}
 
    <nav className="admin-tabs">
     <button onClick={()=>setTab('documents')}>Документы ({docs.length})</button>
