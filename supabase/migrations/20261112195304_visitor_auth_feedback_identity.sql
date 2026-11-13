@@ -85,5 +85,26 @@ end $$;
 comment on column public.feedback_messages.auth_user_id is
   'Verified visitor account for submissions made after visitor auth rollout; nullable to preserve legacy rows.';
 
--- Keep feedback row access locked down. The application server retains insert-only access.
+-- Keep legacy feedback row access locked down. Visitors may only create their
+-- own confirmed-account submission; they cannot read/update/delete feedback.
 revoke all on table public.feedback_messages from public, anon, authenticated;
+grant insert on table public.feedback_messages to authenticated;
+drop policy if exists feedback_visitor_insert_own on public.feedback_messages;
+create policy feedback_visitor_insert_own
+  on public.feedback_messages for insert to authenticated
+  with check (
+    auth.uid() = auth_user_id
+    and email = (select auth.jwt() ->> 'email')
+    and contact_consent = true
+    and consent_version = 'feedback-contact-v1'
+    and status = 'new'
+    and moderation_category is null
+    and moderation_summary is null
+    and moderation_reason is null
+    and moderation_status = 'needs_review'
+    and exists (
+      select 1 from public.visitor_profiles p
+      where p.auth_user_id = (select auth.uid())
+        and p.display_name = name
+    )
+  );

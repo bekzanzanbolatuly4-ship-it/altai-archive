@@ -8,7 +8,8 @@ import {messages} from '../locales/messages.ts';
 import {archiveFoundation,branchConflictDetails,branchConflicts,branchEvidenceUrl,calendarEvidence} from '../lib/provenance.ts';
 
 test('demo read-only guard is opt-in and blocks writes without revealing details',async()=>{
- const before=process.env.DEMO_READ_ONLY;
+ const before=process.env.DEMO_READ_ONLY,vercel=process.env.VERCEL;
+ delete process.env.VERCEL;
  delete process.env.DEMO_READ_ONLY;
  assert.equal(demoReadOnlyFailure(),null);
  process.env.DEMO_READ_ONLY='true';
@@ -16,7 +17,10 @@ test('demo read-only guard is opt-in and blocks writes without revealing details
  assert.equal(response.status,503);
  assert.equal(response.headers.get('cache-control'),'no-store');
  assert.deepEqual(await response.json(),{error:'Archive content is read-only in this demonstration'});
+ process.env.VERCEL='1';delete process.env.DEMO_READ_ONLY;
+ const deploymentGuard=demoReadOnlyFailure();assert.equal(deploymentGuard.status,503);assert.match((await deploymentGuard.json()).error,/Persistent administrative storage/);
  if(before===undefined)delete process.env.DEMO_READ_ONLY;else process.env.DEMO_READ_ONLY=before;
+ if(vercel===undefined)delete process.env.VERCEL;else process.env.VERCEL=vercel;
 });
 
 test('public site URL accepts only a clean origin and requires matching HTTPS production origins',()=>{
@@ -62,7 +66,10 @@ test('branch import preserves source and review markers, never invents coordinat
   assert.equal(record.addressSourceDocument,'Адреса и контакты филиалов.xls');
   assert.equal(record.sourceDate,'2 июня 2026 года · перечень и переименование филиалов');
   assert.equal(record.needsReview,true);
-  assert.equal(record.coordinatesStatus,'unavailable');
+  if(record.id==='branch-source-12'){
+   assert.equal(record.coordinatesStatus,'provider-geocoded');
+   assert.deepEqual(record.coordinates,{latitude:49.958867,longitude:82.598267,sourceUrl:'https://yandex.com/maps/10306/ust-kamenogorsk/search/Potanina%2012%2F2/',sourceLabel:'Yandex Maps address match; map position only, not independent confirmation of branch operation',checkedAt:'2026-11-13'});
+  }else assert.equal(record.coordinatesStatus,'unavailable');
   assert.equal(record.hours,null);
   if(record.id==='branch-source-12'){
    assert.equal(record.phone,'8 (7232) 76-65-60, 8 (7232) 76-81-64');
@@ -77,6 +84,9 @@ test('branch import preserves source and review markers, never invents coordinat
  assert.equal(records.filter(x=>x.addressStatus==='official-listing').length,0);
  const institution=await readFile(new URL('../components/institution.tsx',import.meta.url),'utf8');
  assert.match(institution,/selected\.address&&selected\.addressStatus==='official-listing'/,'Map links must only use verified branch addresses');
+ const directory=await readFile(new URL('../components/branches-directory.tsx',import.meta.url),'utf8');
+ assert.match(directory,/openstreetmap\.org\/export\/embed\.html/,'A real map iframe must be used for the geocoded branch');
+ assert.match(directory,/selected\.id==='branch-source-12'/,'A 2GIS address search is allowed only for the customer-confirmed Oskemen branch');
 });
 
 test('2026 calendar retains both source language records and flags known discrepancies',async()=>{
@@ -132,7 +142,7 @@ test('provenance distinguishes archive source, official corroboration and branch
 });
 
 test('new branch and calendar interface labels exist in RU, KK and EN',()=>{
- const keys=['assistant','feedback','feedbackTitle','moreSections','branchList','branchMap','branchSearch','branchRoute','branchReviewNotice','branchStatusNeedsReview','branchStatusConflict','branchSourceOriginal','branchSourceExternal','branchCrossCheckCaveat','provenanceConfirmed','provenanceNoSource','aiWebSearchUnavailable','aiExampleOne','aiHelpCatalog','aiHelpDocument','catalogueSourceError','searchEmptyHint','exhibitionDemo','historyRegionEyebrow','historySampleMaterials','calendarEyebrow','calendarTitle','calendarIntro','calendarYear','calendarMonth','calendarTopic','calendarSourceLanguage','calendarEnglishUnavailable','calendarReviewNeeded','calendarNoEntries','historyCalendarIntro','calendarAskAI','calendarSourceVersion'];
+ const keys=['assistant','feedback','feedbackTitle','moreSections','branchList','branchMap','branchSearch','branchRoute','branchMapGeocoded','branchCoordinateCaveat','branchCoordinateSource','branchReviewNotice','branchStatusNeedsReview','branchStatusConflict','branchSourceOriginal','branchSourceExternal','branchCrossCheckCaveat','provenanceConfirmed','provenanceNoSource','aiWebSearchUnavailable','aiExampleOne','aiHelpCatalog','aiHelpDocument','catalogueSourceError','searchEmptyHint','exhibitionDemo','historyRegionEyebrow','historySampleMaterials','calendarEyebrow','calendarTitle','calendarIntro','calendarYear','calendarMonth','calendarTopic','calendarSourceLanguage','calendarEnglishUnavailable','calendarReviewNeeded','calendarNoEntries','historyCalendarIntro','calendarAskAI','calendarSourceVersion'];
  for(const locale of ['ru','kk','en'])for(const key of keys)assert.equal(typeof messages[locale][key],'string',`${locale}.${key}`);
 });
 

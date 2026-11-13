@@ -1,13 +1,11 @@
 import {createServerClient} from '@supabase/ssr';
 import {cookies} from 'next/headers';
+import {supabasePublishableKey,supabaseUrl,visitorAuthEnabled} from './config';
 
 export async function createSupabaseServerClient(){
- if(process.env.VISITOR_AUTH_ENABLED!=='true')return null;
- const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
- const key=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
- if(!url||!key)return null;
+ if(!visitorAuthEnabled()||!supabaseUrl||!supabasePublishableKey)return null;
  const jar=await cookies();
- return createServerClient(url,key,{cookies:{
+ return createServerClient(supabaseUrl,supabasePublishableKey,{cookies:{
   getAll(){return jar.getAll();},
   setAll(values){try{values.forEach(({name,value,options})=>jar.set(name,value,options));}catch{/* Server components cannot set cookies; proxy refreshes them. */}}
  }});

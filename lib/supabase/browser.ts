@@ -1,11 +1,9 @@
 'use client';
 
 import {createBrowserClient} from '@supabase/ssr';
+import {supabasePublishableKey,supabaseUrl,visitorAuthEnabled} from './config';
 
 export function createSupabaseBrowserClient(){
- if(process.env.NEXT_PUBLIC_VISITOR_AUTH_ENABLED!=='true')return null;
- const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
- const key=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
- if(!url||!key)return null;
- return createBrowserClient(url,key);
+ if(!visitorAuthEnabled()||!supabaseUrl||!supabasePublishableKey)return null;
+ return createBrowserClient(supabaseUrl,supabasePublishableKey);
 }

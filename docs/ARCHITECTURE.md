@@ -16,7 +16,7 @@
 2. Each admin API checks the live session and required permission. Hiding an interface control is not authorization.
 3. Feedback identity comes from the verified Supabase session and server-loaded profile. Client-supplied `user_id`, email, and name are not trusted.
 4. Static content and uploaded documents are separate sources. Public document APIs should expose only published/public metadata and accessible files.
-5. Branch contacts carry provenance; unconfirmed addresses and coordinates are not routed or marked on a map.
+5. Branch contacts and map points carry provenance. The directory shows a geocoded marker only for the archive-supplied Oskemen address; all other unconfirmed branch coordinates remain unmarked.
 
 ## Persistence and hosting
 

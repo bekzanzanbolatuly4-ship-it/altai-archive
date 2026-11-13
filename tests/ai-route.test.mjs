@@ -51,7 +51,7 @@ test('real route integrates input, public retrieval, provider, validation and sa
    assert.equal(url,'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent');
    assert.equal(options.headers['x-goog-api-key'],'synthetic-key');
    const context=JSON.parse(JSON.parse(options.body).contents[0].parts[0].text).untrustedPublicMetadata;
-   assert.equal(context.length,1);assert.ok(context[0].description.includes('demonstration interface'));
+   assert.equal(context.length,1);assert.ok(context[0].description.includes('Illustrative samples'));
    const reference=approvedReferenceSources('catalogue','en')[0];
    return gemini({answer:'Use the catalogue search and filters.',citations:[{id:reference.id,quote:reference.description}]});
   };

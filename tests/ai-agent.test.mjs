@@ -32,19 +32,19 @@ test('reference questions call the real completion path with approved public fac
   return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({answer:'Use the catalogue search and filters.',citations:[{id:reference.id,quote:reference.description}]})}]}}]});
  }}));
  assert.equal(result.mode,'ai');assert.equal(result.citations[0].url,'/catalog');assert.equal(result.citations[0].provenance,'verified');
- assert.equal(context.length,1);assert.equal(context[0].id,reference.id);assert.ok(context[0].description.includes('demonstration interface'));
+ assert.equal(context.length,1);assert.equal(context[0].id,reference.id);assert.ok(context[0].description.includes('Illustrative samples'));
 });
-test('greetings, assistant identity and status, institution identity and catalogue navigation use cited local references in RU, KK and EN',async()=>{
+test('greetings, assistant identity and status, institution identity and catalogue navigation use Gemini with cited references in RU, KK and EN',async()=>{
  const questions=[['Привет!','ru','/assistant'],['ИИ кто ты?','ru','/assistant'],['Как дела?','ru','/assistant'],['Что такое Государственный архив Восточно-Казахстанской области?','ru','/about'],['Где каталог?','ru','/catalog'],['Сәлем!','kk','/assistant'],['ЖИ сен кімсің?','kk','/assistant'],['Қалайсың?','kk','/assistant'],['Шығыс Қазақстан облысының мемлекеттік архиві деген не?','kk','/about'],['Каталог қайда?','kk','/catalog'],['Hello!','en','/assistant'],['Who are you?','en','/assistant'],['How are you?','en','/assistant'],['What is the State Archive of East Kazakhstan Region?','en','/about'],['Where is the catalogue?','en','/catalog']];
  for(const [message,locale,url] of questions){
-  const result=await runAgent({message,locale},deps({documents:async()=>assert.fail('Local site references must not read archive storage'),fetcher:async()=>assert.fail('Local site references must not call Gemini or another model')}));
-  assert.equal(result.mode,'reference',message);assert.ok(result.answer.length>20,message);assert.ok(result.citations.some(source=>source.url===url),message);
+  const result=await runAgent({message,locale},deps({documents:async()=>assert.fail('Reference questions must not read archive storage'),fetcher:async(_url,options)=>{const request=JSON.parse(options.body);const references=JSON.parse(request.contents[0].parts[0].text).untrustedPublicMetadata;const source=references[0];return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({answer:'I am the ALTAI ARCHIVE assistant. Ask me about the information on this portal.',citations:[{id:source.id,quote:source.description}]})}]}}]});}}));
+  assert.equal(result.mode,'ai',message);assert.ok(result.answer.length>20,message);assert.ok(result.citations.some(source=>source.url===url),message);
  }
 });
-test('site capability questions return localized local references without model calls',async()=>{
+test('site capability questions use the model with localized cited references',async()=>{
  for(const [message,locale] of [['Какие разделы есть на сайте?','ru'],['Сайтта қандай бөлімдер бар?','kk'],['What sections are on the site?','en']]){
-  const result=await runAgent({message,locale},deps({documents:async()=>assert.fail('Site navigation must not read archive storage'),fetcher:async()=>assert.fail('Site navigation must not call a model')}));
-  assert.equal(result.mode,'reference');assert.ok(result.citations.length>=5);
+  const result=await runAgent({message,locale},deps({documents:async()=>assert.fail('Site navigation must not read archive storage'),fetcher:async(_url,options)=>{const request=JSON.parse(options.body);const references=JSON.parse(request.contents[0].parts[0].text).untrustedPublicMetadata;return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({answer:'The portal includes several sections.',citations:references.map(x=>({id:x.id,quote:x.description}))})}]}}]});}}));
+  assert.equal(result.mode,'ai');assert.ok(result.citations.length>=5);
  }
 });
 test('reference questions fall back to a cited local reference on provider 429 without claiming AI',async()=>{

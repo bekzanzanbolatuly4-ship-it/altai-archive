@@ -22,10 +22,6 @@ function isSpecificArchiveSearch(message:string){
  return /(?:archiv[\p{L}]*\s+(?:record|document|file|case)|(?:fonds?|fond|inventory|case|document)\s+(?:no\.?|number|id|\d)|архивн[\p{L}]*\s+(?:документ|дело|шифр|фонд)|(?:фонд|опись|дело|документ)\s*(?:№|номер|шифр|\d)|қор\s*\d|мұрағаттық\s+(?:құжат|іс))/iu.test(message);
 }
 
-function isCatalogueLocationQuestion(message:string){
- return /(?:^|[^\p{L}])(?:где|where|қайда)(?=$|[^\p{L}])/iu.test(message);
-}
-
 function localPublicSearch(sources:Source[],locale:'ru'|'kk'|'en',documents:StoredDocument[]){
  const current=sources.filter(source=>documents.some(document=>document.id===source.documentId&&isPublicDocument(document)&&document.provenance==='verified'&&redact(document.title).slice(0,180)===source.title&&redact(document.description||'').slice(0,500)===source.description));
  if(!current.length)return noMatch(locale);
@@ -44,14 +40,16 @@ export async function runAgent(raw:unknown,dependencies:{documents:()=>Promise<S
   if(asksForNonPublicContent(input.message))return noMatch(input.locale);
   const referenceIntent=classifyReferenceQuestion(input.message);
   if(referenceIntent){
-   if(referenceIntent==='greeting'||referenceIntent==='platform'||referenceIntent==='institution'||referenceIntent==='site-sections'||(referenceIntent==='catalogue'&&isCatalogueLocationQuestion(input.message)))return localReferenceReply(referenceIntent,input.locale,input.message)!;
    const references=approvedReferenceSources(referenceIntent,input.locale);
    try{
     const response=await complete(input.message,buildContext(references),input.locale,{...dependencies,history:input.history});
     return {mode:'ai' as const,locale:input.locale,...validateResponse(response,references,[])};
    }catch(error){
     const local=localReferenceReply(referenceIntent,input.locale,input.message);
-    if(local)return local;
+    if(local){
+     const notice=input.locale==='kk'?'Gemini уақытша қолжетімсіз. Жергілікті анықтамалық жауап көрсетілді.':input.locale==='ru'?'Gemini временно недоступен. Показан локальный справочный ответ.':'Gemini is temporarily unavailable. A local reference answer is shown.';
+     return {...local,answer:`${notice} ${local.answer}`};
+    }
     throw error;
    }
   }

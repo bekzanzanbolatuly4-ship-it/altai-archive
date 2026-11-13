@@ -95,12 +95,10 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
  assert.equal(await page.locator('.catalog-search').count(),1);
  assert.equal(await page.locator('.top-search').count(),0);
  const catalogueSearch=page.locator('.catalog-search input');
- await catalogueSearch.fill('карта горной местности');
- await page.getByRole('heading',{name:'Карта горной местности (макет)'}).waitFor();
- await catalogueSearch.fill('машинописного документа');
- await page.getByRole('heading',{name:'Образец машинописного документа'}).waitFor();
- await page.goto('http://127.0.0.1:3107/document/demo-03');
- await page.getByRole('heading',{name:'Образец машинописного документа'}).waitFor();
+ await catalogueSearch.fill('mountains');
+ await page.getByRole('heading',{name:'Archive photographs'}).waitFor();
+ await page.goto('http://127.0.0.1:3107/document/synthetic-public');
+ await page.getByRole('heading',{name:'Archive photographs'}).waitFor();
  assert.doesNotMatch(await page.locator('body').innerText(),/DEMO|ДЕМО|Mockup preview|ДЕМО-ФОНД/i,'Example records must use editorial labels, not technical demo stamps');
  const documentArtwork=await page.evaluate(async()=>await (await fetch('/images/card-document.svg')).text());
  assert.match(documentArtwork,/ОБРАЗЕЦ ОПИСАНИЯ/,'Document illustration must identify itself as a sample');
@@ -119,7 +117,7 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
  await page.goto('http://127.0.0.1:3107/catalog');
  await page.route('**/api/documents',route=>route.abort());
  await page.reload();
- await page.getByText('Не удалось загрузить опубликованные записи. Ниже показаны образцы карточек.').waitFor();
+ await page.getByText('Не удалось загрузить опубликованные записи. Источник каталога временно недоступен.').waitFor();
  await page.goto('http://127.0.0.1:3107/news');
  await page.getByRole('textbox',{name:'Поиск публикаций'}).fill('no-matching-news');
  await page.getByRole('heading',{name:'Материалы не найдены'}).waitFor();
@@ -174,10 +172,12 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
   await page.goto('http://127.0.0.1:3107/official-documents');
   await page.getByRole('heading',{name:locale==='ru'?'Государственные услуги и документы':locale==='kk'?'Мемлекеттік қызметтер мен құжаттар':'Public services and documents'}).waitFor();
   for(const section of ['#paid-services','#government-service','#legal-framework','#compliance','#reading-room','#useful-links'])await page.locator(section).waitFor();
-  assert.equal(await page.locator('a[href^="/documents/"]').count(),0,'Missing customer PDFs must not be exposed as broken local links');
+  const customerPdfLinks=await page.locator('a[href^="/documents/"]').evaluateAll(links=>links.map(link=>link.getAttribute('href')));
+  assert.deepEqual(customerPdfLinks.sort(),['/documents/archive-services-price-list-kk.pdf','/documents/archive-services-price-list-ru.pdf','/documents/vko-akimat-resolution-142-2026.pdf'].sort());
+  for(const href of customerPdfLinks){const response=await page.request.get(`http://127.0.0.1:3107${href}`);assert.equal(response.status(),200,`Customer PDF should be available: ${href}`);assert.match(response.headers()['content-type']||'',/application\/pdf/);}
   const officialHosts=await page.locator('.official-info-link').evaluateAll(links=>links.map(link=>new URL(link.href).hostname));
   assert.ok(officialHosts.length>=10);
-  assert.ok(officialHosts.every(host=>host==='adilet.zan.kz'||host==='old.adilet.zan.kz'||host==='www.gov.kz'||host==='gov.kz'||host==='egov.kz'||host==='beta.egov.kz'));
+  assert.ok(officialHosts.every(host=>host==='127.0.0.1'||host==='adilet.zan.kz'||host==='old.adilet.zan.kz'||host==='www.gov.kz'||host==='gov.kz'||host==='egov.kz'||host==='beta.egov.kz'));
   await page.setViewportSize({width:390,height:844});
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Official information page must fit a mobile viewport');
   await page.screenshot({path:path.join(root,`output/playwright/official-documents-${locale}-mobile.png`),fullPage:true});
@@ -196,7 +196,7 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
    await input.fill('Find photographs');await input.press('Shift+Enter');
    assert.match(await input.inputValue(),/\n/);
    await input.press('Enter');
-   await page.getByText('Public metadata describes photographs.',{exact:true}).waitFor();
+   await page.getByText(/Public metadata describes photographs\./).waitFor();
    const assistantRequest=assistantRequests.at(-1);
    assert.ok(assistantRequest,'Browser must issue the assistant request');
    assert.equal(assistantRequest.url(),`${page.url().split('/assistant')[0]}/api/assistant`,'Assistant fetch must use the current site origin');
@@ -210,8 +210,8 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
     const greeting=locale==='ru'?'Привет!':locale==='kk'?'Сәлем!':'Hello!';
     const greetingResponse=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/assistant');
     await input.fill(greeting);await input.press('Enter');
-    const greetingBody=await (await greetingResponse).json();assert.equal(greetingBody.mode,'reference');assert.ok(greetingBody.citations.length>0);
-    const referenceLabel=locale==='ru'?'Справочный ответ по сведениям сайта · AI не использовался':locale==='kk'?'Сайт мәліметтеріне негізделген анықтамалық жауап · AI қолданылмады':'Local site reference · no AI used';
+    const greetingBody=await (await greetingResponse).json();assert.equal(greetingBody.mode,'ai');assert.ok(greetingBody.citations.length>0);
+    const referenceLabel=locale==='ru'?'Ответ AI':locale==='kk'?'AI жауабы':'AI response';
     await page.getByText(referenceLabel,{exact:true}).last().waitFor();
    }
    if(locale==='ru'&&mobile){
@@ -220,10 +220,10 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
    const referenceAnswer=await (await referenceResponse).json();assert.equal(referenceAnswer.mode,'ai');assert.equal(referenceAnswer.citations[0].url,'/catalog');
    await page.getByText('Ответ автоматически сформирован AI и может содержать ошибки. Он основан только на указанных публичных сведениях; источники ниже ведут на подтверждающие страницы.',{exact:true}).last().waitFor();
    const localSearchResponse=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/assistant');
-   await input.fill(locale==='ru'?'карта горной местности':'map');await input.press('Enter');
-   const localSearch=await (await localSearchResponse).json();assert.equal(localSearch.mode,'local-search');assert.equal(localSearch.citations[0].url,'/document/demo-02');
-   await page.getByText(locale==='ru'?'Локальный поиск · AI не использовался':locale==='kk'?'Жергілікті іздеу · AI қолданылмады':'Local search · no AI used',{exact:true}).waitFor();
-   await page.locator('a[href="/document/demo-02"]').waitFor();
+   await input.fill('mountains');await input.press('Enter');
+   const localSearch=await (await localSearchResponse).json();assert.equal(localSearch.mode,'ai');assert.equal(localSearch.citations[0].url,'/document/synthetic-public');
+   await page.getByText('Ответ AI',{exact:true}).last().waitFor();
+   await page.locator('a[href="/document/synthetic-public"]').last().waitFor();
    const unmatched=locale==='ru'?'Найди архивный документ с шифром 999-XYZ':locale==='kk'?'999-XYZ архивтік құжатты тап':'Find archive record with reference 999-XYZ';
    const noMatchResponse=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/assistant');
    await input.fill(unmatched);await input.press('Enter');
@@ -260,6 +260,10 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
 
   await page.goto('http://127.0.0.1:3107/branches');
   const searchLabel=locale==='kk'?'Қала немесе филиал бойынша іздеу':locale==='en'?'Search by city or branch':'Поиск по городу или филиалу';
+  const liveMap=page.locator('.branch-map-frame');
+  assert.equal(await liveMap.count(),1,'The customer-confirmed Oskemen address should show the interactive OpenStreetMap embed');
+  assert.match(await liveMap.getAttribute('src'),/openstreetmap\.org\/export\/embed\.html.*marker=/,'The map should carry the geocoded marker');
+  assert.equal(await page.locator('.branch-map-source[href*="yandex.com/maps"]').count(),1,'The map marker must disclose its geocoding source');
   await page.getByRole('textbox',{name:searchLabel}).fill('Риддер');
   const ridder=page.getByRole('button',{name:locale==='en'?/Ridder/:/Риддер/});
   await ridder.click();
@@ -281,10 +285,11 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
   const headers={'content-type':'application/json'};
   const docs=await fetch('/api/admin/documents',{method:'POST',headers,body:'{}'});
   const users=await fetch('/api/admin/users',{method:'POST',headers,body:'{}'});
+  const feedback=await fetch('/api/admin/feedback');
   const exportRequest=await fetch('/api/admin/export');
-  return [docs.status,users.status,exportRequest.status];
+  return [docs.status,users.status,feedback.status,exportRequest.status];
  });
- assert.deepEqual(readOnlyStatuses,[503,503,503]);
+ assert.deepEqual(readOnlyStatuses,[503,503,401,503]);
  const loginStatus=await page.evaluate(async()=>{
   const response=await fetch('/api/auth/login',{method:'POST',headers:{'content-type':'application/json'},body:'{}'});
   return response.status;
@@ -292,7 +297,7 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
  assert.equal(loginStatus,401,'Invalid login should not require creating the initial owner in read-only mode');
  const isolatedStore=JSON.parse(await (await import('node:fs/promises')).readFile(path.join(isolated,'.data/archive-store.json'),'utf8'));
  assert.equal(isolatedStore.users.length,0,'Read-only login must not bootstrap an owner account');
- console.log('PASS: 390/768/1440 navigation, authenticated feedback gate, CAPTCHA-free registration, RU/KK/EN, exact demo catalogue searches, mock AI citation, verified-public local fallback on provider 429, no-match/private-content scenarios, keyboard, unverified branch-directory safeguards, calendar provenance and read-only admin APIs');
+ console.log('PASS: responsive navigation, public visitor routes, feedback auth gate, RU/KK/EN, catalog accuracy, mock Gemini citations, safe fallback, no-match/private-content scenarios, keyboard access, branch provenance, customer PDFs, and read-only admin APIs');
 }finally{
  await browser?.close();
  if(server&&server.exitCode===null){server.kill('SIGTERM');await new Promise(resolve=>server.once('exit',resolve));}

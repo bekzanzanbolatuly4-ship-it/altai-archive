@@ -286,7 +286,15 @@
     "affiliationStatus": "official-listing",
     "addressStatus": "source-listing",
     "addressSourceDocument": "Адреса и контакты филиалов.xls",
-    "contactSourceDocument": "Контакты предоставлены заказчиком 12.11.2026"
+    "contactSourceDocument": "Контакты предоставлены заказчиком 12.11.2026",
+    "coordinatesStatus": "provider-geocoded",
+    "coordinates": {
+      "latitude": 49.958867,
+      "longitude": 82.598267,
+      "sourceUrl": "https://yandex.com/maps/10306/ust-kamenogorsk/search/Potanina%2012%2F2/",
+      "sourceLabel": "Yandex Maps address match; map position only, not independent confirmation of branch operation",
+      "checkedAt": "2026-11-13"
+    }
   },
   {
     "id": "branch-source-13",

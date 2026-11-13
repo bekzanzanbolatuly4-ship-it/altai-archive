@@ -6,6 +6,7 @@ import {readStore} from '@/lib/archive-store';
 export async function POST(request:Request){
  const originFailure=sameOriginFailure(request);
  if(originFailure)return originFailure;
+ if(process.env.VERCEL==='1')return Response.json({error:'Staff authentication requires persistent storage, which is not configured for this deployment'},{status:503,headers:{'Cache-Control':'no-store'}});
  const rawBody=await request.json().catch(()=>({}));
  const body=rawBody&&typeof rawBody==='object'&&!Array.isArray(rawBody)?rawBody as Record<string,unknown>:{};
  const rawEmail=typeof body.email==='string'?body.email:'';

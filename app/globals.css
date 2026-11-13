@@ -3623,6 +3623,9 @@ html[data-theme='dark'] .assistant-disclosure {
 .branch-list-pin { display: grid; place-items: center; width: 34px; height: 34px; color: var(--blue); border: 1px solid var(--line); border-radius: 50%; }
 .branch-empty { padding: 20px 12px; color: var(--muted); line-height: 1.6; }
 .branch-map-panel { min-width: 0; padding: 24px clamp(18px, 3vw, 38px); }
+.branch-map-frame { display: block; width: 100%; height: 330px; max-width: 100%; border: 1px solid var(--line); background: var(--paper); }
+.branch-map-attribution, .branch-map-source { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.branch-map-source { margin-bottom: 18px; }
 .branch-map-art { height: 145px; position: relative; display: grid; place-items: center; overflow: hidden; border: 1px solid var(--line); background-color: var(--paper); color: var(--muted); }
 .branch-map-art::before, .branch-map-art::after, .branch-map-art span { content: ''; position: absolute; inset: -35%; border: 1px solid var(--line); border-radius: 44% 56% 68% 32% / 48% 30% 70% 52%; transform: rotate(-12deg); }
 .branch-map-art::after { inset: -26%; transform: rotate(17deg); }
@@ -3679,6 +3682,7 @@ html[data-theme='dark'] .assistant-disclosure {
  .branch-explorer.show-map .branch-map-panel { display: block; }
  .branch-list-items { max-height: min(64vh, 600px); }
  .branch-map-art { height: 112px; }
+ .branch-map-frame { height: 280px; }
 }
 
 @media (max-width: 420px) {

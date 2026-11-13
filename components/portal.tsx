@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import {useMemo, useState} from 'react';
-import {ArrowRight,ArrowUpRight,BookOpen,MapPin,MessageCircle,Search,Send,Sparkles} from 'lucide-react';
+import {ArrowRight,ArrowUpRight,MapPin,Search} from 'lucide-react';
 import {
   documents,
   exhibitions,
@@ -35,7 +35,7 @@ export function Portal({kind,demoReadOnly=false}:{kind:Kind;demoReadOnly?:boolea
   const localizedExhibitions = useMemo(() => exhibitions.map(e => getLocalizedExhibition(e, locale)), [locale]);
   const localizedNews = useMemo(() => news.map(n => getLocalizedNews(n, locale)), [locale]);
 
-  if(kind==='assistant')return <AIAssistant demo={<Assistant/>}/>;
+  if(kind==='assistant')return <AIAssistant/>;
   if(kind==='admin')return <AdminWorkspace readOnly={demoReadOnly}/>;
   if(kind==='about')return <InstitutionPage/>;
   if(kind==='branches')return <BranchesMapDirectory/>;
@@ -259,7 +259,6 @@ export function Portal({kind,demoReadOnly=false}:{kind:Kind;demoReadOnly?:boolea
 
   return null;
 }
-
 function PageHead({eyebrow,title,lead}:{eyebrow:string;title:string;lead:string}){
   const {locale}=useApp();
   return (
@@ -304,151 +303,6 @@ function SchematicMap({active,onPick,markers}:{active:string;onPick:(id:string)=
         </button>
       ))}
       <div className="map-scale">N ↑<br/>SCHEMATIC</div>
-    </div>
-  );
-}
-
-function Assistant(){
-  const{msg,locale}=useApp();
-  const[query,setQuery]=useState('');
-  const[answer,setAnswer]=useState<{text:string;ids:string[];guide:boolean}|null>(null);
-
-  const topics =
-    locale==='kk'
-      ?['Каталог қалай құрылған?','Фотосуреттерді табу','Тізімдеме деген не?']
-      :locale==='en'
-      ?['How is catalogue structured?','Find photographs','What is an inventory?']
-      :['Как устроен каталог?','Найти фотографии','Что такое опись?'];
-
-  const submit=(e:React.FormEvent)=>{
-    e.preventDefault();
-    const q=query.toLowerCase();
-    const guide=/(каталог|структур|фонд|опись|дело|catalog|fond|inventory|hierarch|архив|қор|тізімдеме|іс)/i.test(q);
-    const results=documents.filter(d=>`${d.title} ${d.description} ${d.category} ${d.tags}`.toLowerCase().split(/[ ,]+/).some(t=>t.length>2&&q.includes(t)));
-    const text=guide
-      ?(locale==='ru'
-        ?'В справочном примере показана цепочка: архив → фонд → опись → дело → документ → страницы. Это схема описания в интерфейсе, а не подтверждённая структура учёта архива.'
-        :locale==='kk'
-        ?'Анықтамалық мысалда мына тізбек көрсетілген: архив → қор → тізімдеме → іс → құжат → беттер. Бұл интерфейстегі сипаттама схемасы, архивтің расталған есеп жүйесі емес.'
-        :'The guidance example shows this sequence: archive → fond → inventory → case → document → pages. It illustrates the interface, not a verified archival arrangement.')
-      :results.length
-      ?(locale==='ru'
-        ?'В образцах описаний есть совпадения. Это локальный поиск без AI; он не подтверждает наличие архивного дела.'
-        :locale==='kk'
-        ?'Сипаттама үлгілерінен сәйкестіктер табылды. Бұл AI қолданбайтын жергілікті іздеу, архивтік істің бар екенін растамайды.'
-        :'There are matches in the description samples. This is local search without AI; it does not confirm the existence of an archival file.')
-      :(locale==='ru'
-        ?'В образцах описаний совпадений нет. Этот локальный поиск не охватывает полный состав архивных фондов.'
-        :locale==='kk'
-        ?'Сипаттама үлгілерінен сәйкестік табылмады. Бұл жергілікті іздеу архив қорларының толық құрамын қамтымайды.'
-        :'No matches were found in the description samples. This local search does not cover the archive’s full holdings.');
-    setAnswer({text,ids:results.map(x=>x.id).slice(0,3),guide});
-  };
-
-  return (
-    <div className="page-wrap assistant-page">
-      <PageHead
-        eyebrow={msg('aiLocalSearch')}
-        title={msg('assistant')}
-        lead={msg('ask')}
-      />
-      <div className="assistant-disclosure">
-        <Sparkles size={17}/>
-        <span>{msg('assistantDisclosure')}</span>
-      </div>
-      <div className="assistant-layout">
-        <aside className="assistant-aside">
-          <div className="assistant-emblem">
-            <MessageCircle size={28}/>
-          </div>
-          <span className="eyebrow">{formatInstitutionName(locale)} · {msg('aiLocalSearch')}</span>
-          <h2>
-            {locale==='ru'
-              ?'Помогаю ориентироваться в материалах'
-              :locale==='kk'
-              ?'Материалдарды бағдарлауға көмектесемін'
-              :'Explore sample records with local guidance'}
-          </h2>
-          <p>
-            {locale==='ru'
-              ?'Можно спросить о каталоге, архивной иерархии или поиске опубликованных материалов.'
-              :locale==='kk'
-              ?'Каталог құрылымы, архивтік иерархия немесе жарияланған материалдар туралы сұрауға болады.'
-              :'Ask about the catalogue, archival hierarchy, or finding published materials.'}
-          </p>
-          <div className="assistant-topics">
-            {topics.map(t=>(
-              <button type="button" key={t} onClick={()=>setQuery(t)}>
-                {t}
-                <ArrowUpRight size={13}/>
-              </button>
-            ))}
-          </div>
-        </aside>
-        <section className="chat-panel">
-          <div className="chat-head">
-            <span className="online-dot"/>
-            {locale==='ru'?'Локальный поиск':locale==='kk'?'Жергілікті іздеу':'Local search'} <small>{locale==='en'?'NO AI':locale==='kk'?'AI қолданылмайды':'БЕЗ AI'}</small>
-          </div>
-          <div className="chat-messages">
-            <div className="chat-bubble assistant-bubble">
-              {locale==='ru'
-                ?'Здравствуйте. Я могу показать примеры описаний и объяснить структуру каталога. Поиск выполняется локально без AI.'
-                :locale==='kk'
-                ?'Сәлеметсіз бе. Сипаттама үлгілерін көрсетіп, каталог құрылымын түсіндіре аламын. Іздеу AI қолданбай жергілікті орындалады.'
-                :'Hello. I can show sample descriptions and explain the catalogue structure. Search runs locally without AI.'}
-            </div>
-            {answer&&(
-              <>
-                <div className="chat-bubble user-bubble">{query}</div>
-                <div className="chat-bubble assistant-bubble">
-                  {answer.text}
-                  {answer.ids.length>0&&(
-                    <div className="assistant-results">
-                      {answer.ids.map(id=>{
-                        const d=documents.find(x=>x.id===id)!;
-                        return (
-                          <Link href={`/document/${id}`} key={id}>
-                            <BookOpen size={14}/>
-                            <span>
-                              {d.title}
-                              <small>{d.category} · {msg('sampleRecord')}</small>
-                            </span>
-                            <ArrowUpRight size={13}/>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {answer.guide&&(
-                    <Link className="assistant-guide-link" href="/catalog">
-                      {msg('catalog')} <ArrowRight size={13}/>
-                    </Link>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-          <form className="chat-input" onSubmit={submit}>
-            <input
-              value={query}
-              onChange={e=>setQuery(e.target.value)}
-              placeholder={msg('askPlaceholder')}
-              aria-label={msg('askPlaceholder')}
-            />
-            <button type="submit" aria-label={msg('send')}>
-              <Send size={16}/>
-            </button>
-          </form>
-          <small className="chat-foot">
-            {locale==='ru'
-              ?'Справочные ответы и поиск по образцам · внешняя AI-служба не используется'
-              :locale==='kk'
-              ?'Үлгілер бойынша анықтама және іздеу · сыртқы AI қызметі пайдаланылмайды'
-              :'Guidance and sample search · no external AI service is used'}
-          </small>
-        </section>
-      </div>
     </div>
   );
 }

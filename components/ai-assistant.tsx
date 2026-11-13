@@ -8,12 +8,11 @@ import {formatInstitutionName} from '@/locales/messages';
 type Reply={mode:'ai'|'reference'|'local-search'|'no-match';answer:string;citations:{id:string;title:string;quote:string;url:string;provenance:string}[]};
 type Turn={question:string;reply?:Reply;error?:string};
 const AI_ERROR_MESSAGES:Record<string,'aiProviderLimit'|'aiRateLimit'|'aiUnconfigured'|'aiConfiguration'|'aiLimiterUnavailable'|'aiProviderUnavailable'|'aiTimeout'|'aiInvalidResponse'>={provider_limit:'aiProviderLimit',rate_limit:'aiRateLimit',unconfigured:'aiUnconfigured',configuration:'aiConfiguration',rate_limit_unavailable:'aiLimiterUnavailable',client_ip_unavailable:'aiLimiterUnavailable',provider_error:'aiProviderUnavailable',timeout:'aiTimeout',invalid_response:'aiInvalidResponse',source_changed:'aiInvalidResponse'};
-export function AIAssistant({demo}:{demo:React.ReactNode}){
+export function AIAssistant(){
  const {msg,locale}=useApp();
  const [query,setQuery]=useState('');
  const [turns,setTurns]=useState<Turn[]>([]);
  const [loading,setLoading]=useState(false);
- const [showDemo,setShowDemo]=useState(false);
  const busy=useRef(false);
  const input=useRef<HTMLTextAreaElement>(null);
  useEffect(()=>{
@@ -58,7 +57,7 @@ export function AIAssistant({demo}:{demo:React.ReactNode}){
        </div>):<p>{msg('aiNoSources')}</p>}
       </section>
      </div>}
-     {turn.error&&<div className="chat-bubble assistant-bubble" role="alert"><p>{msg(AI_ERROR_MESSAGES[turn.error]||'aiError')}</p><button type="button" disabled={loading} onClick={()=>void send(turn.question,i)}>{msg('aiRetry')}</button><button type="button" onClick={()=>setShowDemo(true)}>{msg('aiDemo')}</button><Link href="/catalog">{msg('catalog')} <ArrowRight size={14}/></Link></div>}
+    {turn.error&&<div className="chat-bubble assistant-bubble" role="alert"><p>{msg(AI_ERROR_MESSAGES[turn.error]||'aiError')}</p><button type="button" disabled={loading} onClick={()=>void send(turn.question,i)}>{msg('aiRetry')}</button><Link href="/catalog">{msg('catalog')} <ArrowRight size={14}/></Link></div>}
     </div>)}
     {loading&&<p role="status">{msg('aiLoading')}</p>}
    </div>
@@ -69,7 +68,5 @@ export function AIAssistant({demo}:{demo:React.ReactNode}){
    <small className="chat-foot">{msg('aiKeyboard')}</small>
    {!!turns.length&&<button type="button" className="ai-clear-history" disabled={loading} onClick={()=>setTurns([])}>{msg('aiClearHistory')}</button>}
   </section>
-  <button type="button" className="ai-demo-toggle" aria-expanded={showDemo} onClick={()=>setShowDemo(!showDemo)}>{msg('aiDemo')}</button>
-  {showDemo&&demo}
  </div>;
 }

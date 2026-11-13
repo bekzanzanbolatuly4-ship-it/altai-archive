@@ -1,7 +1,8 @@
 import {createSupabaseServerClient} from '@/lib/supabase/server';
+import {visitorAuthEnabled} from '@/lib/supabase/config';
 export const dynamic='force-dynamic';
 export async function GET(){
- if(process.env.VISITOR_AUTH_ENABLED!=='true')return Response.json({error:'auth_unavailable'},{status:503,headers:{'Cache-Control':'no-store'}});
+ if(!visitorAuthEnabled())return Response.json({error:'auth_unavailable'},{status:503,headers:{'Cache-Control':'no-store'}});
  const supabase=await createSupabaseServerClient();
  if(!supabase)return Response.json({error:'auth_unavailable'},{status:503,headers:{'Cache-Control':'no-store'}});
  const{data:{user},error}=await supabase.auth.getUser();
