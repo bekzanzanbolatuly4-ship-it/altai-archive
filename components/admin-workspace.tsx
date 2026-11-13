@@ -5,7 +5,7 @@ import {ArrowUpRight,Download,FileText,LogOut,ShieldAlert,Trash2,Upload,Users} f
 
 type User={id:string;email:string;name:string;role:string;disabled:boolean};
 type Doc={id:string;title:string;description:string;date:string;fond:string;inventory:string;caseName:string;documentIdentifier:string;keywords:string[];language:string;provenance:string;accessStatus:'public'|'restricted';status:'draft'|'review'|'approved'|'published'|'archived';originalName:string;size:number;mimeType:string;createdBy?:string};
-type Feedback={id:string;type:string;name:string|null;email:string|null;message:string;rating:number|null;status:string;moderation_status:string;moderation_category:string|null;moderation_summary:string|null;moderation_reason:string|null;created_at:string};
+type Feedback={id:string;type:string;name:string|null;email:string|null;message:string;rating:number|null;status:string;moderation_status:string;moderation_category:string|null;moderation_summary:string|null;moderation_reason:string|null;created_at:string;public_consent:boolean;public_display_name:string|null;publication_status:'private'|'pending'|'published'|'rejected';publication_reviewed_at:string|null};
 
 const roles=['SITE_ADMIN','ARCHIVE_EMPLOYEE','EDITOR','BRANCH_ADMIN','MODERATOR','ANALYST'];
 
@@ -16,7 +16,7 @@ async function request(url:string,init?:RequestInit){
  return j;
 }
 
-export function AdminWorkspace({readOnly=false}:{readOnly?:boolean}){
+export function AdminWorkspace({readOnly=false,persistentAuth=false}:{readOnly?:boolean;persistentAuth?:boolean}){
  const[user,setUser]=useState<User|null>(null);
  const[loading,setLoading]=useState(true);
  const[error,setError]=useState('');
@@ -25,6 +25,10 @@ export function AdminWorkspace({readOnly=false}:{readOnly?:boolean}){
  const[users,setUsers]=useState<User[]>([]);
  const[feedback,setFeedback]=useState<Feedback[]>([]);
  const[feedbackSort,setFeedbackSort]=useState<'newest'|'oldest'|'highest'|'lowest'>('newest');
+ const[feedbackType,setFeedbackType]=useState('all');
+ const[moderationFilter,setModerationFilter]=useState('all');
+ const[feedbackSearch,setFeedbackSearch]=useState('');
+ const[savingFeedbackId,setSavingFeedbackId]=useState<string|null>(null);
  const[tab,setTab]=useState<'documents'|'accounts'|'audit'|'feedback'>('documents');
  const[uploading,setUploading]=useState(false);
  const[savingId,setSavingId]=useState<string|null>(null);
@@ -51,8 +55,23 @@ export function AdminWorkspace({readOnly=false}:{readOnly?:boolean}){
 
  useEffect(()=>{
   if(!user||tab!=='feedback')return;
-  request(`/api/admin/feedback?sort=${feedbackSort}`).then(x=>setFeedback(x.feedback)).catch(e=>setError(e.message));
- },[user,tab,feedbackSort]);
+  request(`/api/admin/feedback?sort=${feedbackSort}&type=${feedbackType}&moderation=${moderationFilter}`).then(x=>setFeedback(x.feedback)).catch(e=>setError(e.message));
+ },[user,tab,feedbackSort,feedbackType,moderationFilter]);
+
+ async function setReviewVisibility(item:Feedback,status:'private'|'published'){
+  setError('');setNotice('');setSavingFeedbackId(item.id);
+  try{
+   await request('/api/admin/feedback',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:item.id,status})});
+   setFeedback(rows=>rows.map(row=>row.id===item.id?{...row,publication_status:status}:row));
+  }catch(e){setError((e as Error).message)}finally{setSavingFeedbackId(null)}
+ }
+
+ async function deleteFeedback(item:Feedback){
+  if(!window.confirm('Удалить это сообщение без возможности восстановления?'))return;
+  setError('');setSavingFeedbackId(item.id);
+  try{await request('/api/admin/feedback',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:item.id})});setFeedback(rows=>rows.filter(row=>row.id!==item.id));setNotice('Сообщение удалено.');}
+  catch(e){setError((e as Error).message)}finally{setSavingFeedbackId(null)}
+ }
 
  async function login(e:React.FormEvent<HTMLFormElement>){
   e.preventDefault();
@@ -73,7 +92,7 @@ export function AdminWorkspace({readOnly=false}:{readOnly?:boolean}){
  async function logout(){
   setError('');
   try{
-   await request('/api/auth/logout',{method:'POST'});
+   await request(persistentAuth?'/api/auth/staff-logout':'/api/auth/logout',{method:'POST'});
   }catch(e){
    setError((e as Error).message);
   }finally{
@@ -85,6 +104,8 @@ export function AdminWorkspace({readOnly=false}:{readOnly?:boolean}){
 
  if(loading)return <div className="page-wrap"><p>Загрузка…</p></div>;
 
+ const visibleFeedback=feedback.filter(item=>`${item.name||''} ${item.email||''} ${item.message} ${item.moderation_category||''}`.toLocaleLowerCase().includes(feedbackSearch.trim().toLocaleLowerCase()));
+
  if(!user){
   return (
    <div className="page-wrap admin-page">
@@ -93,7 +114,7 @@ export function AdminWorkspace({readOnly=false}:{readOnly?:boolean}){
      <ShieldAlert size={17}/>
      Публичной регистрации нет. Доступ предоставляется владельцем сайта.
     </div>
-    {readOnly&&<div className="admin-warning"><ShieldAlert size={17}/>Демонстрация доступна только для чтения. После входа можно просматривать разрешённые записи; изменения и экспорт отключены.</div>}
+    {readOnly&&<div className="admin-warning"><ShieldAlert size={17}/>{persistentAuth?'Вход сотрудников выполняется через подтверждённый аккаунт Supabase с отдельным назначением роли.':'Демонстрация доступна только для чтения.'}</div>}
     <form className="admin-form" onSubmit={login}>
      <label>
       Email
@@ -187,7 +208,7 @@ export function AdminWorkspace({readOnly=false}:{readOnly?:boolean}){
    });
    setUsers((await request('/api/admin/users')).users);
    f.reset();
-   setNotice('Учётная запись создана. Передайте сотруднику пароль безопасным способом.');
+   setNotice(persistentAuth?'Роль сохранена в Supabase. Сотрудник входит через свой подтверждённый аккаунт.':'Учётная запись создана. Передайте сотруднику пароль безопасным способом.');
   }catch(e){
    setError((e as Error).message);
   }
@@ -221,7 +242,7 @@ export function AdminWorkspace({readOnly=false}:{readOnly?:boolean}){
 
    <div className="admin-warning">
     <ShieldAlert size={17}/>
-    {readOnly?'Демонстрация доступна только для чтения. Изменения каталога, аккаунтов и экспорт отключены.':'Локальное файловое хранилище для одного экземпляра приложения. Вход и операции управления проверяются сервером.'}
+    {persistentAuth?'Каталог документов остаётся в режиме чтения. Сотруднические роли и отзывы хранятся в Supabase и проверяются сервером.':readOnly?'Демонстрация доступна только для чтения. Изменения каталога, аккаунтов и экспорт отключены.':'Локальное файловое хранилище для одного экземпляра приложения. Вход и операции управления проверяются сервером.'}
    </div>
 
    <nav className="admin-tabs">
@@ -317,17 +338,17 @@ export function AdminWorkspace({readOnly=false}:{readOnly?:boolean}){
    {tab==='accounts'&&user.role==='SUPERADMIN'&&(
     <>
      <h2>Сотрудники</h2>
-     {!readOnly&&<form className="admin-form staff-form" onSubmit={createStaff}>
-      <label>Имя<input name="name" required maxLength={100}/></label>
+     {(!readOnly||persistentAuth)&&<form className="admin-form staff-form" onSubmit={createStaff}>
+      {persistentAuth?<p>Назначайте роль только существующему пользователю с подтверждённой почтой. Регистрация сотрудников закрыта.</p>:<label>Имя<input name="name" required maxLength={100}/></label>}
       <label>Email<input name="email" type="email" required/></label>
-      <label>Временный пароль<input name="password" type="password" minLength={12} required/></label>
+      {!persistentAuth&&<label>Временный пароль<input name="password" type="password" minLength={12} required/></label>}
       <label>
        Роль
        <select name="role">
         {roles.map(r=><option key={r}>{r}</option>)}
        </select>
       </label>
-      <button className="outline-link">Создать сотрудника <Users size={15}/></button>
+      <button className="outline-link">{persistentAuth?'Назначить роль':'Создать сотрудника'} <Users size={15}/></button>
      </form>}
 
      {users.filter(x=>x.role!=='SUPERADMIN').map(x=>(
@@ -336,7 +357,7 @@ export function AdminWorkspace({readOnly=false}:{readOnly?:boolean}){
         <b>{x.name} · {x.email}</b>
         <small>{x.role}{x.disabled?' · отключён':''}</small>
        </span>
-       {!readOnly&&<select
+       {(!readOnly||persistentAuth)&&<select
         value={x.role}
         onChange={async e=>{
          await request('/api/admin/users',{
@@ -349,7 +370,7 @@ export function AdminWorkspace({readOnly=false}:{readOnly?:boolean}){
        >
         {roles.map(r=><option key={r}>{r}</option>)}
        </select>}
-       {!readOnly&&<button
+       {(!readOnly||persistentAuth)&&<button
         className="text-button"
         onClick={async()=>{
          await request('/api/admin/users',{
@@ -371,9 +392,16 @@ export function AdminWorkspace({readOnly=false}:{readOnly?:boolean}){
 
    {tab==='feedback'&&['SUPERADMIN','SITE_ADMIN','MODERATOR'].includes(user.role)&&(
     <section className="admin-feedback-list">
-    <div className="admin-main-head"><h2>Отзывы ({feedback.length})</h2><label>Сортировка <select aria-label="Сортировка отзывов" value={feedbackSort} onChange={e=>setFeedbackSort(e.target.value as 'newest'|'oldest'|'highest'|'lowest')}><option value="newest">Сначала новые</option><option value="oldest">Сначала старые</option><option value="highest">Сначала высокая оценка</option><option value="lowest">Сначала низкая оценка</option></select></label></div>
-    {feedback.map(item=><article className="admin-row" key={item.id}><span><b>{item.type} · {item.name||'Без имени'}</b><small>{item.rating?`${'★'.repeat(item.rating)}${'☆'.repeat(5-item.rating)} · ${item.rating}/5`:''} {item.email||'Контакт не указан'} · {new Date(item.created_at).toLocaleString()}</small><p>{item.message}</p><small>{item.moderation_status==='classified'?`AI-категория: ${item.moderation_category||'не определена'} · решение не принято автоматически`:'Требует проверки'}</small>{item.moderation_summary&&<p>{item.moderation_summary}</p>}{item.moderation_reason&&<small>{item.moderation_reason}</small>}</span></article>)}
-     {!feedback.length&&<p>Сохранённых отзывов пока нет.</p>}
+    {readOnly&&!persistentAuth&&<p className="admin-warning">Публикация и удаление отключены: для безопасных изменений на сайте нужно настроить постоянную авторизацию сотрудников.</p>}
+    <div className="admin-feedback-filters">
+     <label>Поиск<input value={feedbackSearch} onChange={e=>setFeedbackSearch(e.target.value)} placeholder="Имя, email или текст"/></label>
+     <label>Тип<select value={feedbackType} onChange={e=>setFeedbackType(e.target.value)}><option value="all">Все типы</option><option value="site_feedback">Отзывы</option><option value="suggestion">Предложения</option><option value="site_bug">Ошибки</option></select></label>
+     <label>AI-модерация<select value={moderationFilter} onChange={e=>setModerationFilter(e.target.value)}><option value="all">Все статусы</option><option value="classified">Классифицировано</option><option value="needs_review">Требует проверки</option></select></label>
+     <label>Сортировка<select aria-label="Сортировка отзывов" value={feedbackSort} onChange={e=>setFeedbackSort(e.target.value as 'newest'|'oldest'|'highest'|'lowest')}><option value="newest">Сначала новые</option><option value="oldest">Сначала старые</option><option value="highest">Сначала высокая оценка</option><option value="lowest">Сначала низкая оценка</option></select></label>
+    </div>
+    <p className="admin-feedback-count">Показано {visibleFeedback.length} из {feedback.length}</p>
+    {visibleFeedback.map(item=><article className="admin-row" key={item.id}><span><b>{item.type} · {item.name||'Без имени'}</b><small>{item.rating?`${'★'.repeat(item.rating)}${'☆'.repeat(5-item.rating)} · ${item.rating}/5`:''} {item.email||'Контакт не указан'} · {new Date(item.created_at).toLocaleString()}</small><p>{item.message}</p><small>{item.moderation_status==='classified'?`AI-категория: ${item.moderation_category||'не определена'} · решение не принято автоматически`:'Требует проверки'}{item.moderation_summary?` · ${item.moderation_summary}`:''}</small>{item.moderation_reason&&<small>{item.moderation_reason}</small>}<small>Публикация: {item.publication_status}{item.public_consent?' · пользователь дал отдельное согласие':' · согласия на публикацию нет'}</small>{(!readOnly||persistentAuth)&&<div className="admin-feedback-actions">{item.publication_status==='published'?<button type="button" disabled={savingFeedbackId===item.id} onClick={()=>setReviewVisibility(item,'private')}>Снять с публикации</button>:<button type="button" disabled={savingFeedbackId===item.id||!item.public_consent||item.type!=='site_feedback'||!item.rating} onClick={()=>setReviewVisibility(item,'published')}>Опубликовать отзыв</button>}{['SUPERADMIN','SITE_ADMIN'].includes(user.role)&&<button className="danger" type="button" disabled={savingFeedbackId===item.id} onClick={()=>deleteFeedback(item)}>Удалить</button>}</div>}</span></article>)}
+     {!visibleFeedback.length&&<p>По выбранным фильтрам сообщений нет.</p>}
     </section>
    )}
   </div>

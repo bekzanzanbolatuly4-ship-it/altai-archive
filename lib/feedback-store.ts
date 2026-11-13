@@ -3,8 +3,9 @@ import type {FeedbackSubmission} from './feedback-validation';
 import type {FeedbackModeration} from './ai/moderation';
 
 export const feedbackConsentVersion='feedback-contact-v1';
+export const feedbackPublicationConsentVersion='feedback-publication-v1';
 
-export type FeedbackRow=Omit<FeedbackSubmission,'contactConsent'>&{
+export type FeedbackRow=Omit<FeedbackSubmission,'contactConsent'|'publicConsent'>&{
  contact_consent:boolean;
  auth_user_id:string|null;
  name:string;
@@ -16,6 +17,10 @@ export type FeedbackRow=Omit<FeedbackSubmission,'contactConsent'>&{
  moderation_summary:FeedbackModeration['summary'];
  moderation_reason:FeedbackModeration['reason'];
  moderation_status:FeedbackModeration['status'];
+ public_consent:boolean;
+ public_consent_version:string|null;
+ public_display_name:string|null;
+ publication_status:'private'|'pending';
 };
 
 export async function storeFeedback(
@@ -44,6 +49,10 @@ export async function storeFeedback(
   moderation_summary:moderation?.summary??null,
   moderation_reason:moderation?.reason??null,
   moderation_status:moderation?.status??'needs_review',
+  public_consent:submission.publicConsent,
+  public_consent_version:submission.publicConsent?feedbackPublicationConsentVersion:null,
+  public_display_name:submission.publicConsent?submission.name.split(/\s+/u)[0].slice(0,80):null,
+  publication_status:submission.publicConsent?'pending':'private',
  };
  const headers:Record<string,string>={
   apikey:secret,

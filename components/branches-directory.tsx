@@ -67,7 +67,7 @@ export function BranchesDirectory(){
        <section><b>{msg('branchSourceOriginal')}</b><span>{selected.shortName}</span><span>{selected.address||msg('unconfirmed')}</span><span>{msg('phone')}: {selected.phone||msg('unconfirmed')}</span></section>
        <section><b>{msg('branchSourceExternal')}</b><span>{branchConflictDetails[selected.id].name}</span><span>{branchConflictDetails[selected.id].address||msg('branchNoExternalValue')}</span><span>{msg('phone')}: {branchConflictDetails[selected.id].phone||msg('branchNoExternalValue')}</span></section>
       </div>}
-      <p>{msg('branchReviewNotice')}</p><p>{msg('branchCrossCheckCaveat')}</p><small>{msg('branchCheckedAt')}: 12.11.2026</small>
+      <small>{msg('branchCheckedAt')}: 12.11.2026 · {msg('branchSourceDateNote')}</small>
       <a href="https://www.gov.kz/org/vko-uca/documents/1?type=14" target="_blank" rel="noreferrer">gov.kz · {msg('branchGovSource')} <ExternalLink size={13}/></a>
       <a href={branchEvidenceUrl} target="_blank" rel="noreferrer">e-memory.kz · {msg('sourceLabel')} <ExternalLink size={13}/></a>
      </div>

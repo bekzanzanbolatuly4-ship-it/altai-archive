@@ -101,6 +101,19 @@ export async function issueSession(userId:string,actor?:string){
 
 export async function currentUser():Promise<SafeUser|null>{
  const cookieJar=await cookies();
+ // Production staff identity is a Supabase Auth account plus an active row in
+ // the protected profiles table. Never fall back to ephemeral .data there.
+ if(process.env.VERCEL==='1'){
+  const auth=await createSupabaseServerClient();
+  if(!auth)return null;
+  try{
+   const{data:{user},error}=await auth.auth.getUser();
+   if(error||!user?.email||!user.email_confirmed_at)return null;
+   const{data:profile,error:profileError}=await auth.from('profiles').select('id,display_name,role,disabled').eq('auth_user_id',user.id).maybeSingle();
+   if(profileError||!profile||profile.disabled||!roles.includes(profile.role as StaffRole))return null;
+   return {id:profile.id,email:user.email,name:profile.display_name,role:profile.role as StaffRole,disabled:false,createdAt:new Date(user.created_at).toISOString()};
+  }catch{return null;}
+ }
  const hasVisitorAuthCookie=cookieJar.getAll().some(({name})=>/^sb-.+-auth-token(?:\.\d+)?$/u.test(name));
  if(hasVisitorAuthCookie){
   const auth=await createSupabaseServerClient();

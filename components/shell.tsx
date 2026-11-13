@@ -5,6 +5,8 @@ import {useRouter} from 'next/navigation';
 import {useEffect,useRef,useState} from 'react';
 import {ArrowUpRight,BookOpen,Eye,House,Map,Menu,Moon,Newspaper,Search,Settings,Sun,X,History,Sparkles} from 'lucide-react';
 import {useApp} from './providers';
+import {PrivacyGate} from './privacy-gate';
+import {privacyConsentStorageKey,privacyPolicyVersion} from '@/lib/privacy-policy';
 import {messages,formatInstitutionName,formatOfficeHours} from '@/locales/messages';
 import {mainArchive} from '@/data/archive';
 
@@ -26,9 +28,20 @@ export function Shell({children}:{children:React.ReactNode}){
   const[open,setOpen]=useState(false);
   const[staff,setStaff]=useState(false);
   const[visitor,setVisitor]=useState(false);
+  const[privacyConsent,setPrivacyConsent]=useState<'checking'|'required'|'accepted'>('checking');
   const searchRef=useRef<HTMLInputElement>(null);
+  const privacyRoute=path==='/privacy';
+  const canEnter=privacyConsent==='accepted'||privacyRoute;
 
   useEffect(()=>{
+    try{
+      const value=JSON.parse(localStorage.getItem(privacyConsentStorageKey)||'null') as {version?:string}|null;
+      setPrivacyConsent(value?.version===privacyPolicyVersion?'accepted':'required');
+    }catch{setPrivacyConsent('required');}
+  },[]);
+
+  useEffect(()=>{
+    if(!canEnter||privacyRoute)return;
     let alive=true;
     const refreshStaff=()=>fetch('/api/auth/me').then(r=>r.ok?r.json():null).then(result=>{if(alive)setStaff(Boolean(result?.user?.role))}).catch(()=>{if(alive)setStaff(false)});
     const refreshVisitor=()=>fetch('/api/visitor/me',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(result=>{if(alive)setVisitor(Boolean(result?.user))}).catch(()=>{if(alive)setVisitor(false)});
@@ -41,7 +54,7 @@ export function Shell({children}:{children:React.ReactNode}){
       unsubscribe=()=>subscription.unsubscribe();
     }).catch(()=>{});
     return()=>{alive=false;unsubscribe?.();};
-  },[]);
+  },[canEnter,privacyRoute]);
 
   useEffect(()=>{
     const onKey=(e:KeyboardEvent)=>{
@@ -79,6 +92,8 @@ export function Shell({children}:{children:React.ReactNode}){
 
   const institutionTitle=formatInstitutionName(locale);
   const hasLocalSearch=['/catalog','/branches','/history','/news','/atlas','/exhibitions','/assistant'].some(route=>path===route||path.startsWith(`${route}/`));
+
+  if(!canEnter)return <PrivacyGate checking={privacyConsent==='checking'} onAccept={()=>setPrivacyConsent('accepted')}/>;
 
   return (
     <div className="app-shell">
@@ -219,6 +234,7 @@ export function Shell({children}:{children:React.ReactNode}){
               <Link href="/news">{msg('news')}</Link>
               <Link href="/atlas">{msg('atlas')}</Link>
               <Link href="/assistant">{msg('assistant')}</Link>
+              <Link href="/privacy">{msg('privacyLink')}</Link>
               <a href="https://www.instagram.com/arhiv_vko/" target="_blank" rel="noreferrer noopener" aria-label="Instagram @arhiv_vko">Instagram · @arhiv_vko <ArrowUpRight size={13}/></a>
               <a href="https://egov.kz/services/K002/" target="_blank" rel="noreferrer">{locale==='ru'?'Заказать архивную справку на eGov.kz':locale==='kk'?'eGov.kz арқылы архивтік анықтамаға тапсырыс беру':'Request an archive certificate on eGov.kz'} <ArrowUpRight size={13}/></a>
               <a href="https://egov.kz/cms/ru/articles/department_of_archives" target="_blank" rel="noreferrer">eGov.kz — {locale==='ru'?'архивное дело':locale==='kk'?'архив ісі':'archives directory'} <ArrowUpRight size={13}/></a>

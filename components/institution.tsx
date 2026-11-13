@@ -5,6 +5,7 @@ import {ArrowRight,ArrowUpRight,Clock3,ExternalLink,MapPin,Phone,BookOpen,Search
 import {branches,mainArchive,getLocalizedBranchTitle,type ArchiveLocation} from '@/data/archive';
 import {useApp} from './providers';
 import {FeedbackForm} from './feedback-form';
+import {PublicFeedbackList} from './public-feedback-list';
 import {formatCity,formatInstitutionName,formatOfficeHours} from '@/locales/messages';
 
 export function InstitutionPage(){
@@ -157,6 +158,7 @@ export function InstitutionPage(){
         <h2>{msg('feedbackTitle')}</h2>
         <p>{msg('feedbackText')}</p>
         <FeedbackForm/>
+        <PublicFeedbackList/>
       </section>
     </div>
   );

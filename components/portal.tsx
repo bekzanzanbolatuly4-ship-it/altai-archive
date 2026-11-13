@@ -23,7 +23,7 @@ import {useApp} from './providers';
 
 type Kind='atlas'|'branches'|'exhibitions'|'history'|'news'|'about'|'assistant'|'admin';
 
-export function Portal({kind,demoReadOnly=false}:{kind:Kind;demoReadOnly?:boolean}){
+export function Portal({kind,demoReadOnly=false,persistentAuth=false}:{kind:Kind;demoReadOnly?:boolean;persistentAuth?:boolean}){
   const{msg,locale}=useApp();
   const[query,setQuery]=useState('');
   const[active,setActive]=useState('');
@@ -36,7 +36,7 @@ export function Portal({kind,demoReadOnly=false}:{kind:Kind;demoReadOnly?:boolea
   const localizedNews = useMemo(() => news.map(n => getLocalizedNews(n, locale)), [locale]);
 
   if(kind==='assistant')return <AIAssistant/>;
-  if(kind==='admin')return <AdminWorkspace readOnly={demoReadOnly}/>;
+  if(kind==='admin')return <AdminWorkspace readOnly={demoReadOnly} persistentAuth={persistentAuth}/>;
   if(kind==='about')return <InstitutionPage/>;
   if(kind==='branches')return <BranchesMapDirectory/>;
 

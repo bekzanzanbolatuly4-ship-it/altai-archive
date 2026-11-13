@@ -13,14 +13,15 @@ async function loadTs(relative){
  return import(`data:text/javascript,${encodeURIComponent(compiled)}`);
 }
 const {validateFeedbackInput,readFeedbackJson}=await loadTs('lib/feedback-validation.ts');
-const {storeFeedback,feedbackConsentVersion}=await loadTs('lib/feedback-store.ts');
+const {storeFeedback,feedbackConsentVersion,feedbackPublicationConsentVersion}=await loadTs('lib/feedback-store.ts');
 const {storeFeedbackModeration}=await loadTs('lib/feedback-moderation-store.ts');
 const {enforceFeedbackRateLimit}=await loadTs('lib/feedback-rate-limit.ts');
 const {messages}=await loadTs('locales/messages.ts');
 const {validateRegistrationInput}=await loadTs('lib/visitor-auth-validation.ts');
 const {moderateFeedback}=await loadTs('lib/ai/moderation.ts');
-const valid={type:'site_feedback',firstName:'Archive',lastName:'Visitor',email:'visitor@example.org',rating:5,message:'Make the catalog easier to use',feedbackConsent:true,website:''};
-const normalized={type:'site_feedback',name:'Archive Visitor',email:'visitor@example.org',rating:5,message:valid.message,contactConsent:true};
+const identity={userId:'verified-user-id',name:'Archive Visitor',email:'visitor@example.org'};
+const valid={type:'site_feedback',rating:5,message:'Make the catalog easier to use',feedbackConsent:true,website:''};
+const normalized={type:'site_feedback',name:'Archive Visitor',email:'visitor@example.org',rating:5,message:valid.message,contactConsent:true,publicConsent:false};
 
 test('visitor registration validates name, email, strong password, confirmation and informed consent',()=>{
  const pass=randomBytes(24).toString('base64url');const input={name:'Archive visitor',email:'visitor@example.org',password:pass,confirmPassword:pass,consent:true};
@@ -32,10 +33,13 @@ test('visitor registration validates name, email, strong password, confirmation 
  assert.equal(validateRegistrationInput({...input,consent:false}),'consent_required');
 });
 
-test('anonymous feedback validates names, optional contact, stars, consent and anti-spam fields',()=>{
- assert.deepEqual(validateFeedbackInput(valid),normalized);
- assert.equal(validateFeedbackInput({...valid,type:'suggestion',rating:null,email:null}).rating,null);
- for(const input of [{...valid,message:'  '},{...valid,message:'x'.repeat(2001)},{...valid,type:'official_request'},{...valid,firstName:''},{...valid,email:'bad'},{...valid,rating:0},{...valid,name:'forged'},{...valid,feedbackConsent:false},{...valid,website:'spam'},{...valid,captchaToken:'unexpected'},{...valid,unexpected:'value'}])assert.throws(()=>validateFeedbackInput(input),error=>error.name==='FeedbackError');
+test('feedback accepts only verified account identity and rejects client identity overrides',()=>{
+ assert.deepEqual(validateFeedbackInput(valid,identity),normalized);
+ assert.equal(validateFeedbackInput({...valid,type:'suggestion',rating:null},identity).rating,null);
+ assert.equal(validateFeedbackInput({...valid,publicConsent:true},identity).publicConsent,true);
+ assert.throws(()=>validateFeedbackInput({...valid,type:'suggestion',rating:null,publicConsent:true},identity),error=>error.code==='invalid_feedback');
+ for(const input of [{...valid,message:'  '},{...valid,message:'x'.repeat(2001)},{...valid,type:'official_request'},{...valid,firstName:'Forged'},{...valid,lastName:'Impostor'},{...valid,email:'forged@example.org'},{...valid,user_id:'self-promoted'},{...valid,rating:0},{...valid,feedbackConsent:false},{...valid,website:'spam'},{...valid,captchaToken:'unexpected'},{...valid,unexpected:'value'}])assert.throws(()=>validateFeedbackInput(input,identity),error=>error.name==='FeedbackError');
+ assert.throws(()=>validateFeedbackInput(valid,{...identity,email:'unconfirmed'}),error=>error.code==='feedback_auth_required');
 });
 
 test('feedback body reader enforces byte limit and rejects malformed JSON',async()=>{
@@ -45,19 +49,23 @@ test('feedback body reader enforces byte limit and rejects malformed JSON',async
  assert.deepEqual(await readFeedbackJson(new Request('https://archive.test',{method:'POST',headers,body:JSON.stringify(valid)})),valid);
 });
 
-test('Supabase feedback store persists anonymous identity and rating and reports upstream failure',async()=>{
+test('Supabase feedback store persists verified account identity and rating and reports upstream failure',async()=>{
  let sent,url;
- await storeFeedback(normalized,undefined,{url:'https://project.supabase.co',secret:'sb_secret_test',fetcher:async(target,init)=>{url=String(target);sent={headers:init.headers,row:JSON.parse(init.body)};return new Response(null,{status:201});}});
+ await storeFeedback(normalized,{userId:identity.userId},{url:'https://project.supabase.co',secret:'sb_secret_test',fetcher:async(target,init)=>{url=String(target);sent={headers:init.headers,row:JSON.parse(init.body)};return new Response(null,{status:201});}});
  assert.equal(url,'https://project.supabase.co/rest/v1/feedback_messages');
  assert.equal(sent.headers.apikey,'sb_secret_test');assert.equal(sent.headers.Authorization,undefined);
- assert.equal(sent.row.status,'new');assert.equal(sent.row.consent_version,feedbackConsentVersion);assert.equal(sent.row.auth_user_id,null);assert.equal(sent.row.name,'Archive Visitor');assert.equal(sent.row.email,'visitor@example.org');assert.equal(sent.row.rating,5);
+ assert.equal(sent.row.status,'new');assert.equal(sent.row.consent_version,feedbackConsentVersion);assert.equal(sent.row.auth_user_id,identity.userId);assert.equal(sent.row.name,'Archive Visitor');assert.equal(sent.row.email,'visitor@example.org');assert.equal(sent.row.rating,5);
  assert.equal(sent.row.contact_consent,true);assert.equal('contactConsent' in sent.row,false,'Database writes must use the actual snake_case column name');
  assert.equal(sent.row.moderation_status,'needs_review');assert.equal(sent.row.moderation_category,null);
+ assert.equal(sent.row.public_consent,false);assert.equal(sent.row.publication_status,'private');assert.equal(sent.row.public_display_name,null);
+ const optedIn={...normalized,publicConsent:true};
+ await storeFeedback(optedIn,{userId:identity.userId},{url:'https://project.supabase.co',secret:'sb_secret_test',fetcher:async(_url,init)=>{sent={row:JSON.parse(init.body)};return new Response(null,{status:201});}});
+ assert.equal(sent.row.public_consent,true);assert.equal(sent.row.public_consent_version,feedbackPublicationConsentVersion);assert.equal(sent.row.publication_status,'pending');assert.equal(sent.row.public_display_name,'Archive');
  const marked={category:'suggestion',summary:'Improve catalogue search',reason:'Concrete improvement idea',status:'classified'};
- await storeFeedback(normalized,undefined,{url:'https://project.supabase.co',secret:'sb_secret_test',moderation:marked,fetcher:async(_url,init)=>{sent={row:JSON.parse(init.body)};return new Response(null,{status:201});}});
+ await storeFeedback(normalized,{userId:identity.userId},{url:'https://project.supabase.co',secret:'sb_secret_test',moderation:marked,fetcher:async(_url,init)=>{sent={row:JSON.parse(init.body)};return new Response(null,{status:201});}});
  assert.equal(sent.row.moderation_category,'suggestion');assert.equal(sent.row.moderation_status,'classified');
- await assert.rejects(storeFeedback(normalized,undefined,{url:'',secret:''}),/feedback_storage_unavailable/);
- await assert.rejects(storeFeedback(normalized,undefined,{url:'https://project.supabase.co',secret:'private-key',fetcher:async()=>new Response('sensitive database detail',{status:500})}),error=>error.code==='feedback_storage_unavailable'&&!error.message.includes('sensitive'));
+ await assert.rejects(storeFeedback(normalized,{userId:identity.userId},{url:'',secret:''}),/feedback_storage_unavailable/);
+ await assert.rejects(storeFeedback(normalized,{userId:identity.userId},{url:'https://project.supabase.co',secret:'private-key',fetcher:async()=>new Response('sensitive database detail',{status:500})}),error=>error.code==='feedback_storage_unavailable'&&!error.message.includes('sensitive'));
 });
 
 test('AI moderation metadata is written only through the restricted server credential',async()=>{
@@ -83,18 +91,24 @@ test('feedback rate limit uses isolated IP, identity, duplicate and global keys 
  await assert.rejects(enforceFeedbackRateLimit(new Request('https://archive.test'),options),error=>error.code==='feedback_limiter_unavailable');
 });
 
-test('anonymous feedback endpoint enforces same origin, spam controls, moderation and confirmed storage',async()=>{
+test('feedback endpoint requires a confirmed Supabase account and uses only verified identity',async()=>{
  let source=await readFile('app/api/feedback/route.ts','utf8');
  source=source.replace("import {sameOriginFailure} from '@/lib/request-security';",`const sameOriginFailure=globalThis.__sameOriginFailure;`);
  source=source.replace("import {enforceFeedbackRateLimit} from '@/lib/feedback-rate-limit';",`const enforceFeedbackRateLimit=globalThis.__enforceFeedbackRateLimit;`);
- source=source.replace("import {safeFeedbackError} from '@/lib/feedback-errors';",`const safeFeedbackError=(error)=>({code:error.code||'feedback_storage_unavailable',status:error.status||503});`);
+ source=source.replace("import {FeedbackError,safeFeedbackError} from '@/lib/feedback-errors';",`const FeedbackError=globalThis.__FeedbackError;const safeFeedbackError=(error)=>({code:error.code||'feedback_storage_unavailable',status:error.status||503});`);
  source=source.replace("import {readFeedbackJson,validateFeedbackInput} from '@/lib/feedback-validation';",`const {readFeedbackJson,validateFeedbackInput}=globalThis.__feedbackValidation;`);
  source=source.replace("import {storeFeedback} from '@/lib/feedback-store';",`const storeFeedback=globalThis.__storeFeedback;`);
  source=source.replace("import {moderateFeedback} from '@/lib/ai/moderation';",`const moderateFeedback=globalThis.__moderateFeedback;`);
+ source=source.replace("import {createSupabaseServerClient} from '@/lib/supabase/server';",`const createSupabaseServerClient=globalThis.__createSupabaseServerClient;`);
  source=source.replace(/from '@\/([^']+)'/g,(_,name)=>`from '${pathToFileURL(path.resolve(`${name}.ts`)).href}'`);
  const compiled=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
- const saved={origin:process.env.APP_ORIGIN,secret:process.env.SUPABASE_SECRET_KEY,gemini:process.env.GEMINI_API_KEY,validation:globalThis.__feedbackValidation,sameOrigin:globalThis.__sameOriginFailure,limit:globalThis.__enforceFeedbackRateLimit,store:globalThis.__storeFeedback,moderate:globalThis.__moderateFeedback,stored:globalThis.__feedbackStored,failed:globalThis.__feedbackStoreFails,limited:globalThis.__feedbackRateLimited};
+ const saved={origin:process.env.APP_ORIGIN,secret:process.env.SUPABASE_SECRET_KEY,gemini:process.env.GEMINI_API_KEY,validation:globalThis.__feedbackValidation,sameOrigin:globalThis.__sameOriginFailure,limit:globalThis.__enforceFeedbackRateLimit,store:globalThis.__storeFeedback,moderate:globalThis.__moderateFeedback,stored:globalThis.__feedbackStored,failed:globalThis.__feedbackStoreFails,limited:globalThis.__feedbackRateLimited,supabase:globalThis.__createSupabaseServerClient,feedbackError:globalThis.__FeedbackError};
  globalThis.__feedbackValidation={readFeedbackJson,validateFeedbackInput};
+ const FeedbackError=class extends Error{constructor(code,status){super(code);this.code=code;this.status=status;this.name='FeedbackError';}};
+ globalThis.__FeedbackError=FeedbackError;
+ let authUser={id:identity.userId,email:identity.email,email_confirmed_at:'2026-11-13T00:00:00Z'};
+ let profile={display_name:identity.name};
+ globalThis.__createSupabaseServerClient=async()=>({auth:{getUser:async()=>({data:{user:authUser},error:null})},from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:profile,error:null})})})})});
  globalThis.__sameOriginFailure=(request)=>request.headers.get('origin')!=='https://archive.test'?Response.json({error:'forbidden'},{status:403}):null;
  globalThis.__enforceFeedbackRateLimit=async(_request,options)=>{globalThis.__rateOptions=options;if(globalThis.__feedbackRateLimited)throw Object.assign(new Error('limited'),{code:'feedback_rate_limit',status:429});};
  let moderated,stored;
@@ -106,14 +120,16 @@ test('anonymous feedback endpoint enforces same origin, spam controls, moderatio
   process.env.APP_ORIGIN='https://archive.test';
   assert.equal((await POST(makeRequest(valid,'https://attacker.test'))).status,403);
   assert.equal((await POST(makeRequest({...valid,type:'other'}))).status,400);
+  authUser=null;assert.equal((await POST(makeRequest())).status,401);authUser={...identity,email_confirmed_at:null};assert.equal((await POST(makeRequest())).status,403);authUser={id:identity.userId,email:identity.email,email_confirmed_at:'2026-11-13T00:00:00Z'};profile=null;assert.equal((await POST(makeRequest())).status,403);profile={display_name:identity.name};
   globalThis.__feedbackRateLimited=true;assert.equal((await POST(makeRequest())).status,429);globalThis.__feedbackRateLimited=false;
   globalThis.__feedbackStoreFails=true;assert.equal((await POST(makeRequest())).status,503);globalThis.__feedbackStoreFails=false;
   process.env.SUPABASE_SECRET_KEY='sb_secret_server_only_test';process.env.GEMINI_API_KEY='synthetic-test-key';
-  const accepted=await POST(makeRequest());assert.equal(accepted.status,201);assert.deepEqual(await accepted.json(),{received:true});assert.deepEqual(stored.submission,normalized);assert.equal(stored.options.moderation.category,'suggestion');
-  assert.equal(moderated,valid.message);assert.equal(globalThis.__rateOptions.identity,valid.email);assert.equal(globalThis.__rateOptions.content,valid.message);
+  const accepted=await POST(makeRequest());assert.equal(accepted.status,201);assert.deepEqual(await accepted.json(),{received:true,publicationStatus:'private'});assert.deepEqual(stored.submission,normalized);assert.equal(stored.options.moderation.category,'suggestion');
+  assert.equal(moderated,valid.message);assert.equal(globalThis.__rateOptions.identity,identity.email);assert.equal(globalThis.__rateOptions.content,valid.message);
+  assert.equal(stored.submission.name,identity.name);assert.equal(stored.submission.email,identity.email);
  }finally{
   for(const[k,v]of Object.entries({APP_ORIGIN:saved.origin,SUPABASE_SECRET_KEY:saved.secret,GEMINI_API_KEY:saved.gemini}))if(v===undefined)delete process.env[k];else process.env[k]=v;
-  for(const[key,value]of[['__feedbackValidation',saved.validation],['__sameOriginFailure',saved.sameOrigin],['__enforceFeedbackRateLimit',saved.limit],['__storeFeedback',saved.store],['__moderateFeedback',saved.moderate],['__feedbackStored',saved.stored],['__feedbackStoreFails',saved.failed],['__feedbackRateLimited',saved.limited],['__rateOptions',undefined]])if(value===undefined)delete globalThis[key];else globalThis[key]=value;
+  for(const[key,value]of[['__feedbackValidation',saved.validation],['__sameOriginFailure',saved.sameOrigin],['__enforceFeedbackRateLimit',saved.limit],['__storeFeedback',saved.store],['__moderateFeedback',saved.moderate],['__feedbackStored',saved.stored],['__feedbackStoreFails',saved.failed],['__feedbackRateLimited',saved.limited],['__createSupabaseServerClient',saved.supabase],['__FeedbackError',saved.feedbackError],['__rateOptions',undefined]])if(value===undefined)delete globalThis[key];else globalThis[key]=value;
  }
 });
 
@@ -128,7 +144,7 @@ test('AI feedback moderation redacts email, validates Gemini JSON and fails safe
 });
 
 test('feedback labels, warnings, outcomes and errors are localized in RU/KK/EN',()=>{
- const keys=['feedbackTitle','feedbackText','feedbackType','feedbackChooseType','feedbackTypeReview','feedbackTypeSuggestion','feedbackTypeBug','feedbackName','feedbackEmail','feedbackMessage','feedbackWarning','feedbackSubmit','feedbackSending','feedbackSuccess','feedbackError','feedbackValidationError','feedbackCharacters'];
+ const keys=['feedbackTitle','feedbackText','feedbackType','feedbackChooseType','feedbackTypeReview','feedbackTypeSuggestion','feedbackTypeBug','feedbackName','feedbackEmail','feedbackMessage','feedbackWarning','feedbackSubmit','feedbackSending','feedbackSuccess','feedbackPublishConsent','feedbackPublicTitle','feedbackPublicLoading','feedbackPublicEmpty','feedbackPublicUnavailable','feedbackPublicPending','feedbackPublicPrivate','feedbackApprovePublic','feedbackKeepPrivate','feedbackError','feedbackValidationError','feedbackCharacters','feedbackAuthChecking','feedbackAuthPrompt','feedbackSignIn','feedbackRegister','feedbackConfirmEmail','feedbackAuthUnavailable','feedbackErrorLimiter','feedbackErrorStorage','feedbackErrorAuth','feedbackErrorEmail','feedbackErrorProfile','feedbackErrorRate','feedbackErrorConsent','feedbackErrorInvalid'];
  for(const locale of ['ru','kk','en'])for(const key of keys)assert.equal(typeof messages[locale][key],'string',`${locale}.${key}`);
 });
 
@@ -137,5 +153,9 @@ test('feedback SQL enables RLS, denies public reads, preserves legacy rows and v
  assert.match(sql,/enable row level security/i);assert.match(sql,/force row level security/i);assert.match(sql,/revoke all on table public\.feedback_messages from public, anon, authenticated, service_role/i);assert.match(sql,/grant insert on table public\.feedback_messages to service_role/i);assert.doesNotMatch(sql,/for select|grant select|grant all/i);
  const identityMigration=await readFile('supabase/migrations/20261112195304_visitor_auth_feedback_identity.sql','utf8');assert.match(identityMigration,/add column if not exists auth_user_id uuid references auth\.users\(id\) on delete set null/i);assert.doesNotMatch(identityMigration,/delete from public\.feedback_messages/i);assert.match(identityMigration,/for select to authenticated[\s\S]*auth\.uid\(\) = auth_user_id/i);assert.match(identityMigration,/for insert to authenticated[\s\S]*auth\.uid\(\) = auth_user_id/i);assert.match(identityMigration,/moderation_category text/i);assert.match(identityMigration,/moderation_status in \('classified','needs_review'\)/i);assert.match(identityMigration,/moderation_category is null[\s\S]*moderation_status = 'needs_review'/i);
  const staffMigration=await readFile('supabase/migrations/20261112204700_feedback_staff_review_access.sql','utf8');assert.match(staffMigration,/grant select on table public\.feedback_messages to service_role/i);assert.match(staffMigration,/grant update \(moderation_category, moderation_summary, moderation_reason, moderation_status\)/i);assert.doesNotMatch(staffMigration,/to anon|to authenticated/i);
+ const publicationMigration=await readFile('supabase/migrations/20261113060940_feedback_publication_workflow.sql','utf8');assert.match(publicationMigration,/public_consent boolean not null default false/i);assert.match(publicationMigration,/publication_status text not null default 'private'/i);assert.match(publicationMigration,/revoke all on table public\.feedback_messages from public, anon, authenticated/i);assert.match(publicationMigration,/publication_status='private' or \(public_consent and public_consent_version is not null\)/i);
+ const publicationPolicy=await readFile('supabase/migrations/20261113063945_feedback_publication_insert_guard.sql','utf8');assert.match(publicationPolicy,/public_consent = false[\s\S]*public_display_name is null[\s\S]*publication_status = 'private'[\s\S]*publication_reviewed_by is null/i);
+ const publicRoute=await readFile('app/api/public-feedback/route.ts','utf8');assert.match(publicRoute,/select','public_display_name,rating,message,created_at/);assert.match(publicRoute,/publication_status','eq\.published/);assert.doesNotMatch(publicRoute,/select','[^']*(email|auth_user_id|moderation_)/i);
+ const staffRoute=await readFile('app/api/admin/feedback/route.ts','utf8');assert.match(staffRoute,/export async function PATCH/);assert.match(staffRoute,/export async function DELETE/);assert.match(staffRoute,/\['SUPERADMIN','SITE_ADMIN'\]/);
  const ratingMigration=await readFile('supabase/migrations/20261113041246_feedback_star_rating.sql','utf8');assert.match(ratingMigration,/add column if not exists rating smallint/i);assert.match(ratingMigration,/rating between 1 and 5/i);assert.doesNotMatch(ratingMigration,/delete from|drop table/i);
 });

@@ -32,12 +32,17 @@ try{
  assert.ok(ready,'Isolated server must start');
 browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTABLE_PATH?{executablePath:process.env.PLAYWRIGHT_EXECUTABLE_PATH}:{})});
  const page=await browser.newPage();
+ await page.addInitScript(()=>localStorage.setItem('altai-privacy-consent',JSON.stringify({version:'privacy-notice-2026-11-v1',acceptedAt:new Date().toISOString()})));
  if(process.env.ALT_ARCHIVE_SCREENSHOT_DIR)await mkdir(process.env.ALT_ARCHIVE_SCREENSHOT_DIR,{recursive:true});
  const assistantRequests=[];
  page.on('request',request=>{
   if(new URL(request.url()).pathname==='/api/assistant')assistantRequests.push(request);
  });
- await page.route('**/*',route=>new URL(route.request().url()).hostname==='127.0.0.1'?route.continue():route.abort());
+ await page.route('**/*',route=>{
+  const url=new URL(route.request().url());
+  if(url.pathname==='/api/public-feedback')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({reviews:[{name:'Archive',rating:5,message:'The history section is helpful.',createdAt:'2026-11-12T10:00:00.000Z'}]})});
+  return url.hostname==='127.0.0.1'?route.continue():route.abort();
+ });
  for(const width of [360,390,430,768,1024,1440]){
   await page.setViewportSize({width,height:900});
   await page.goto('http://127.0.0.1:3107/');
@@ -92,6 +97,7 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
  assert.ok((await page.locator('.branch-explorer').getAttribute('class')).includes('show-map'));
  assert.equal(await page.locator('a[href*="2gis.kz"]').count(),1,'Use the source-listed address to provide an external map search');
  await page.goto('http://127.0.0.1:3107/catalog');
+ await page.locator('.catalog-search').waitFor();
  assert.equal(await page.locator('.catalog-search').count(),1);
  assert.equal(await page.locator('.top-search').count(),0);
  const catalogueSearch=page.locator('.catalog-search input');
@@ -151,24 +157,17 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Footer directory must fit a mobile viewport');
   const feedbackHeading={ru:'Отзывы и предложения',kk:'Пікірлер мен ұсыныстар',en:'Feedback and suggestions'}[locale];
   await page.getByRole('heading',{name:feedbackHeading}).scrollIntoViewIfNeeded();
-  const feedbackForm=page.locator('.feedback-form');await feedbackForm.waitFor();
-  assert.equal(await feedbackForm.locator('.feedback-contact-fields input').count(),2,'Anonymous feedback requires first and last name');
-  assert.equal(await feedbackForm.locator('input[type="email"]').count(),1,'Reply email is optional');
-  await feedbackForm.locator('select').selectOption('site_feedback');
-  assert.equal(await feedbackForm.locator('.feedback-stars button').count(),5,'Website review provides a five-star rating');
+  await page.getByRole('heading',{name:locale==='ru'?'Отзывы посетителей':locale==='kk'?'Келушілер пікірлері':'Visitor reviews'}).waitFor();
+  assert.equal(await page.locator('.public-feedback-card').count(),1,'The public list renders only server-approved review DTOs');
+  assert.doesNotMatch(await page.locator('.public-feedback-card').innerText(),/visitor@example\.org|surname/i);
+  const feedbackForm=page.locator('.feedback-form');
+  const signInPrompt={ru:'Войдите или зарегистрируйтесь, чтобы оставить отзыв.',kk:'Пікір қалдыру үшін кіріңіз немесе тіркеліңіз.',en:'Sign in or register to leave feedback.'}[locale];
+  await page.getByText(signInPrompt,{exact:true}).waitFor();
+  assert.equal(await feedbackForm.count(),0,'Guests cannot submit feedback');
+  assert.equal(await page.locator('.feedback-auth-prompt a[href="/login"]').count(),1,'Sign-in link is shown');
+  assert.equal(await page.locator('.feedback-auth-prompt a[href="/register"]').count(),1,'Registration link is shown');
   assert.equal(await page.locator('.admin-link').count(),0,'Public feedback page must not expose staff navigation');
-  // UI-only mock: storage and rate-limit behavior are covered separately by route unit tests.
-  await page.route('**/api/feedback',async route=>{
-   const body=route.request().postDataJSON();assert.equal(body.firstName,'Test');assert.equal(body.lastName,'Visitor');assert.equal(body.type,'site_feedback');assert.equal(body.rating,5);assert.equal(body.feedbackConsent,true);assert.equal(body.website,'');
-   await route.fulfill({status:201,contentType:'application/json',body:JSON.stringify({received:true})});
-  });
-  await feedbackForm.locator('.feedback-contact-fields input').nth(0).fill('Test');
-  await feedbackForm.locator('.feedback-contact-fields input').nth(1).fill('Visitor');
-  await feedbackForm.locator('.feedback-stars button').nth(4).click();
-  await feedbackForm.locator('textarea').fill('The website is clear and useful.');
-  await feedbackForm.locator('input[type="checkbox"]').check();
-  await feedbackForm.locator('button[type="submit"]').click();
-  await feedbackForm.getByRole('status').waitFor();
+  assert.equal(await page.locator('.feedback-auth-prompt a[href="/login"]').getAttribute('href'),'/login');
   await page.goto('http://127.0.0.1:3107/register');
   await page.getByRole('heading',{name:locale==='ru'?'Регистрация посетителя':locale==='kk'?'Келушіні тіркеу':'Visitor registration'}).waitFor();
   assert.equal(await page.locator('input[type="password"]').count(),2,'Registration asks for password and confirmation');
@@ -272,11 +271,14 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
 
   await page.goto('http://127.0.0.1:3107/branches');
   const searchLabel=locale==='kk'?'Қала немесе филиал бойынша іздеу':locale==='en'?'Search by city or branch':'Поиск по городу или филиалу';
+  if(mobile)await page.locator('.branch-mobile-tabs button').nth(1).click();
   const liveMap=page.locator('.branch-map-frame');
-  assert.equal(await liveMap.count(),1,'The customer-confirmed Oskemen address should show the interactive OpenStreetMap embed');
+  await liveMap.waitFor();
+  assert.equal(await liveMap.count(),1,'The selected branch should show its available interactive map point');
   assert.match(await liveMap.getAttribute('src'),/openstreetmap\.org\/export\/embed\.html.*marker=/,'The map should carry the geocoded marker');
   assert.equal(await page.locator('.branch-list-item').count(),13,'The branch directory must provide all thirteen source-listed locations');
   assert.equal(await page.locator('.branch-map-source[href*="openstreetmap.org/?mlat"]').count(),1,'Settlement centroid must disclose its OpenStreetMap source');
+  if(mobile)await page.locator('.branch-mobile-tabs button').first().click();
   await page.getByRole('textbox',{name:searchLabel}).fill('Потанина');
   await page.locator('.branch-list-item').first().click();
   assert.equal(await page.locator('.branch-map-source[href*="yandex.com/maps"]').count(),1,'The address-level marker must disclose its Yandex geocoding source');
@@ -314,7 +316,7 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
  assert.equal(loginStatus,401,'Invalid login should not require creating the initial owner in read-only mode');
  const isolatedStore=JSON.parse(await (await import('node:fs/promises')).readFile(path.join(isolated,'.data/archive-store.json'),'utf8'));
  assert.equal(isolatedStore.users.length,0,'Read-only login must not bootstrap an owner account');
- console.log('PASS: responsive navigation, public visitor routes, anonymous feedback UI (mocked success), RU/KK/EN, catalog accuracy, mock Gemini citations, safe fallback, no-match/private-content scenarios, keyboard access, branch provenance, customer PDFs, and read-only admin APIs');
+ console.log('PASS: responsive navigation, public visitor routes, login-required feedback UI, RU/KK/EN, catalog accuracy, mock Gemini citations, safe fallback, no-match/private-content scenarios, keyboard access, branch provenance, customer PDFs, and read-only admin APIs');
 }finally{
  await browser?.close();
  if(server&&server.exitCode===null){server.kill('SIGTERM');await new Promise(resolve=>server.once('exit',resolve));}
