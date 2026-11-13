@@ -2,6 +2,7 @@
 import {useEffect,useState} from 'react';
 import Image from 'next/image';
 import {ArrowUpRight,Download,FileText,LogOut,ShieldAlert,Trash2,Upload,Users} from 'lucide-react';
+import {useApp} from './providers';
 
 type User={id:string;email:string;name:string;role:string;disabled:boolean};
 type Doc={id:string;title:string;description:string;date:string;fond:string;inventory:string;caseName:string;documentIdentifier:string;keywords:string[];language:string;provenance:string;accessStatus:'public'|'restricted';status:'draft'|'review'|'approved'|'published'|'archived';originalName:string;size:number;mimeType:string;createdBy?:string};
@@ -17,6 +18,7 @@ async function request(url:string,init?:RequestInit){
 }
 
 export function AdminWorkspace({readOnly=false,persistentAuth=false}:{readOnly?:boolean;persistentAuth?:boolean}){
+ const{locale,msg}=useApp();
  const[user,setUser]=useState<User|null>(null);
  const[loading,setLoading]=useState(true);
  const[error,setError]=useState('');
@@ -27,6 +29,7 @@ export function AdminWorkspace({readOnly=false,persistentAuth=false}:{readOnly?:
  const[feedbackSort,setFeedbackSort]=useState<'newest'|'oldest'|'highest'|'lowest'>('newest');
  const[feedbackType,setFeedbackType]=useState('all');
  const[moderationFilter,setModerationFilter]=useState('all');
+ const[publicationFilter,setPublicationFilter]=useState('pending');
  const[feedbackSearch,setFeedbackSearch]=useState('');
  const[savingFeedbackId,setSavingFeedbackId]=useState<string|null>(null);
  const[tab,setTab]=useState<'documents'|'accounts'|'audit'|'feedback'>('documents');
@@ -63,6 +66,7 @@ export function AdminWorkspace({readOnly=false,persistentAuth=false}:{readOnly?:
   try{
    await request('/api/admin/feedback',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:item.id,status})});
    setFeedback(rows=>rows.map(row=>row.id===item.id?{...row,publication_status:status}:row));
+   setNotice(locale==='ru'?(status==='published'?'Отзыв опубликован.':'Отзыв снят с публикации.'):locale==='kk'?(status==='published'?'Пікір жарияланды.':'Пікір жарияланымнан алынды.'):(status==='published'?'Review published.':'Review unpublished.'));
   }catch(e){setError((e as Error).message)}finally{setSavingFeedbackId(null)}
  }
 
@@ -104,7 +108,7 @@ export function AdminWorkspace({readOnly=false,persistentAuth=false}:{readOnly?:
 
  if(loading)return <div className="page-wrap"><p>Загрузка…</p></div>;
 
- const visibleFeedback=feedback.filter(item=>`${item.name||''} ${item.email||''} ${item.message} ${item.moderation_category||''}`.toLocaleLowerCase().includes(feedbackSearch.trim().toLocaleLowerCase()));
+ const visibleFeedback=feedback.filter(item=>`${item.name||''} ${item.email||''} ${item.message} ${item.moderation_category||''}`.toLocaleLowerCase().includes(feedbackSearch.trim().toLocaleLowerCase())&&(publicationFilter==='all'||item.publication_status===publicationFilter));
 
  if(!user){
   return (
@@ -392,15 +396,18 @@ export function AdminWorkspace({readOnly=false,persistentAuth=false}:{readOnly?:
 
    {tab==='feedback'&&['SUPERADMIN','SITE_ADMIN','MODERATOR'].includes(user.role)&&(
     <section className="admin-feedback-list">
+    <h2>{msg('reviewQueueTitle')}</h2>
+    <p className="admin-feedback-count">{msg('reviewQueueHelp')}</p>
     {readOnly&&!persistentAuth&&<p className="admin-warning">Публикация и удаление отключены: для безопасных изменений на сайте нужно настроить постоянную авторизацию сотрудников.</p>}
     <div className="admin-feedback-filters">
      <label>Поиск<input value={feedbackSearch} onChange={e=>setFeedbackSearch(e.target.value)} placeholder="Имя, email или текст"/></label>
      <label>Тип<select value={feedbackType} onChange={e=>setFeedbackType(e.target.value)}><option value="all">Все типы</option><option value="site_feedback">Отзывы</option><option value="suggestion">Предложения</option><option value="site_bug">Ошибки</option></select></label>
+     <label>{msg('reviewPublication')}<select value={publicationFilter} onChange={e=>setPublicationFilter(e.target.value)}><option value="pending">{msg('reviewPending')}</option><option value="published">{msg('reviewPublished')}</option><option value="private">{msg('reviewPrivate')}</option><option value="all">{msg('reviewAllStatuses')}</option></select></label>
      <label>AI-модерация<select value={moderationFilter} onChange={e=>setModerationFilter(e.target.value)}><option value="all">Все статусы</option><option value="classified">Классифицировано</option><option value="needs_review">Требует проверки</option></select></label>
      <label>Сортировка<select aria-label="Сортировка отзывов" value={feedbackSort} onChange={e=>setFeedbackSort(e.target.value as 'newest'|'oldest'|'highest'|'lowest')}><option value="newest">Сначала новые</option><option value="oldest">Сначала старые</option><option value="highest">Сначала высокая оценка</option><option value="lowest">Сначала низкая оценка</option></select></label>
     </div>
     <p className="admin-feedback-count">Показано {visibleFeedback.length} из {feedback.length}</p>
-    {visibleFeedback.map(item=><article className="admin-row" key={item.id}><span><b>{item.type} · {item.name||'Без имени'}</b><small>{item.rating?`${'★'.repeat(item.rating)}${'☆'.repeat(5-item.rating)} · ${item.rating}/5`:''} {item.email||'Контакт не указан'} · {new Date(item.created_at).toLocaleString()}</small><p>{item.message}</p><small>{item.moderation_status==='classified'?`AI-категория: ${item.moderation_category||'не определена'} · решение не принято автоматически`:'Требует проверки'}{item.moderation_summary?` · ${item.moderation_summary}`:''}</small>{item.moderation_reason&&<small>{item.moderation_reason}</small>}<small>Публикация: {item.publication_status}{item.public_consent?' · пользователь дал отдельное согласие':' · согласия на публикацию нет'}</small>{(!readOnly||persistentAuth)&&<div className="admin-feedback-actions">{item.publication_status==='published'?<button type="button" disabled={savingFeedbackId===item.id} onClick={()=>setReviewVisibility(item,'private')}>Снять с публикации</button>:<button type="button" disabled={savingFeedbackId===item.id||!item.public_consent||item.type!=='site_feedback'||!item.rating} onClick={()=>setReviewVisibility(item,'published')}>Опубликовать отзыв</button>}{['SUPERADMIN','SITE_ADMIN'].includes(user.role)&&<button className="danger" type="button" disabled={savingFeedbackId===item.id} onClick={()=>deleteFeedback(item)}>Удалить</button>}</div>}</span></article>)}
+    {visibleFeedback.map(item=><article className="admin-row" key={item.id}><span><b>{item.type} · {item.name||'Без имени'}</b><small>{item.rating?`${'★'.repeat(item.rating)}${'☆'.repeat(5-item.rating)} · ${item.rating}/5`:''} {item.email||'Контакт не указан'} · {new Date(item.created_at).toLocaleString()}</small><p>{item.message}</p><small>{item.moderation_status==='classified'?`AI-категория: ${item.moderation_category||'не определена'} · решение не принято автоматически`:'Требует проверки'}{item.moderation_summary?` · ${item.moderation_summary}`:''}</small>{item.moderation_reason&&<small>{item.moderation_reason}</small>}<small>Публикация: {item.publication_status}{item.public_consent?' · пользователь дал отдельное согласие':' · согласия на публикацию нет'}</small>{(!readOnly||persistentAuth)&&<div className="admin-feedback-actions">{item.publication_status==='published'?<button type="button" disabled={savingFeedbackId===item.id} onClick={()=>setReviewVisibility(item,'private')}>{msg('reviewUnpublish')}</button>:<><button type="button" disabled={savingFeedbackId===item.id||!item.public_consent||item.type!=='site_feedback'||!item.rating} onClick={()=>setReviewVisibility(item,'published')}>{msg('reviewApprove')}</button>{(!item.public_consent||item.type!=='site_feedback'||!item.rating)&&<small>{msg('reviewConsentRequired')}</small>}</>}{['SUPERADMIN','SITE_ADMIN'].includes(user.role)&&<button className="danger" type="button" disabled={savingFeedbackId===item.id} onClick={()=>deleteFeedback(item)}>Удалить</button>}</div>}</span></article>)}
      {!visibleFeedback.length&&<p>По выбранным фильтрам сообщений нет.</p>}
     </section>
    )}

@@ -41,6 +41,8 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
  await page.route('**/*',route=>{
   const url=new URL(route.request().url());
   if(url.pathname==='/api/public-feedback')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({reviews:[{name:'Archive',rating:5,message:'The history section is helpful.',createdAt:'2026-11-12T10:00:00.000Z'}]})});
+  // Display-only fixture: real profile fields are resolved by the authenticated server endpoint.
+  if(url.pathname==='/api/account/profile')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({profile:{email:'visitor@example.org',name:'Test Visitor',emailConfirmed:true,accountStatus:'active',role:'SITE_ADMIN',createdAt:'2026-11-10T09:00:00.000Z',staffSince:'2026-11-12T09:00:00.000Z',consentAt:'2026-11-10T09:00:00.000Z'}})});
   return url.hostname==='127.0.0.1'?route.continue():route.abort();
  });
  for(const width of [360,390,430,768,1024,1440]){
@@ -168,6 +170,11 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
   assert.equal(await page.locator('.feedback-auth-prompt a[href="/register"]').count(),1,'Registration link is shown');
   assert.equal(await page.locator('.admin-link').count(),0,'Public feedback page must not expose staff navigation');
   assert.equal(await page.locator('.feedback-auth-prompt a[href="/login"]').getAttribute('href'),'/login');
+  await page.goto('http://127.0.0.1:3107/account');
+  await page.getByRole('heading',{name:{ru:'Мой профиль',kk:'Менің профилім',en:'My profile'}[locale]}).waitFor();
+  await page.getByText('visitor@example.org',{exact:true}).waitFor();
+  assert.ok(await page.getByText({ru:'Администратор сайта',kk:'Сайт әкімшісі',en:'Site administrator'}[locale],{exact:true}).count()>=1,'The profile should display the assigned role');
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Profile card must fit the mobile viewport');
   await page.goto('http://127.0.0.1:3107/register');
   await page.getByRole('heading',{name:locale==='ru'?'Регистрация посетителя':locale==='kk'?'Келушіні тіркеу':'Visitor registration'}).waitFor();
   assert.equal(await page.locator('input[type="password"]').count(),2,'Registration asks for password and confirmation');

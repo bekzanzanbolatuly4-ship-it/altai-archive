@@ -29,6 +29,10 @@ export async function GET(){
 }
 
 export async function POST(request:Request){
+ if(process.env.VERCEL!=='1'){
+  const readOnly=demoReadOnlyFailure();
+  if(readOnly)return readOnly;
+ }
  const originFailure=sameOriginFailure(request);
  if(originFailure)return originFailure;
  const auth=await requireUser('accounts');
@@ -64,9 +68,6 @@ export async function POST(request:Request){
    return Response.json({user:{id:target.id,email:target.email,name:visitor.display_name,role,disabled:false}},{status:201,headers:{'Cache-Control':'no-store'}});
   }catch{return Response.json({error:'Invalid staff assignment'},{status:400});}
  }
- const readOnly=demoReadOnlyFailure();
- if(readOnly)return readOnly;
-
  try{
   const b=await request.json().catch(()=>({}));
   const email=String(b.email||'').trim().toLowerCase().slice(0,254);
@@ -112,6 +113,10 @@ export async function POST(request:Request){
 }
 
 export async function PATCH(request:Request){
+ if(process.env.VERCEL!=='1'){
+  const readOnly=demoReadOnlyFailure();
+  if(readOnly)return readOnly;
+ }
  const originFailure=sameOriginFailure(request);
  if(originFailure)return originFailure;
  const auth=await requireUser('accounts');
@@ -138,9 +143,6 @@ export async function PATCH(request:Request){
    return Response.json({ok:true},{headers:{'Cache-Control':'no-store'}});
   }catch{return Response.json({error:'Invalid account update'},{status:400});}
  }
- const readOnly=demoReadOnlyFailure();
- if(readOnly)return readOnly;
-
  try{
   const body:unknown=await request.json();
   if(!body||typeof body!=='object'||Array.isArray(body)){
