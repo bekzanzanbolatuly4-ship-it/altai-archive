@@ -112,19 +112,34 @@ export function InstitutionPage(){
           <small>{locale==='ru'?'Имя указано в документе о структуре и в государственной закупке от 21.08.2026; эта дата подтверждает только запись в документе, но не гарантирует, что должность не менялась позже.':locale==='kk'?'Аты құрылым құжатында және 2026 жылғы 21 тамыздағы мемлекеттік сатып алу жазбасында көрсетілген. Бұл тек сол жазбадағы деректі растайды, кейін лауазым өзгермегеніне кепіл емес.':'Named in the supplied organization chart and an official procurement record dated 21 Aug 2026. This confirms that record only; it does not guarantee no later change.'}</small>
           <a href="https://procurement.gov.kz/ru/announce/index/17537922" target="_blank" rel="noreferrer">{locale==='ru'?'Проверить запись госзакупки':locale==='kk'?'Мемлекеттік сатып алу жазбасын көру':'View procurement record'} <ArrowRight size={14}/></a>
         </div>
-        <p className="institution-structure-caveat">{locale==='ru'?'Состав подразделений приведён по документу «Структура.docx»; дата его актуальности не указана. Персональные телефоны и почта сотрудников не размещены, поскольку их текущая публикация не подтверждена. Переводы названий на казахский и английский даны для навигации и архивом не утверждены.':locale==='kk'?'Бөлімшелер құрамы «Структура.docx» құжаты бойынша берілген; мәліметтің өзектілік күні көрсетілмеген. Қызметкерлердің жеке телефондары мен электрондық поштасы жарияланбады, өйткені қазіргі жариялануы расталмады. Қазақша және ағылшынша атаулар архив бекітпеген навигациялық аударма болып табылады.':'Departments below follow “Структура.docx”; the source gives no effective date. Staff phone numbers and email addresses are omitted because current publication status was not confirmed. Kazakh and English department names are unapproved navigation translations.'}</p>
-        <ul className="institution-departments">
+        <div className="institution-org-connector" aria-hidden="true">↓</div>
+        <div className="institution-management" aria-label={locale==='ru'?'Заместители директора':locale==='kk'?'Директор орынбасарлары':'Deputy directors'}>
+          <article className="institution-org-card">
+            <b>{locale==='ru'?'Заместитель директора':locale==='kk'?'Директордың орынбасары':'Deputy Director'}</b>
+            <span>Костина Елена Валерьевна</span>
+          </article>
+          <article className="institution-org-card">
+            <b>{locale==='ru'?'Заместитель директора':locale==='kk'?'Директордың орынбасары':'Deputy Director'}</b>
+            <span>{locale==='ru'?'Имя в документе не указано':locale==='kk'?'Құжатта аты көрсетілмеген':'Name not provided in the source document'}</span>
+          </article>
+        </div>
+        <div className="institution-org-connector" aria-hidden="true">↓</div>
+        <h3 className="institution-departments-title">{locale==='ru'?'Отделы и руководители':locale==='kk'?'Бөлімдер мен басшылары':'Departments and heads'}</h3>
+        <div className="institution-departments">
           {([
-            ['Финансовой и кадровой работы','Қаржы және кадр жұмысы','Finance and Human Resources'],
-            ['Административно-хозяйственной части','Әкімшілік-шаруашылық бөлігі','Administrative and Facilities'],
-            ['Обеспечения сохранности и государственного учёта документов','Құжаттардың сақталуын және мемлекеттік есебін қамтамасыз ету','Document Preservation and State Records'],
-            ['Комплектования и контроля за ведомственными архивами','Жинақтау және ведомстволық архивтерді бақылау','Acquisitions and Departmental Archives Oversight'],
-            ['Научно-справочного аппарата, публикации и научного использования документов','Ғылыми-анықтамалық аппарат, құжаттарды жариялау және ғылыми пайдалану','Reference Tools, Publications and Scholarly Use'],
-            ['Информационных технологий','Ақпараттық технологиялар','Information Technology'],
-            ['Экспертизы ценности документов','Құжаттардың құндылығына сараптама жасау','Records Appraisal'],
-          ] as const).map(([ru,kk,en])=><li key={ru}>{locale==='ru'?`Отдел ${ru}`:locale==='kk'?kk:en}</li>)}
-          <li>{locale==='ru'?'Главный хранитель фондов':locale==='kk'?'Қорлардың бас сақтаушысы':'Chief Custodian of Archival Holdings'}</li>
-        </ul>
+            {ru:'Отдел финансовой и кадровой работы',kk:'Қаржы және кадр жұмысы бөлімі',en:'Finance and Human Resources',people:[['Главный бухгалтер','Бас бухгалтер','Chief Accountant','Калиева Мадина Саматовна'],['Инспектор по кадрам','Кадр инспекторы','HR Inspector','Увальжанова Кульмира Оспановна']]},
+            {ru:'Отдел административно-хозяйственной части',kk:'Әкімшілік-шаруашылық бөлімі',en:'Administrative and Facilities',people:[['Специалист по АХЧ','Әкімшілік-шаруашылық маманы','Facilities Specialist','Мутагалиев Аскат Кумаргалиевич']]},
+            {ru:'Сохранность и государственный учёт документов',kk:'Құжаттарды сақтау және мемлекеттік есепке алу',en:'Document Preservation and State Records',people:[['Главный хранитель фондов · руководитель отдела','Қорлардың бас сақтаушысы · бөлім басшысы','Chief Custodian · Department Head','Баелова Альмира Тугельбаевна']]},
+            {ru:'Отдел комплектования и контроля за ведомственными архивами',kk:'Жинақтау және ведомстволық архивтерді бақылау бөлімі',en:'Acquisitions and Departmental Archives Oversight',people:[['Руководитель отдела','Бөлім басшысы','Department Head','Сарсембаева Галия Еркеновна']]},
+            {ru:'Отдел научно-справочного аппарата, публикации и научного использования документов',kk:'Ғылыми-анықтамалық аппарат, құжаттарды жариялау және ғылыми пайдалану бөлімі',en:'Reference Tools, Publications and Scholarly Use',people:[['Руководитель отдела','Бөлім басшысы','Department Head','Шустова Татьяна Владимировна']]},
+            {ru:'Отдел информационных технологий',kk:'Ақпараттық технологиялар бөлімі',en:'Information Technology',people:[['Руководитель отдела','Бөлім басшысы','Department Head','Бекниязқызы Жангуль']]},
+            {ru:'Отдел экспертизы ценности документов',kk:'Құжаттардың құндылығын сараптау бөлімі',en:'Records Appraisal',people:[['Руководитель отдела','Бөлім басшысы','Department Head','Рахимбаева Акмарал Токтамысовна']]},
+          ] as const).map(unit=><article className="institution-department-card" key={unit.ru}>
+            <h4>{locale==='ru'?unit.ru:locale==='kk'?unit.kk:unit.en}</h4>
+            {unit.people.map(([roleRu,roleKk,roleEn,name])=><div className="institution-employee" key={name}><b>{locale==='ru'?roleRu:locale==='kk'?roleKk:roleEn}</b><span>{name}</span></div>)}
+          </article>)}
+        </div>
+        <p className="institution-structure-caveat">{locale==='ru'?'Данные приведены по документу «Структура.docx», переданному архивом; дата его актуальности не указана. Документ показывает должности и подразделения, но не уточняет, какие отделы закреплены за каждым заместителем. Второй заместитель указан без имени. Телефоны и электронные адреса сотрудников не публикуются. Названия подразделений на казахском и английском — навигационный перевод, не утверждённый архивом.':locale==='kk'?'Мәліметтер архив берген «Структура.docx» құжаты бойынша келтірілген; оның өзектілік күні көрсетілмеген. Құжатта лауазымдар мен бөлімдер бар, бірақ бөлімдердің әр орынбасарға бекітілуі нақтыланбаған. Екінші орынбасар аты-жөнсіз көрсетілген. Қызметкерлердің телефондары мен электрондық пошталары жарияланбайды. Бөлім атауларының қазақша және ағылшынша нұсқалары — архив бекітпеген навигациялық аударма.':'Based on the archive-supplied “Структура.docx”; its effective date is not stated. The source lists positions and departments but does not specify which departments report to each deputy. The second deputy position has no name in the source. Staff phone numbers and email addresses are omitted. Kazakh and English department names are navigation translations, not archive-approved.'}</p>
         <a className="outline-link" href="https://www.gov.kz/org/vko-uca/about/structure" target="_blank" rel="noreferrer">{locale==='ru'?'Официальная структура курирующего управления':locale==='kk'?'Жетекшілік ететін басқарманың ресми құрылымы':'Official structure of the supervising department'} <ArrowRight size={15}/></a>
       </section>
 

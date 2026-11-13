@@ -25,7 +25,7 @@ test('successful retrieval, model generation and server citations',async()=>{
  assert.equal(result.citations[0].url,'/document/public-id');
 });
 test('reference questions call the real completion path with approved public facts even when archive storage is empty',async()=>{
- for(const [question,intent] of [['What is an archive fund?','fund'],['How do I use the archive catalogue?','catalogue'],['Где найти филиалы?','branches'],['Как найти официальные документы?','official-documents'],['Что представляет собой Государственный архив ВКО?','institution'],['Какие разделы есть на сайте?','site-sections']])assert.equal(classifyReferenceQuestion(question),intent);
+ for(const [question,intent] of [['What is an archive fund?','fund'],['How do I use the archive catalogue?','catalogue'],['Где найти филиалы?','branches'],['Как найти официальные документы?','official-documents'],['Что представляет собой Государственный архив ВКО?','institution'],['Как устроен архив?','institution'],['Как работает архив?','institution'],['Чем занимается архив?','institution'],['Архив қалай жұмыс істейді?','institution'],['Архив калай жумыс жасайды?','institution'],['How does the archive work?','institution'],['Какие разделы есть на сайте?','site-sections']])assert.equal(classifyReferenceQuestion(question),intent);
  const reference=approvedReferenceSources('catalogue','en')[0];let context;
  const result=await runAgent({message:'How do I use the archive catalogue?',locale:'en'},deps({documents:async()=>assert.fail('Reference questions must not read archive storage'),fetcher:async(_url,options)=>{
   const payload=JSON.parse(options.body);context=JSON.parse(payload.contents[0].parts[0].text).untrustedPublicMetadata;
@@ -34,8 +34,8 @@ test('reference questions call the real completion path with approved public fac
  assert.equal(result.mode,'ai');assert.equal(result.citations[0].url,'/catalog');assert.equal(result.citations[0].provenance,'verified');
  assert.equal(context.length,1);assert.equal(context[0].id,reference.id);assert.ok(context[0].description.includes('Illustrative samples'));
 });
-test('greetings, assistant identity and status, institution identity and catalogue navigation use Gemini with cited references in RU, KK and EN',async()=>{
- const questions=[['Привет!','ru','/assistant'],['ИИ кто ты?','ru','/assistant'],['Как дела?','ru','/assistant'],['Что такое Государственный архив Восточно-Казахстанской области?','ru','/about'],['Где каталог?','ru','/catalog'],['Сәлем!','kk','/assistant'],['ЖИ сен кімсің?','kk','/assistant'],['Қалайсың?','kk','/assistant'],['Шығыс Қазақстан облысының мемлекеттік архиві деген не?','kk','/about'],['Каталог қайда?','kk','/catalog'],['Hello!','en','/assistant'],['Who are you?','en','/assistant'],['How are you?','en','/assistant'],['What is the State Archive of East Kazakhstan Region?','en','/about'],['Where is the catalogue?','en','/catalog']];
+test('greetings, assistant identity and status, general archive questions and catalogue navigation use Gemini with cited references in RU, KK and EN',async()=>{
+ const questions=[['Привет!','ru','/assistant'],['ИИ кто ты?','ru','/assistant'],['Как дела?','ru','/assistant'],['Что такое Государственный архив Восточно-Казахстанской области?','ru','/about'],['Как устроен архив?','ru','/about'],['Где каталог?','ru','/catalog'],['Сәлем!','kk','/assistant'],['ЖИ сен кімсің?','kk','/assistant'],['Қалайсың?','kk','/assistant'],['Шығыс Қазақстан облысының мемлекеттік архиві деген не?','kk','/about'],['Архив қалай жұмыс істейді?','kk','/about'],['Архив калай жумыс жасайды?','ru','/about'],['Каталог қайда?','kk','/catalog'],['Hello!','en','/assistant'],['Who are you?','en','/assistant'],['How are you?','en','/assistant'],['What is the State Archive of East Kazakhstan Region?','en','/about'],['How does the archive work?','en','/about'],['Where is the catalogue?','en','/catalog']];
  for(const [message,locale,url] of questions){
   const result=await runAgent({message,locale},deps({documents:async()=>assert.fail('Reference questions must not read archive storage'),fetcher:async(_url,options)=>{const request=JSON.parse(options.body);const references=JSON.parse(request.contents[0].parts[0].text).untrustedPublicMetadata;const source=references[0];return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({answer:'I am the ALTAI ARCHIVE assistant. Ask me about the information on this portal.',citations:[{id:source.id,quote:source.description}]})}]}}]});}}));
   assert.equal(result.mode,'ai',message);assert.ok(result.answer.length>20,message);assert.ok(result.citations.some(source=>source.url===url),message);
@@ -157,6 +157,7 @@ test('prior dialogue is bounded and redacted before it reaches AI context',()=>{
 test('RU, KK and EN detection with locale fallback',()=>{
  assert.equal(parseInput({message:'Найти фотографии',locale:'en'}).locale,'ru');
  assert.equal(parseInput({message:'Құжаттарды іздеу',locale:'ru'}).locale,'kk');
+ assert.equal(parseInput({message:'Архив калай жумыс жасайды?',locale:'ru'}).locale,'kk');
  assert.equal(parseInput({message:'Find photographs',locale:'kk'}).locale,'en');
  assert.equal(parseInput({message:'1900',locale:'kk'}).locale,'kk');
 });

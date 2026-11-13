@@ -2783,9 +2783,18 @@ html[data-theme='dark'] .map-scale {
 .institution-director span { font: 500 19px/1.35 'Playfair Display',Georgia,serif; color: var(--ink); }
 .institution-director small { max-width: 800px; color: var(--muted); line-height: 1.55; }
 .institution-director a { display: inline-flex; align-items: center; gap: 7px; width: fit-content; margin-top: 5px; color: var(--forest); font-size: 12px; font-weight: 600; }
+.institution-org-connector { display: grid; place-items: center; min-height: 42px; color: var(--sage); font-size: 25px; }
+.institution-management { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.institution-org-card,.institution-department-card { min-width: 0; padding: 16px; border: 1px solid var(--line); background: var(--paper); }
+.institution-org-card { display: grid; gap: 6px; }
+.institution-org-card b,.institution-employee b { color: var(--forest); font-size: 11px; line-height: 1.45; }
+.institution-org-card span,.institution-employee span { color: var(--ink); font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
+.institution-departments-title { margin: 4px 0 0; text-align: center; color: var(--muted); font-size: 14px; font-weight: 600; }
 .institution-structure-caveat { color: var(--muted); font-size: 13px; line-height: 1.6; }
-.institution-departments { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 24px; margin: 20px 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
-.institution-departments li { padding: 13px 2px; border-bottom: 1px solid var(--line); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.institution-departments { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; margin: 16px 0; }
+.institution-department-card h4 { margin: 0 0 12px; color: var(--forest); font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
+.institution-employee { display: grid; gap: 3px; padding-top: 10px; border-top: 1px solid var(--line); }
+.institution-employee+.institution-employee { margin-top: 10px; }
 .official-document-card { overflow: hidden; border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow); }
 .official-document-copy { display: grid; grid-template-columns: 52px minmax(0,1fr); gap: 18px; padding: 28px 30px 22px; }
 .official-document-icon { display: grid; place-items: center; width: 48px; height: 56px; background: var(--blue-soft); color: var(--forest); }
@@ -2811,7 +2820,7 @@ html[data-theme='dark'] .map-scale {
   .official-info-grid { grid-template-columns: minmax(0,1fr); gap: 12px; }
   .official-info-card { padding: 18px 16px; }
   .institution-structure { padding: 18px 16px; }
-  .institution-departments { grid-template-columns: minmax(0,1fr); }
+  .institution-management,.institution-departments { grid-template-columns: minmax(0,1fr); }
   .official-document-copy { grid-template-columns: 40px minmax(0,1fr); gap: 12px; padding: 20px 16px 17px; }
   .official-document-icon { width: 40px; height: 48px; }
   .official-document-metadata { grid-template-columns: 1fr; gap: 12px; margin: 0 16px; padding: 16px 0; }

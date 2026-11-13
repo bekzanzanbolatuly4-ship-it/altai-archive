@@ -28,6 +28,12 @@ export function classifyReferenceQuestion(message:string):ReferenceIntent|null{
  if(/(?:\b(?:что такое|что значит|определение|what is|define|анықтамасы|деген не)\b).{0,60}(?:архивн[\p{L}]* фонд|архивтік қор|archive fund)|(?:архивн[\p{L}]* фонд|архивтік қор|archive fund).{0,50}(?:что такое|what is|деген не)/u.test(q))return 'fund';
  if(/(?:что представляет собой|что такое|what is|who is|кто такой|мекеме қандай|не представляет собой).{0,100}(?:государственн[\p{L}]* архив|госархив|архив вко|архив восточно-казахстан|state archive|вко архив|мемлекеттік архив|мемлекеттік мұрағат)/u.test(q))return 'institution';
  if(/(?:мемлекеттік архив|мемлекеттік мұрағат).{0,50}(?:деген не|қандай)/u.test(q))return 'institution';
+ // General questions about the institution must reach Gemini with the approved
+ // institution references instead of being mistaken for catalogue searches.
+ const generalInstitutionQuestion=/(?:как устроен|как работает|чем занимается|структур[\p{L}]*).{0,60}(?:архив|госархив)|(?:архив|госархив).{0,60}(?:как устроен|как работает|чем занимается|структур[\p{L}]*)/u.test(q)
+  ||/(?:how does|how is|what does).{0,60}(?:archive|institution).{0,40}(?:work|organized|do)|(?:archive|institution).{0,60}(?:structure|organization|how it works)/u.test(q)
+  ||/(?:архив|мұрағат|мурағат).{0,80}(?:(?:қ|к)алай\s+(?:жұмыс|жумыс)\s+(?:істейді|истейді|жасайды)|құрылымы|немен айналысады)|(?:(?:қ|к)алай\s+(?:жұмыс|жумыс)\s+(?:істейді|истейді|жасайды)|құрылымы|немен айналысады).{0,80}(?:архив|мұрағат|мурағат)/u.test(q);
+ if(generalInstitutionQuestion)return 'institution';
  if(/(?:филиал|branches|branch|филиалдар)/u.test(q)&&/(?:где|найти|показ|список|where|find|show|қайда|табу|көрсету)/u.test(q))return 'branches';
  if(/(?:каталог|catalogue|catalog|каталогтан|каталогты)/u.test(q)&&/(?:как|пользоват|искать|найти|поиск|где|how|use|search|find|where|қайда|қалай|ізде|пайдалан)/u.test(q))return 'catalogue';
  if(/(?:официальн[\p{L}]* документ|ресми құжат|official document|адилет|әділет)/u.test(q)&&/(?:где|найти|искать|как|where|find|search|how|қайда|табу|қалай)/u.test(q))return 'official-documents';

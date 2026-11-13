@@ -16,7 +16,7 @@ export function parseInput(raw:unknown){
  if(tokens.length>300)throw new AIError('invalid_request',400);
  if(tokens.length>=40){const counts=new Map<string,number>();for(const token of tokens)counts.set(token,(counts.get(token)||0)+1);if(Math.max(...counts.values())/tokens.length>0.45)throw new AIError('invalid_request',400);}
  const message=redact(normalized);
- const locale:Language=/[әғқңөұүһі]/i.test(message)?'kk':/[а-яё]/i.test(message)?'ru':/\b(the|find|what|how|hello|archive|document|please)\b/i.test(message)?'en':input.locale as Language;
+ const locale:Language=/[әғқңөұүһі]/i.test(message)||/(?:^|[^\p{L}])(?:калай|жумыс|мурағат|қалай|жұмыс)(?=$|[^\p{L}])/iu.test(message)?'kk':/[а-яё]/i.test(message)?'ru':/\b(the|find|what|how|hello|archive|document|please)\b/i.test(message)?'en':input.locale as Language;
  const history=Array.isArray(input.history)?input.history.slice(-4).flatMap((turn)=>{
   if(!turn||typeof turn!=='object')return [];
   const item=turn as Record<string,unknown>;
