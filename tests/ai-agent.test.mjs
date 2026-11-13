@@ -47,6 +47,11 @@ test('site capability questions use the model with localized cited references',a
   assert.equal(result.mode,'ai');assert.ok(result.citations.length>=5);
  }
 });
+test('general questions use Gemini and end with an archive-data summary even when no archive record matches',async()=>{
+ let context;
+ const result=await runAgent({message:'Explain photosynthesis simply',locale:'en'},deps({documents:async()=>[],fetcher:async(_url,options)=>{const request=JSON.parse(options.body);context=JSON.parse(request.contents[0].parts[0].text).untrustedPublicMetadata;return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({answer:'Photosynthesis is how plants use light to make food.',citations:[]})}]}}]});}}));
+ assert.equal(result.mode,'ai');assert.deepEqual(context,[]);assert.match(result.answer,/Photosynthesis/);assert.match(result.answer,/Available archive data:/);assert.match(result.answer,/No confirmed published archive material matches/);
+});
 test('reference questions fall back to a cited local reference on provider 429 without claiming AI',async()=>{
  const result=await runAgent({message:'What is an archive fund?',locale:'en'},deps({documents:async()=>assert.fail('No archive read'),fetcher:async()=>new Response('{}',{status:429})}));
  assert.equal(result.mode,'reference');assert.equal(result.citations[0].url,'https://adilet.zan.kz/rus/docs/Z980000326_');assert.ok(!result.answer.includes('AI response'));
@@ -114,17 +119,17 @@ test('citations require exact excerpts and current authorization',()=>{
  assert.throws(()=>validateResponse(output,sources,[{...doc,title:'Changed'}]),/source_changed/);
 });
 test('no source matches do not fabricate citations',async()=>{
- const result=await runAgent({message:'квантовая обсерватория на Марсе',locale:'ru'},deps({documents:async()=>[],fetcher:async()=>assert.fail('No-match must not call the provider')}));
- assert.deepEqual(result.citations,[]);
+ const result=await runAgent({message:'квантовая обсерватория на Марсе',locale:'ru'},deps({documents:async()=>[],fetcher:async()=>Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({answer:'Для ответа нужны более точные сведения.',citations:[]})}]}}]})}));
+ assert.equal(result.mode,'ai');assert.deepEqual(result.citations,[]);assert.match(result.answer,/Доступные данные архива:/);
 });
-test('missing specific archive documents remain no-match and do not hit the synthetic demo catalogue',async()=>{
- const result=await runAgent({message:'Найди архивный документ с шифром 999-XYZ',locale:'ru'},deps({documents:async()=>[],fetcher:async()=>assert.fail('No confirmed archive record must not call a provider')}));
- assert.equal(result.mode,'no-match');assert.deepEqual(result.citations,[]);
+test('missing specific archive documents still use AI but never hit the synthetic demo catalogue',async()=>{
+ const result=await runAgent({message:'Найди архивный документ с шифром 999-XYZ',locale:'ru'},deps({documents:async()=>[],fetcher:async(_url,options)=>{const request=JSON.parse(options.body);assert.equal(JSON.parse(request.contents[0].parts[0].text).untrustedPublicMetadata.length,0);return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({answer:'В опубликованных источниках такого документа нет.',citations:[]})}]}}]});}}));
+ assert.equal(result.mode,'ai');assert.deepEqual(result.citations,[]);assert.match(result.answer,/подтверждённых совпадений/iu);
 });
 test('empty published catalogue does not return synthetic sample records',async()=>{
  for(const [locale,message] of [['ru','Найти фотографию'],['kk','Фото іздеу'],['en','Find photographs']]){
-  const result=await runAgent({message,locale},deps({documents:async()=>[]}));
-  assert.equal(result.mode,'no-match');
+  const result=await runAgent({message,locale},deps({documents:async()=>[],fetcher:async()=>Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({answer:'No matching published material is available in the catalogue.',citations:[]})}]}}]})}));
+  assert.equal(result.mode,'ai');
   assert.deepEqual(result.citations,[]);
  }
 });

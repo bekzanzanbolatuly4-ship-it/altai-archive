@@ -12,8 +12,9 @@ globalThis.fetch=async(input,options)=>{
    return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({answer:'Use the catalogue search and filters.',citations:[{id:source.id,quote:source.description}]})}]}}]});
   }
   const reference=input.untrustedPublicMetadata.find(item=>item.id.startsWith('R'));
-  const citation=reference?{id:reference.id,quote:reference.description}:{id:'S1',quote:'Photographs of mountains.'};
-  return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({answer:'I am the ALTAI ARCHIVE information assistant. Public metadata describes photographs.',citations:[citation]})}]}}]});
+  const source=input.untrustedPublicMetadata[0];
+  const citation=reference?{id:reference.id,quote:reference.description}:source?.id?{id:source.id,quote:source.description}:null;
+  return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify({answer:'I am the information assistant. Public metadata describes photographs.',citations:citation?[citation]:[]})}]}}]});
  }
  if(!url.startsWith('http://127.0.0.1')&&!url.startsWith('http://localhost'))throw new Error('External network blocked in E2E');
  return original(input,options);

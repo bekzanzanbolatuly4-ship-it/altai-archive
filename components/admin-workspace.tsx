@@ -5,7 +5,7 @@ import {ArrowUpRight,Download,FileText,LogOut,ShieldAlert,Trash2,Upload,Users} f
 
 type User={id:string;email:string;name:string;role:string;disabled:boolean};
 type Doc={id:string;title:string;description:string;date:string;fond:string;inventory:string;caseName:string;documentIdentifier:string;keywords:string[];language:string;provenance:string;accessStatus:'public'|'restricted';status:'draft'|'review'|'approved'|'published'|'archived';originalName:string;size:number;mimeType:string;createdBy?:string};
-type Feedback={id:string;type:string;name:string|null;email:string|null;message:string;status:string;moderation_status:string;moderation_category:string|null;moderation_summary:string|null;moderation_reason:string|null;created_at:string};
+type Feedback={id:string;type:string;name:string|null;email:string|null;message:string;rating:number|null;status:string;moderation_status:string;moderation_category:string|null;moderation_summary:string|null;moderation_reason:string|null;created_at:string};
 
 const roles=['SITE_ADMIN','ARCHIVE_EMPLOYEE','EDITOR','BRANCH_ADMIN','MODERATOR','ANALYST'];
 
@@ -24,7 +24,7 @@ export function AdminWorkspace({readOnly=false}:{readOnly?:boolean}){
  const[docs,setDocs]=useState<Doc[]>([]);
  const[users,setUsers]=useState<User[]>([]);
  const[feedback,setFeedback]=useState<Feedback[]>([]);
- const[feedbackSort,setFeedbackSort]=useState<'newest'|'oldest'>('newest');
+ const[feedbackSort,setFeedbackSort]=useState<'newest'|'oldest'|'highest'|'lowest'>('newest');
  const[tab,setTab]=useState<'documents'|'accounts'|'audit'|'feedback'>('documents');
  const[uploading,setUploading]=useState(false);
  const[savingId,setSavingId]=useState<string|null>(null);
@@ -371,8 +371,8 @@ export function AdminWorkspace({readOnly=false}:{readOnly?:boolean}){
 
    {tab==='feedback'&&['SUPERADMIN','SITE_ADMIN','MODERATOR'].includes(user.role)&&(
     <section className="admin-feedback-list">
-     <div className="admin-main-head"><h2>Отзывы ({feedback.length})</h2><label>Сортировка <select aria-label="Сортировка отзывов" value={feedbackSort} onChange={e=>setFeedbackSort(e.target.value as 'newest'|'oldest')}><option value="newest">Сначала новые</option><option value="oldest">Сначала старые</option></select></label></div>
-     {feedback.map(item=><article className="admin-row" key={item.id}><span><b>{item.type} · {item.name||'Без имени'}</b><small>{item.email||'Email не указан'} · {new Date(item.created_at).toLocaleString()}</small><p>{item.message}</p><small>{item.moderation_status==='classified'?`AI-категория: ${item.moderation_category||'не определена'} · решение не принято автоматически`:'Требует проверки'}</small>{item.moderation_summary&&<p>{item.moderation_summary}</p>}{item.moderation_reason&&<small>{item.moderation_reason}</small>}</span></article>)}
+    <div className="admin-main-head"><h2>Отзывы ({feedback.length})</h2><label>Сортировка <select aria-label="Сортировка отзывов" value={feedbackSort} onChange={e=>setFeedbackSort(e.target.value as 'newest'|'oldest'|'highest'|'lowest')}><option value="newest">Сначала новые</option><option value="oldest">Сначала старые</option><option value="highest">Сначала высокая оценка</option><option value="lowest">Сначала низкая оценка</option></select></label></div>
+    {feedback.map(item=><article className="admin-row" key={item.id}><span><b>{item.type} · {item.name||'Без имени'}</b><small>{item.rating?`${'★'.repeat(item.rating)}${'☆'.repeat(5-item.rating)} · ${item.rating}/5`:''} {item.email||'Контакт не указан'} · {new Date(item.created_at).toLocaleString()}</small><p>{item.message}</p><small>{item.moderation_status==='classified'?`AI-категория: ${item.moderation_category||'не определена'} · решение не принято автоматически`:'Требует проверки'}</small>{item.moderation_summary&&<p>{item.moderation_summary}</p>}{item.moderation_reason&&<small>{item.moderation_reason}</small>}</span></article>)}
      {!feedback.length&&<p>Сохранённых отзывов пока нет.</p>}
     </section>
    )}

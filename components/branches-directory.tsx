@@ -21,8 +21,8 @@ export function BranchesDirectory(){
  const title=(branch:ArchiveLocation)=>getLocalizedBranchTitle(branch,locale);
  const mapUrl=(branch:ArchiveLocation)=>{
   if(!branch.coordinates)return null;
-  const{latitude,longitude}=branch.coordinates;
-  const dLat=0.003,dLon=0.004;
+  const{latitude,longitude,precision}=branch.coordinates;
+  const dLat=precision==='address'?0.003:0.04,dLon=precision==='address'?0.004:0.055;
   const params=new URLSearchParams({bbox:`${longitude-dLon},${latitude-dLat},${longitude+dLon},${latitude+dLat}`,layer:'mapnik',marker:`${latitude},${longitude}`});
   return `https://www.openstreetmap.org/export/embed.html?${params.toString()}`;
  };
@@ -52,8 +52,8 @@ export function BranchesDirectory(){
      <iframe className="branch-map-frame" title={`${title(selected)} · OpenStreetMap`} src={mapUrl(selected)!} loading="lazy" referrerPolicy="no-referrer" />
      <a className="branch-map-attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a>
      <p className="branch-map-status"><MapPin size={18}/>{msg('branchMapGeocoded')}</p>
-     <p>{msg('branchCoordinateCaveat')}</p>
-     <a className="branch-map-source" href={selected.coordinates!.sourceUrl} target="_blank" rel="noreferrer">{msg('branchCoordinateSource')} <ExternalLink size={13}/></a>
+     <p>{selected.coordinates!.precision==='settlement'?msg('branchSettlementCaveat'):msg('branchCoordinateCaveat')}</p>
+     <a className="branch-map-source" href={selected.coordinates!.sourceUrl} target="_blank" rel="noreferrer">{selected.coordinates!.precision==='settlement'?msg('branchSettlementSource'):msg('branchCoordinateSource')} <ExternalLink size={13}/></a>
     </>:<>
      <div className="branch-map-art" aria-hidden="true"><span/><span/><MapIcon size={30}/></div>
      <p className="branch-map-status"><AlertTriangle size={18}/>{msg('branchMapUnavailable')}</p><p>{msg('branchMapHelp')}</p>
@@ -61,7 +61,7 @@ export function BranchesDirectory(){
     {selected&&<article className="branch-selected-card" aria-live="polite">
      <span className="eyebrow">{formatCity(selected.city,locale)}</span><h2>{title(selected)}</h2>
      <dl><div><dt>{msg('address')}</dt><dd>{selected.address?`${msg('branchSourceListing')}: ${selected.address}`:msg('unconfirmed')}</dd></div></dl>
-     {selected.address&&(selected.addressStatus==='official-listing'||selected.id==='branch-source-12')&&<a className="outline-link branch-route" href={`https://2gis.kz/oskemen/search/${encodeURIComponent(selected.address)}`} target="_blank" rel="noreferrer"><MapPin size={16}/>{msg('branchRoute')}<ArrowUpRight size={14}/></a>}
+     {selected.address&&<a className="outline-link branch-route" href={`https://2gis.kz/oskemen/search/${encodeURIComponent(selected.address)}`} target="_blank" rel="noreferrer"><MapPin size={16}/>{msg('branchRoute')}<ArrowUpRight size={14}/></a>}
      <div className="branch-evidence"><b>{msg(branchConflicts.has(selected.id)?'branchStatusConflict':'branchStatusNeedsReview')}</b><span>{msg('branchNameSource')}: {selected.sourceDocument}</span><span>{msg('branchAddressSource')}: {selected.addressSourceDocument||msg('unconfirmed')}</span><span>{msg('branchSourceDateNote')}</span>
       {branchConflictDetails[selected.id]&&<div className="branch-source-versions">
        <section><b>{msg('branchSourceOriginal')}</b><span>{selected.shortName}</span><span>{selected.address||msg('unconfirmed')}</span><span>{msg('phone')}: {selected.phone||msg('unconfirmed')}</span></section>

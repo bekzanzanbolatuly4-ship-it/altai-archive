@@ -18,7 +18,15 @@
     "reviewNotes": [
       "Название и статус филиала сверены по постановлению №142; адрес указан в таблице заказчика, его актуальность для маршрута требует отдельной проверки."
     ],
-    "coordinatesStatus": "unavailable",
+    "coordinatesStatus": "provider-geocoded",
+    "coordinates": {
+      "latitude": 49.724243,
+      "longitude": 84.275146,
+      "precision": "settlement",
+      "sourceUrl": "https://www.openstreetmap.org/?mlat=49.724243&mlon=84.275146#map=14/49.724243/84.275146",
+      "sourceLabel": "OpenStreetMap place centroid for Altai settlement; not the branch entrance",
+      "checkedAt": "2026-11-13"
+    },
     "affiliationStatus": "official-listing",
     "addressStatus": "source-listing",
     "addressSourceDocument": "Адреса и контакты филиалов.xls"
@@ -42,7 +50,15 @@
     "reviewNotes": [
       "Название и статус филиала сверены по постановлению №142; адрес указан в таблице заказчика, его актуальность для маршрута требует отдельной проверки."
     ],
-    "coordinatesStatus": "unavailable",
+    "coordinatesStatus": "provider-geocoded",
+    "coordinates": {
+      "latitude": 50.1438305,
+      "longitude": 82.3169517,
+      "precision": "settlement",
+      "sourceUrl": "https://www.openstreetmap.org/?mlat=50.1438305&mlon=82.3169517#map=14/50.1438305/82.3169517",
+      "sourceLabel": "OpenStreetMap place centroid for Glubokoye settlement; not the branch entrance",
+      "checkedAt": "2026-11-13"
+    },
     "affiliationStatus": "official-listing",
     "addressStatus": "source-listing",
     "addressSourceDocument": "Адреса и контакты филиалов.xls"
@@ -66,7 +82,15 @@
     "reviewNotes": [
       "Название и статус филиала сверены по постановлению №142; адрес указан в таблице заказчика, его актуальность для маршрута требует отдельной проверки."
     ],
-    "coordinatesStatus": "unavailable",
+    "coordinatesStatus": "provider-geocoded",
+    "coordinates": {
+      "latitude": 47.4672312,
+      "longitude": 84.8718159,
+      "precision": "settlement",
+      "sourceUrl": "https://www.openstreetmap.org/?mlat=47.4672312&mlon=84.8718159#map=14/47.4672312/84.8718159",
+      "sourceLabel": "OpenStreetMap place centroid for Zaysan settlement; not the branch entrance",
+      "checkedAt": "2026-11-13"
+    },
     "affiliationStatus": "official-listing",
     "addressStatus": "source-listing",
     "addressSourceDocument": "Адреса и контакты филиалов.xls"
@@ -90,7 +114,15 @@
     "reviewNotes": [
       "Название и статус филиала сверены по постановлению №142; адрес указан в таблице заказчика, его актуальность для маршрута требует отдельной проверки."
     ],
-    "coordinatesStatus": "unavailable",
+    "coordinatesStatus": "provider-geocoded",
+    "coordinates": {
+      "latitude": 49.1776001,
+      "longitude": 85.6063821,
+      "precision": "settlement",
+      "sourceUrl": "https://www.openstreetmap.org/?mlat=49.1776001&mlon=85.6063821#map=14/49.1776001/85.6063821",
+      "sourceLabel": "OpenStreetMap place centroid for Katon-Karagay settlement; not the branch entrance",
+      "checkedAt": "2026-11-13"
+    },
     "affiliationStatus": "official-listing",
     "addressStatus": "source-listing",
     "addressSourceDocument": "Адреса и контакты филиалов.xls"
@@ -114,7 +146,15 @@
     "reviewNotes": [
       "Название и статус филиала сверены по постановлению №142; адрес указан в таблице заказчика, его актуальность для маршрута требует отдельной проверки."
     ],
-    "coordinatesStatus": "unavailable",
+    "coordinatesStatus": "provider-geocoded",
+    "coordinates": {
+      "latitude": 48.5656876,
+      "longitude": 83.6524237,
+      "precision": "settlement",
+      "sourceUrl": "https://www.openstreetmap.org/?mlat=48.5656876&mlon=83.6524237#map=14/48.5656876/83.6524237",
+      "sourceLabel": "OpenStreetMap place centroid for Kurchum settlement; not the branch entrance",
+      "checkedAt": "2026-11-13"
+    },
     "affiliationStatus": "official-listing",
     "addressStatus": "source-listing",
     "addressSourceDocument": "Адреса и контакты филиалов.xls"
@@ -138,7 +178,15 @@
     "reviewNotes": [
       "Название и статус филиала сверены по постановлению №142; адрес указан в таблице заказчика, его актуальность для маршрута требует отдельной проверки."
     ],
-    "coordinatesStatus": "unavailable",
+    "coordinatesStatus": "provider-geocoded",
+    "coordinates": {
+      "latitude": 48.4269057,
+      "longitude": 85.7338403,
+      "precision": "settlement",
+      "sourceUrl": "https://www.openstreetmap.org/?mlat=48.4269057&mlon=85.7338403#map=14/48.4269057/85.7338403",
+      "sourceLabel": "OpenStreetMap place centroid for Markakol settlement; not the branch entrance",
+      "checkedAt": "2026-11-13"
+    },
     "affiliationStatus": "official-listing",
     "addressStatus": "source-listing",
     "addressSourceDocument": "Адреса и контакты филиалов.xls"
@@ -162,7 +210,15 @@
     "reviewNotes": [
       "Название и статус филиала сверены по постановлению №142; адрес указан в таблице заказчика, его актуальность для маршрута требует отдельной проверки."
     ],
-    "coordinatesStatus": "unavailable",
+    "coordinatesStatus": "provider-geocoded",
+    "coordinates": {
+      "latitude": 50.3532685,
+      "longitude": 83.5207272,
+      "precision": "settlement",
+      "sourceUrl": "https://www.openstreetmap.org/?mlat=50.3532685&mlon=83.5207272#map=14/50.3532685/83.5207272",
+      "sourceLabel": "OpenStreetMap place centroid for Ridder settlement; not the branch entrance",
+      "checkedAt": "2026-11-13"
+    },
     "affiliationStatus": "official-listing",
     "addressStatus": "source-listing",
     "addressSourceDocument": "Адреса и контакты филиалов.xls"
@@ -186,7 +242,15 @@
     "reviewNotes": [
       "Название и статус филиала сверены по постановлению №142; адрес указан в таблице заказчика, его актуальность для маршрута требует отдельной проверки."
     ],
-    "coordinatesStatus": "unavailable",
+    "coordinatesStatus": "provider-geocoded",
+    "coordinates": {
+      "latitude": 49.0204442,
+      "longitude": 83.3657624,
+      "precision": "settlement",
+      "sourceUrl": "https://www.openstreetmap.org/?mlat=49.0204442&mlon=83.3657624#map=14/49.0204442/83.3657624",
+      "sourceLabel": "OpenStreetMap place centroid for Samar settlement; not the branch entrance",
+      "checkedAt": "2026-11-13"
+    },
     "affiliationStatus": "official-listing",
     "addressStatus": "source-listing",
     "addressSourceDocument": "Адреса и контакты филиалов.xls"
@@ -210,7 +274,15 @@
     "reviewNotes": [
       "Название и статус филиала сверены по постановлению №142; адрес указан в таблице заказчика, его актуальность для маршрута требует отдельной проверки."
     ],
-    "coordinatesStatus": "unavailable",
+    "coordinatesStatus": "provider-geocoded",
+    "coordinates": {
+      "latitude": 47.5828510,
+      "longitude": 83.6894680,
+      "precision": "settlement",
+      "sourceUrl": "https://www.openstreetmap.org/?mlat=47.5828510&mlon=83.6894680#map=14/47.5828510/83.6894680",
+      "sourceLabel": "OpenStreetMap place centroid for Akzhar settlement; not the branch entrance",
+      "checkedAt": "2026-11-13"
+    },
     "affiliationStatus": "official-listing",
     "addressStatus": "source-listing",
     "addressSourceDocument": "Адреса и контакты филиалов.xls"
@@ -234,7 +306,15 @@
     "reviewNotes": [
       "Название и статус филиала сверены по постановлению №142; адрес указан в таблице заказчика, его актуальность для маршрута требует отдельной проверки."
     ],
-    "coordinatesStatus": "unavailable",
+    "coordinatesStatus": "provider-geocoded",
+    "coordinates": {
+      "latitude": 49.8755707,
+      "longitude": 82.4875024,
+      "precision": "settlement",
+      "sourceUrl": "https://www.openstreetmap.org/?mlat=49.8755707&mlon=82.4875024#map=14/49.8755707/82.4875024",
+      "sourceLabel": "OpenStreetMap place centroid for Kasym Kaysenov settlement; not the branch entrance",
+      "checkedAt": "2026-11-13"
+    },
     "affiliationStatus": "official-listing",
     "addressStatus": "source-listing",
     "addressSourceDocument": "Адреса и контакты филиалов.xls"
@@ -258,7 +338,15 @@
     "reviewNotes": [
       "Название и статус филиала сверены по постановлению №142; адрес указан в таблице заказчика, его актуальность для маршрута требует отдельной проверки."
     ],
-    "coordinatesStatus": "unavailable",
+    "coordinatesStatus": "provider-geocoded",
+    "coordinates": {
+      "latitude": 49.2138860,
+      "longitude": 84.5087660,
+      "precision": "settlement",
+      "sourceUrl": "https://www.openstreetmap.org/?mlat=49.2138860&mlon=84.5087660#map=14/49.2138860/84.5087660",
+      "sourceLabel": "OpenStreetMap place centroid for Ulken Naryn settlement; not the branch entrance",
+      "checkedAt": "2026-11-13"
+    },
     "affiliationStatus": "official-listing",
     "addressStatus": "source-listing",
     "addressSourceDocument": "Адреса и контакты филиалов.xls"
@@ -282,7 +370,15 @@
     "reviewNotes": [
       "Название и статус филиала сверены по постановлению №142; адрес указан в таблице заказчика, его актуальность для маршрута требует отдельной проверки."
     ],
-    "coordinatesStatus": "unavailable",
+    "coordinatesStatus": "provider-geocoded",
+    "coordinates": {
+      "latitude": 50.6273293,
+      "longitude": 81.9086454,
+      "precision": "settlement",
+      "sourceUrl": "https://www.openstreetmap.org/?mlat=50.6273293&mlon=81.9086454#map=14/50.6273293/81.9086454",
+      "sourceLabel": "OpenStreetMap place centroid for Shemonaiha settlement; not the branch entrance",
+      "checkedAt": "2026-11-13"
+    },
     "affiliationStatus": "official-listing",
     "addressStatus": "source-listing",
     "addressSourceDocument": "Адреса и контакты филиалов.xls",
@@ -291,6 +387,7 @@
     "coordinates": {
       "latitude": 49.958867,
       "longitude": 82.598267,
+      "precision": "address",
       "sourceUrl": "https://yandex.com/maps/10306/ust-kamenogorsk/search/Potanina%2012%2F2/",
       "sourceLabel": "Yandex Maps address match; map position only, not independent confirmation of branch operation",
       "checkedAt": "2026-11-13"
@@ -315,7 +412,15 @@
     "reviewNotes": [
       "Название и статус филиала сверены по постановлению №142; адрес указан в таблице заказчика, его актуальность для маршрута требует отдельной проверки."
     ],
-    "coordinatesStatus": "unavailable",
+    "coordinatesStatus": "provider-geocoded",
+    "coordinates": {
+      "latitude": 50.6273293,
+      "longitude": 81.9086454,
+      "precision": "settlement",
+      "sourceUrl": "https://www.openstreetmap.org/?mlat=50.6273293&mlon=81.9086454#map=14/50.6273293/81.9086454",
+      "sourceLabel": "OpenStreetMap place centroid for Shemonaiha settlement; not the branch entrance",
+      "checkedAt": "2026-11-13"
+    },
     "affiliationStatus": "official-listing",
     "addressStatus": "source-listing",
     "addressSourceDocument": "Адреса и контакты филиалов.xls"

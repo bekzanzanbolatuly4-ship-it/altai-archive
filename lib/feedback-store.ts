@@ -4,10 +4,12 @@ import type {FeedbackModeration} from './ai/moderation';
 
 export const feedbackConsentVersion='feedback-contact-v1';
 
-export type FeedbackRow=FeedbackSubmission&{
- auth_user_id:string;
+export type FeedbackRow=Omit<FeedbackSubmission,'contactConsent'>&{
+ contact_consent:boolean;
+ auth_user_id:string|null;
  name:string;
- email:string;
+ email:string|null;
+ rating:number|null;
  status:'new';
  consent_version:string|null;
  moderation_category:FeedbackModeration['category'];
@@ -18,7 +20,7 @@ export type FeedbackRow=FeedbackSubmission&{
 
 export async function storeFeedback(
  submission:FeedbackSubmission,
- identity:{userId:string;name:string;email:string},
+ identity:{userId:string}|undefined,
  {url=process.env.SUPABASE_URL,secret=process.env.SUPABASE_SECRET_KEY||process.env.SUPABASE_SERVICE_ROLE_KEY,fetcher=fetch,moderation}:{url?:string;secret?:string;fetcher?:typeof fetch;moderation?:FeedbackModeration}={},
 ):Promise<void>{
  if(!url||!secret)throw new FeedbackError('feedback_storage_unavailable',503);
@@ -29,10 +31,13 @@ export async function storeFeedback(
   endpoint=new URL('/rest/v1/feedback_messages',base.origin);
  }catch{throw new FeedbackError('feedback_storage_unavailable',503);}
  const row:FeedbackRow={
-  ...submission,
-  auth_user_id:identity.userId,
-  name:identity.name,
-  email:identity.email,
+  type:submission.type,
+  name:submission.name,
+  email:submission.email,
+  rating:submission.rating,
+  message:submission.message,
+  contact_consent:submission.contactConsent,
+  auth_user_id:identity?.userId??null,
   status:'new',
   consent_version:submission.contactConsent?feedbackConsentVersion:null,
   moderation_category:moderation?.category??null,

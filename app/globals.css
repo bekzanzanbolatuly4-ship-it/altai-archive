@@ -3599,6 +3599,14 @@ html[data-theme='dark'] .assistant-disclosure {
 .feedback-field textarea { min-height: 150px; resize: vertical; line-height: 1.55; }
 .feedback-field input:focus-visible, .feedback-field select:focus-visible, .feedback-field textarea:focus-visible, .feedback-consent input:focus-visible, .feedback-submit:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
 .feedback-field input:disabled, .feedback-field select:disabled, .feedback-field textarea:disabled { opacity: .7; }
+.feedback-rating { min-width: 0; margin: 0; padding: 12px 14px; border: 1px solid var(--line); }
+.feedback-rating legend { padding: 0 5px; color: var(--ink); font-weight: 600; }
+.feedback-stars { display: flex; flex-wrap: wrap; gap: 5px; }
+.feedback-stars button { display: grid; place-items: center; width: 46px; height: 46px; border: 1px solid var(--line); background: var(--paper); color: var(--muted); cursor: pointer; }
+.feedback-stars button.active { color: var(--forest); }
+.feedback-stars button:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+.feedback-rating small { display: block; margin-top: 6px; color: var(--muted); }
+.feedback-trap { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
 .feedback-count { justify-self: end; color: var(--muted); font-weight: 400; }
 .feedback-consent { display: flex; align-items: flex-start; gap: 10px; max-width: 760px; color: var(--ink); line-height: 1.55; }
 .feedback-consent input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--blue); flex: 0 0 auto; }

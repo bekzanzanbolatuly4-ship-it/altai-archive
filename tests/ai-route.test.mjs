@@ -35,14 +35,14 @@ test('real route integrates input, public retrieval, provider, validation and sa
   assert.equal((await POST(request({message:'x'.repeat(2001),locale:'en'}))).status,400);
   globalThis.__assistantDocuments=[];
   const empty=await POST(request({message:'квантовая обсерватория на Марсе',locale:'ru'}));
-  assert.equal(empty.status,200);assert.deepEqual(await empty.json(),{mode:'no-match',locale:'ru',answer:'По вашему запросу не найдено опубликованных архивных материалов.',citations:[]});
+  assert.equal(empty.status,200);const emptyBody=await empty.json();assert.equal(emptyBody.mode,'reference');assert.match(emptyBody.answer,/AI временно недоступен/);assert.match(emptyBody.answer,/Доступные данные архива:/);
   assert.equal(providerCalls,0,'No provider request should run when there are no public documents');
   for(const [message,locale,url] of [['привет','ru','/assistant'],['Что такое Государственный архив Восточно-Казахстанской области?','ru','/about'],['Где каталог?','ru','/catalog']]){
    const response=await POST(request({message,locale}));assert.equal(response.status,200);
    const body=await response.json();assert.equal(body.mode,'reference');assert.ok(body.citations.some(source=>source.url===url));
   }
   const missingDocument=await POST(request({message:'Найди архивный документ с шифром 999-XYZ',locale:'ru'}));
-  assert.equal(missingDocument.status,200);assert.equal((await missingDocument.json()).mode,'no-match');
+  assert.equal(missingDocument.status,200);const missingDocumentBody=await missingDocument.json();assert.equal(missingDocumentBody.mode,'reference');assert.match(missingDocumentBody.answer,/Доступные данные архива:/);
   const missingReferenceConfig=await POST(request({message:'How do I use the archive catalogue?',locale:'en'}));
   assert.equal(missingReferenceConfig.status,200);assert.equal((await missingReferenceConfig.json()).mode,'reference');
   assert.equal(providerCalls,0,'Local references and no-match must not call a model');

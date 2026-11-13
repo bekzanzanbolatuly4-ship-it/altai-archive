@@ -66,10 +66,10 @@ test('branch import preserves source and review markers, never invents coordinat
   assert.equal(record.addressSourceDocument,'Адреса и контакты филиалов.xls');
   assert.equal(record.sourceDate,'2 июня 2026 года · перечень и переименование филиалов');
   assert.equal(record.needsReview,true);
-  if(record.id==='branch-source-12'){
-   assert.equal(record.coordinatesStatus,'provider-geocoded');
-   assert.deepEqual(record.coordinates,{latitude:49.958867,longitude:82.598267,sourceUrl:'https://yandex.com/maps/10306/ust-kamenogorsk/search/Potanina%2012%2F2/',sourceLabel:'Yandex Maps address match; map position only, not independent confirmation of branch operation',checkedAt:'2026-11-13'});
-  }else assert.equal(record.coordinatesStatus,'unavailable');
+  assert.equal(record.coordinatesStatus,'provider-geocoded');
+  assert.ok(record.coordinates&&record.coordinates.latitude>=45&&record.coordinates.latitude<=52&&record.coordinates.longitude>=80&&record.coordinates.longitude<=88);
+  assert.equal(record.coordinates.precision,record.id==='branch-source-12'?'address':'settlement');
+  assert.equal(record.coordinates.checkedAt,'2026-11-13');
   assert.equal(record.hours,null);
   if(record.id==='branch-source-12'){
    assert.equal(record.phone,'8 (7232) 76-65-60, 8 (7232) 76-81-64');
@@ -82,11 +82,10 @@ test('branch import preserves source and review markers, never invents coordinat
   'Филиал района Алтай','Глубоковский районный филиал','Зайсанский районный филиал','Катон-Карагайский районный филиал','Курчумский районный филиал','Филиал района Маркаколь','Риддерский городской филиал','Филиал района Самар','Тарбагатайский районный филиал','Уланский районный филиал','Филиал района Улькен Нарын','Усть-Каменогорский городской филиал по личному составу','Шемонаихинский районный филиал'
  ]);
  assert.equal(records.filter(x=>x.addressStatus==='official-listing').length,0);
- const institution=await readFile(new URL('../components/institution.tsx',import.meta.url),'utf8');
- assert.match(institution,/selected\.address&&selected\.addressStatus==='official-listing'/,'Map links must only use verified branch addresses');
  const directory=await readFile(new URL('../components/branches-directory.tsx',import.meta.url),'utf8');
  assert.match(directory,/openstreetmap\.org\/export\/embed\.html/,'A real map iframe must be used for the geocoded branch');
- assert.match(directory,/selected\.id==='branch-source-12'/,'A 2GIS address search is allowed only for the customer-confirmed Oskemen branch');
+ assert.match(directory,/selected\.address&&<a className="outline-link branch-route"/,'Source-listed addresses should open as map searches');
+ assert.match(directory,/selected\.coordinates!\.precision==='settlement'/,'Approximate settlement points must be disclosed');
 });
 
 test('2026 calendar retains both source language records and flags known discrepancies',async()=>{

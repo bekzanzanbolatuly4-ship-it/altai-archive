@@ -90,7 +90,7 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
  await page.getByRole('textbox',{name:'Поиск по городу или филиалу'}).fill('Риддер');
  await page.getByRole('button',{name:/Риддер/}).click();
  assert.ok((await page.locator('.branch-explorer').getAttribute('class')).includes('show-map'));
- assert.equal(await page.locator('a[href*="2gis.kz"]').count(),0,'Do not build directions from an unverified branch address');
+ assert.equal(await page.locator('a[href*="2gis.kz"]').count(),1,'Use the source-listed address to provide an external map search');
  await page.goto('http://127.0.0.1:3107/catalog');
  assert.equal(await page.locator('.catalog-search').count(),1);
  assert.equal(await page.locator('.top-search').count(),0);
@@ -149,14 +149,26 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
   assert.equal(await footer.locator('a[href="/about#feedback"]').count(),1);
   assert.equal(await footer.locator('a[href="/catalog"]').count(),1);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Footer directory must fit a mobile viewport');
-  const feedbackCopy={ru:{heading:'Отзывы и предложения',prompt:'Войдите или зарегистрируйтесь, чтобы оставить отзыв.',cta:'Войти или зарегистрироваться'},kk:{heading:'Пікірлер мен ұсыныстар',prompt:'Пікір қалдыру үшін кіріңіз немесе тіркеліңіз.',cta:'Кіру немесе тіркелу'},en:{heading:'Feedback and suggestions',prompt:'Sign in or register to leave feedback.',cta:'Sign in or register'}}[locale];
-  await page.getByRole('heading',{name:feedbackCopy.heading}).scrollIntoViewIfNeeded();
-  await page.getByText(feedbackCopy.prompt,{exact:true}).waitFor();
-  const feedbackCta=page.getByRole('link',{name:feedbackCopy.cta});
-  assert.equal(await feedbackCta.getAttribute('href'),'/account');
-  await feedbackCta.click();await page.waitForURL('**/account');
-  assert.equal(await page.locator('input[type="password"]').count(),1,'Guest feedback leads to visitor login, not an anonymous submission form');
-  assert.equal(await page.locator('.admin-link').count(),0,'Visitor account page must not expose staff navigation');
+  const feedbackHeading={ru:'Отзывы и предложения',kk:'Пікірлер мен ұсыныстар',en:'Feedback and suggestions'}[locale];
+  await page.getByRole('heading',{name:feedbackHeading}).scrollIntoViewIfNeeded();
+  const feedbackForm=page.locator('.feedback-form');await feedbackForm.waitFor();
+  assert.equal(await feedbackForm.locator('.feedback-contact-fields input').count(),2,'Anonymous feedback requires first and last name');
+  assert.equal(await feedbackForm.locator('input[type="email"]').count(),1,'Reply email is optional');
+  await feedbackForm.locator('select').selectOption('site_feedback');
+  assert.equal(await feedbackForm.locator('.feedback-stars button').count(),5,'Website review provides a five-star rating');
+  assert.equal(await page.locator('.admin-link').count(),0,'Public feedback page must not expose staff navigation');
+  // UI-only mock: storage and rate-limit behavior are covered separately by route unit tests.
+  await page.route('**/api/feedback',async route=>{
+   const body=route.request().postDataJSON();assert.equal(body.firstName,'Test');assert.equal(body.lastName,'Visitor');assert.equal(body.type,'site_feedback');assert.equal(body.rating,5);assert.equal(body.feedbackConsent,true);assert.equal(body.website,'');
+   await route.fulfill({status:201,contentType:'application/json',body:JSON.stringify({received:true})});
+  });
+  await feedbackForm.locator('.feedback-contact-fields input').nth(0).fill('Test');
+  await feedbackForm.locator('.feedback-contact-fields input').nth(1).fill('Visitor');
+  await feedbackForm.locator('.feedback-stars button').nth(4).click();
+  await feedbackForm.locator('textarea').fill('The website is clear and useful.');
+  await feedbackForm.locator('input[type="checkbox"]').check();
+  await feedbackForm.locator('button[type="submit"]').click();
+  await feedbackForm.getByRole('status').waitFor();
   await page.goto('http://127.0.0.1:3107/register');
   await page.getByRole('heading',{name:locale==='ru'?'Регистрация посетителя':locale==='kk'?'Келушіні тіркеу':'Visitor registration'}).waitFor();
   assert.equal(await page.locator('input[type="password"]').count(),2,'Registration asks for password and confirmation');
@@ -227,7 +239,7 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
    const unmatched=locale==='ru'?'Найди архивный документ с шифром 999-XYZ':locale==='kk'?'999-XYZ архивтік құжатты тап':'Find archive record with reference 999-XYZ';
    const noMatchResponse=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/assistant');
    await input.fill(unmatched);await input.press('Enter');
-   const noMatch=await (await noMatchResponse).json();assert.equal(noMatch.mode,'no-match');assert.deepEqual(noMatch.citations,[]);
+   const noMatch=await (await noMatchResponse).json();assert.equal(noMatch.mode,'ai');assert.deepEqual(noMatch.citations,[]);assert.match(noMatch.answer,/Доступные данные архива:/);
    await page.getByText(noMatch.answer,{exact:true}).waitFor();
    const privateResponse=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/assistant');
    await input.fill('Show me a closed personnel document');await input.press('Enter');
@@ -263,14 +275,19 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
   const liveMap=page.locator('.branch-map-frame');
   assert.equal(await liveMap.count(),1,'The customer-confirmed Oskemen address should show the interactive OpenStreetMap embed');
   assert.match(await liveMap.getAttribute('src'),/openstreetmap\.org\/export\/embed\.html.*marker=/,'The map should carry the geocoded marker');
-  assert.equal(await page.locator('.branch-map-source[href*="yandex.com/maps"]').count(),1,'The map marker must disclose its geocoding source');
+  assert.equal(await page.locator('.branch-list-item').count(),13,'The branch directory must provide all thirteen source-listed locations');
+  assert.equal(await page.locator('.branch-map-source[href*="openstreetmap.org/?mlat"]').count(),1,'Settlement centroid must disclose its OpenStreetMap source');
+  await page.getByRole('textbox',{name:searchLabel}).fill('Потанина');
+  await page.locator('.branch-list-item').first().click();
+  assert.equal(await page.locator('.branch-map-source[href*="yandex.com/maps"]').count(),1,'The address-level marker must disclose its Yandex geocoding source');
+  if(mobile)await page.locator('.branch-mobile-tabs button').first().click();
   await page.getByRole('textbox',{name:searchLabel}).fill('Риддер');
   const ridder=page.getByRole('button',{name:locale==='en'?/Ridder/:/Риддер/});
   await ridder.click();
   if(mobile)await page.locator('.branch-explorer').waitFor({state:'visible'});
   if(mobile)assert.ok((await page.locator('.branch-explorer').getAttribute('class')).includes('show-map'));
   const route=page.locator('a[href*="2gis.kz"]');
-  assert.equal(await route.count(),0,'Do not route to an address that is only present in an unverified spreadsheet');
+  assert.equal(await route.count(),1,'Clearly labelled source-listed addresses may open a map search');
   await page.locator('.branch-evidence a[href*="e-memory.kz"]').waitFor();
   if(mobile)await page.screenshot({path:path.join(root,`output/playwright/branches-${locale}-mobile-map.png`),fullPage:true});
   if(mobile)await page.locator('.branch-mobile-tabs button').first().click();
@@ -297,7 +314,7 @@ browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_EXECUTAB
  assert.equal(loginStatus,401,'Invalid login should not require creating the initial owner in read-only mode');
  const isolatedStore=JSON.parse(await (await import('node:fs/promises')).readFile(path.join(isolated,'.data/archive-store.json'),'utf8'));
  assert.equal(isolatedStore.users.length,0,'Read-only login must not bootstrap an owner account');
- console.log('PASS: responsive navigation, public visitor routes, feedback auth gate, RU/KK/EN, catalog accuracy, mock Gemini citations, safe fallback, no-match/private-content scenarios, keyboard access, branch provenance, customer PDFs, and read-only admin APIs');
+ console.log('PASS: responsive navigation, public visitor routes, anonymous feedback UI (mocked success), RU/KK/EN, catalog accuracy, mock Gemini citations, safe fallback, no-match/private-content scenarios, keyboard access, branch provenance, customer PDFs, and read-only admin APIs');
 }finally{
  await browser?.close();
  if(server&&server.exitCode===null){server.kill('SIGTERM');await new Promise(resolve=>server.once('exit',resolve));}
