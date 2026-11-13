@@ -49,7 +49,7 @@ export async function POST(request:Request){
    const email=typeof value.email==='string'?value.email.trim().toLowerCase():'';
    const role=value.role as StaffRole;
    if(!EMAIL_RE.test(email)||email.length>254||!roles.includes(role)||role==='SUPERADMIN'||Object.keys(value).some(key=>!['email','role'].includes(key)))return Response.json({error:'Provide a valid confirmed account email and staff role'},{status:400});
-   let target:{id:string;email?:string}|null=null;
+   let target:{id:string;email?:string;user_metadata?:Record<string,unknown>}|null=null;
    for(let page=1;page<=20&&!target;page++){
     const{data,error}=await admin.auth.admin.listUsers({page,perPage:1000});
     if(error)return Response.json({error:'Account lookup unavailable'},{status:503});
@@ -61,11 +61,14 @@ export async function POST(request:Request){
    const{data:existing,error:existingError}=await admin.from('profiles').select('id,role,disabled').eq('auth_user_id',target.id).maybeSingle();
    if(existingError)return Response.json({error:'Staff storage is unavailable'},{status:503});
    if(existing)return Response.json({error:'This account already has a staff membership; change it from the staff list'},{status:409});
-   const{data:visitor,error:visitorError}=await admin.from('visitor_profiles').select('display_name').eq('auth_user_id',target.id).maybeSingle();
-   if(visitorError||!visitor?.display_name)return Response.json({error:'The account has no verified visitor profile'},{status:409});
-   const{error}=await admin.from('profiles').insert({id:target.id,auth_user_id:target.id,display_name:visitor.display_name,role,disabled:false,granted_by:auth.user!.id,updated_at:new Date().toISOString()});
+   // A confirmed Auth account can be assigned a staff role even if it was
+   // provisioned outside public visitor registration. Name is display-only;
+   // permissions continue to come exclusively from this protected server path.
+   const metadataName=typeof target.user_metadata?.display_name==='string'?target.user_metadata.display_name:'';
+   const displayName=metadataName.replace(/[\x00-\x1F\x7F]/g,'').trim().slice(0,80)||email.split('@')[0].slice(0,80);
+   const{error}=await admin.from('profiles').insert({id:target.id,auth_user_id:target.id,display_name:displayName,role,disabled:false,granted_by:auth.user!.id,updated_at:new Date().toISOString()});
    if(error)return Response.json({error:'Staff membership could not be saved'},{status:503});
-   return Response.json({user:{id:target.id,email:target.email,name:visitor.display_name,role,disabled:false}},{status:201,headers:{'Cache-Control':'no-store'}});
+   return Response.json({user:{id:target.id,email:target.email,name:displayName,role,disabled:false}},{status:201,headers:{'Cache-Control':'no-store'}});
   }catch{return Response.json({error:'Invalid staff assignment'},{status:400});}
  }
  try{
